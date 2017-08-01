@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="../src/drill.js"></script>
+</head>
+
+<body>
+
+</body>
+<script>
+    (async() => {
+        drill.config({
+            baseUrl: "js/"
+        });
+
+        await require('file/file01');
+        console.log('file01 OK');
+
+        //同样是file，已经加载过，会变得无效
+        await require('file/file01');
+
+        // var [d1, d2] = await require('define/define01', 'define/define02');
+        var [d1, d2, d3] = await require('define/define01', 'define/define02', 'define/define03');
+        console.log('d1 and d2 => ', d1, d2);
+
+        // var d3 = await require('define/define03');
+        console.log('d3 => ', d3);
+
+        var d4 = await require('define/define04');
+        console.log('d4 => ', d4);
+    })();
+</script>
+
+</html>
