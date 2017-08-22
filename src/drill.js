@@ -49,35 +49,6 @@
         return arr;
     };
 
-    //obj类型的遍历
-    var objEach = (obj, func) => {
-        for (let i in obj) {
-            if (func(i, obj[i]) === false) {
-                break;
-            }
-        }
-        return obj;
-    };
-
-    //合并对象
-    var extend = def => {
-        let args = makeArray(arguments).slice(1);
-        arrayEach(args, (opt) => {
-            for (let key in opt) {
-                def[key] = opt[key];
-            }
-        });
-        return def;
-    };
-
-    //合并数组
-    var merge = (arr1, arr2) => {
-        let fakeArr2 = makeArray(arr2);
-        fakeArr2.unshift(arr1.length, 0);
-        arr1.splice.apply(arr1, fakeArr2);
-        return arr1;
-    };
-
     //获取目录名
     var getDir = (url) => {
         let urlArr = url.match(/(.+\/).+/);
