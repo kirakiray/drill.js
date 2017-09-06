@@ -102,11 +102,25 @@
     //返回Promise实例
     var promise = func => new Promise(func);
 
+    // 拆分参数和真实地址
+    var split_drill_param = url => {
+        var sarr = url.split(" ");
+        return [sarr[0], sarr.slice(1)];
+    };
+
+    // 还原参数和真实地址
+    var reduce_drill_param = (url, paramsArr) => {
+        var narr = paramsArr.slice();
+        narr.unshift(url);
+        return narr.join(" ");
+    }
+
     //main
     //主业务逻辑
     var R = {
         //加载script的方法
         loadScript: url => {
+            [url, ] = split_drill_param(url);
             let script = document.createElement('script');
 
             //判断版本号
@@ -179,6 +193,8 @@
         },
         //载入单个资源的代理方法
         agent: (path, pubData) => promise((res, rej) => {
+            let param;
+            [path, param] = split_drill_param(path);
             let tar = dataMap[path];
             if (tar) {
                 switch (tar.state) {
@@ -213,9 +229,13 @@
                     state: PENDING,
                     c: [{
                         res,
+                        rej,
                         pubData
                     }]
                 };
+
+                // 还原回去
+                path = reduce_drill_param(path, param);
 
                 let script = R.loadScript(path);
 
@@ -226,7 +246,7 @@
                 };
                 script.onerror = () => {
                     while (0 in tar.c) {
-                        tar.c.shift().rej();
+                        tar.c.shift().rej('load script error => ' + path);
                     }
                     baseResources.tempM = {};
                     tar.state = REJECTED;
@@ -234,8 +254,10 @@
                 }
             }
         }),
-        //设定temp的方法
+        // 设定默认文件类型
+        // 默认支持的 普通js文件（file），define模块，task进程
         setTemp: path => {
+            [path, ] = split_drill_param(path);
             //获取模块数据
             let { tempM } = baseResources;
             let data = tempM.d;
@@ -352,17 +374,20 @@
         },
         //转换路径
         getPath: (target, pubData) => {
+            // 拆分参数和值
+            let param;
+            [target, param] = split_drill_param(target);
+
             let relatePath = pubData.rel;
             //判断是否已经注册了路径
             if (paths[target]) {
                 target = paths[target];
             } else {
-                let tarreg, res;
+                let tarreg;
                 //判断是否注册目录
                 for (let i in dirpaths) {
                     tarreg = new RegExp('^' + i);
-                    res = tarreg.test(target);
-                    if (res) {
+                    if (tarreg.test(target)) {
                         target = target.replace(tarreg, dirpaths[i]);
                         break
                     }
@@ -384,13 +409,19 @@
                     //获取相对目录
                     target = getDir(relatePath) + rePath[1];
                 } else {
-                    //加上根目录
-                    target = baseResources.baseUrl + target;
+                    // 判断是否有 -r(root)参数
+                    if (param.indexOf('-r') == -1) {
+                        //加上根目录
+                        target = baseResources.baseUrl + target;
+                    }
                 }
 
                 //去除相对上级目录
                 target = removeParentPath(target);
             }
+
+            //还原参数和值
+            target = reduce_drill_param(target, param);
             return target;
         },
         //引用模块
@@ -436,7 +467,7 @@
     var drill = {
         config: data => {
             //配置baseurl
-            baseResources.baseUrl = data.baseUrl || "";
+            baseResources.baseUrl = data.baseUrl || baseResources.baseUrl;
 
             //配置paths
             for (let i in data.paths) {
@@ -451,7 +482,7 @@
         },
         remove: url => {
             //获取路径
-            let path = R.getPath(url);
+            let path = R.getPath(url, {});
 
             //获取寄存对象
             let tarData = dataMap[path];
