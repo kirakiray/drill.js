@@ -20,6 +20,8 @@ It's SugarRequire 4.0
 
 为了es7时代而出的模块化方案，只能在比较新的浏览器上跑；
 
+但可以把项目用 Babel 编译成es5的版本，就能使用 drill.js 了；
+
 ### 目录解析
 
 `dist` 编译成ES5版本的 `drill.js`

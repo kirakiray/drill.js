@@ -8,4 +8,6 @@ define(async(require, exports) => {
     exports.d3 = d3;
 
     exports.val = "I am define04";
+
+    once(1, 'load define04 ok');
 });

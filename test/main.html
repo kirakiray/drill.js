@@ -5,37 +5,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
+    <title>drill.js test</title>
     <script src="../src/drill.js"></script>
+    <script src="ok.js"></script>
 </head>
 
 <body>
-
 </body>
 <script>
+    var g1 = expect(10, '主进程');
+
     (async() => {
         drill.config({
             baseUrl: "js/"
         });
 
+        g1.ok(1, 'run file01 start');
         await require('file/file01');
-        console.log('file01 OK');
+        g1.ok(1, 'run file01 ok 1');
 
         //同样是file，已经加载过，会变得无效
         await require('file/file01');
+        g1.ok(1, 'run file01 ok 2');
 
-        // var [d1, d2] = await require('define/define01', 'define/define02');
         var [d1, d2, d3] = await require('define/define01', 'define/define02', 'define/define03');
         console.log('d1 and d2 => ', d1, d2);
+        g1.ok(1, 'run define01 define02 define03 ok');
 
-        // var d3 = await require('define/define03');
         console.log('d3 => ', d3);
+        g1.ok(d3.d1 === d1, 'd3 data ok');
 
         var d4 = await require('define/define04');
         console.log('d4 => ', d4);
+        g1.ok(d4.d1 === d1, 'd4 data ok 1');
+        g1.ok(d4.d2 === d2, 'd4 data ok 2');
+        g1.ok(d4.d3 === d3, 'd4 data ok 3');
 
         var t1 = await require('task01').post([120, 230]);
         console.log('task01 => ', t1);
+        g1.ok(t1 === 350, 'task01 data ok 1');
+
+        var t2 = await require('task01').post([220, 230]);
+        g1.ok(t2 === 450, 'task01 data ok 2');
     })();
 </script>
 
