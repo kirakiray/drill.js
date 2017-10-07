@@ -125,7 +125,7 @@
 
             //判断版本号
             let { k, v } = drill.cacheInfo;
-            if (k && v) {
+            if (url && k && v) {
                 if (url.search(/\?/) > -1) {
                     url += "&" + k + "=" + v;
                 } else {
@@ -136,7 +136,7 @@
             //填充相应数据
             script.type = 'text/javascript';
             script.async = true;
-            script.src = url;
+            url && (script.src = url);
 
             //ie10对 async支持差的修正方案
             nextTick(() => {
