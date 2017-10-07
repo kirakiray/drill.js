@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>test</title>
+    <script src="ok.js"></script>
+    <script src="../src/drill.js"></script>
+    <script src="../plugin/drill-instant.js"></script>
+</head>
+
+<body>
+    <script>
+        drill.setModule('js/define/define01.js', 'data:text/javascript;base64,ZGVmaW5lKHsKICAgIHZhbDogIkkgYW0gZGVmaW5lMDEiCn0pOwoKb25jZSgxLCAnbG9hZCBkZWZpbmUwMSBvaycpOwovL0Agc291cmNlTWFwcGluZ1VSTD1oYWhh');
+
+        (async() => {
+            drill.config({
+                baseUrl: "js/"
+            });
+            drill.cacheInfo = {
+                k: "as",
+                v: "1"
+            };
+            let d1 = await require('define/define01');
+            let d2 = await require('define/define02');
+        })();
+    </script>
+</body>
+
+</html>

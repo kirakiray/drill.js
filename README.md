@@ -24,8 +24,10 @@ It's SugarRequire 4.0
 
 ### 目录解析
 
-`dist` 编译成ES5版本的 `drill.js`
+`dist` 编译成ES5版本的 `drill.js` (一般使用 drill.js 都是重点使用 `async` `await` 开发，最好使用 `src` 下的源文件，在用babel统一转换成 `es5` 来使用);
 
 `src` 源文件目录
 
 `test` 测试案例
+
+`plugin` 官方提供插件

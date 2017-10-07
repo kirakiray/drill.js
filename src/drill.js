@@ -50,7 +50,7 @@
     };
 
     //获取目录名
-    var getDir = (url) => {
+    var getDir = url => {
         let urlArr = url.match(/(.+\/).+/);
         return urlArr && urlArr[1];
     };
@@ -145,52 +145,6 @@
 
             return script;
         },
-        //根据数组内的路径进行封装返回Promise对象
-        toProm: (args, pubData) => {
-            let pendFun;
-
-            let pms = promise((res, rej) => {
-                let arr = [];
-                let len = args.length;
-
-                //确认返回数据的方法
-                let monitFun = () => {
-                    len--;
-                    if (!len) {
-                        pendFun = null;
-                        if (arr.length == 1) {
-                            res(arr[0]);
-                        } else {
-                            res(arr);
-                        };
-                    }
-                };
-
-                arrayEach(args, (e, i) => {
-                    //获取实际路径
-                    let path = R.getPath(e, pubData);
-
-                    //获取promise模块
-                    let p = R.agent(path, pubData);
-
-                    p.then((data) => {
-                        arr[i] = data;
-                        pendFun && pendFun(data, i);
-                        monitFun();
-                    }).catch((err) => {
-                        rej(err);
-                    });
-                });
-            });
-
-            //加入pend事件
-            pms.pend = (func) => {
-                pendFun = func;
-                return pms;
-            };
-
-            return pms;
-        },
         //载入单个资源的代理方法
         agent: (path, pubData) => promise((res, rej) => {
             let param;
@@ -254,6 +208,52 @@
                 }
             }
         }),
+        //根据数组内的路径进行封装返回Promise对象
+        toProm: (args, pubData) => {
+            let pendFun;
+
+            let pms = promise((res, rej) => {
+                let arr = [];
+                let len = args.length;
+
+                //确认返回数据的方法
+                let monitFun = () => {
+                    len--;
+                    if (!len) {
+                        pendFun = null;
+                        if (arr.length == 1) {
+                            res(arr[0]);
+                        } else {
+                            res(arr);
+                        };
+                    }
+                };
+
+                arrayEach(args, (e, i) => {
+                    //获取实际路径
+                    let path = R.getPath(e, pubData);
+
+                    //获取promise模块
+                    let p = R.agent(path, pubData);
+
+                    p.then((data) => {
+                        arr[i] = data;
+                        pendFun && pendFun(data, i);
+                        monitFun();
+                    }).catch((err) => {
+                        rej(err);
+                    });
+                });
+            });
+
+            //加入pend事件
+            pms.pend = (func) => {
+                pendFun = func;
+                return pms;
+            };
+
+            return pms;
+        },
         // 设定默认文件类型
         // 默认支持的 普通js文件（file），define模块，task进程
         setTemp: path => {
@@ -313,13 +313,13 @@
                             };
 
                         //判断返回值是否promise
-                        let p = data.bind({
-                            FILE: path
-                        })(function() {
-                            return R.require(makeArray(arguments), {
+                        let p = data(function(...args) {
+                            return R.require(args, {
                                 rel: path
                             });
-                        }, exports, module);
+                        }, exports, module, {
+                            FILE: path
+                        });
 
                         if (p instanceof Promise) {
                             p.then((d) => {
@@ -342,11 +342,13 @@
                     //设定数据值
                     if (getType(data).search('function') > -1) {
                         let getFun = tar.get = (res, pubData) => {
-                            let p = data(function() {
-                                return R.require(makeArray(arguments), {
+                            let p = data(function(...args) {
+                                return R.require(args, {
                                     rel: path
                                 });
-                            }, pubData.pdata);
+                            }, pubData.pdata, {
+                                FILE: path
+                            });
                             p.then((d) => {
                                 res(d);
                             });
@@ -454,8 +456,8 @@
     };
 
     //主体require
-    var require = function() {
-        return R.require(makeArray(arguments));
+    var require = (...args) => {
+        return R.require(args);
     };
     var oDefine = (d, ids) => {
         R.define(d, ids);
@@ -494,24 +496,68 @@
             }
         },
         //扩展函数
-        extend: fun => {
-            fun(baseResources, R);
+        extend: option => {
+            option(baseResources, R);
+            // switch (getType(option)) {
+            //     case "object":
+            //         // let defaults = {
+            //         //     // 是否在前面运行  before在前面执行 after在后面执行 replace覆盖方法
+            //         //     type: "before",
+            //         //     // 要替代的方法
+            //         //     name: "",
+            //         //     // 主体函数
+            //         //     func: () => {}
+            //         // };
+
+            //         // 先拿出旧的方法
+            //         let old_func = R[option.name];
+
+            //         switch (option.type) {
+            //             case "before":
+            //                 R[option.name] = (...args) => {
+            //                     option.func.apply(R, args);
+            //                     return old_func.apply(R, args);
+            //                 };
+            //                 break;
+            //             case "after":
+            //                 R[option.name] = (...args) => {
+            //                     let d = old_func.apply(R, args);
+            //                     d = option.func(d);
+            //                     return d;
+            //                 };
+            //                 break;
+            //             case "replace":
+            //                 R[option.name] = option.func;
+            //                 break;
+            //         }
+
+            //         break;
+            //     case "function":
+            //         option(baseResources, R);
+            //         break;
+            // }
         },
         require: require,
         define: oDefine,
         task: oTask,
         //缓存版本号
         cacheInfo: {
-            k: "srcache",
-            // v: ""
+            k: "srcache"
+                //, v: ""
         }
     };
-
 
     //init
     glo.require || (glo.require = require);
     glo.define || (glo.define = oDefine);
     glo.task || (glo.task = oTask);
+    if (glo.drill) {
+        if (getType(glo.drill)) {
+            glo.drill(drill);
+        } else {
+            throw "async drill.js type error";
+        }
+    }
     glo.drill = drill;
 
     window.baseResources = baseResources;
