@@ -1,7 +1,8 @@
 ((glo) => {
     "use strict";
     //common
-    const windowHead = document.head;
+    const Docum = document;
+    const windowHead = Docum.head;
 
     const
     //模块处理中 
@@ -121,7 +122,7 @@
         //加载script的方法
         loadScript: url => {
             [url, ] = split_drill_param(url);
-            let script = document.createElement('script');
+            let script = Docum.createElement('script');
 
             //判断版本号
             let { k, v } = drill.cacheInfo;
@@ -498,44 +499,6 @@
         //扩展函数
         extend: option => {
             option(baseResources, R);
-            // switch (getType(option)) {
-            //     case "object":
-            //         // let defaults = {
-            //         //     // 是否在前面运行  before在前面执行 after在后面执行 replace覆盖方法
-            //         //     type: "before",
-            //         //     // 要替代的方法
-            //         //     name: "",
-            //         //     // 主体函数
-            //         //     func: () => {}
-            //         // };
-
-            //         // 先拿出旧的方法
-            //         let old_func = R[option.name];
-
-            //         switch (option.type) {
-            //             case "before":
-            //                 R[option.name] = (...args) => {
-            //                     option.func.apply(R, args);
-            //                     return old_func.apply(R, args);
-            //                 };
-            //                 break;
-            //             case "after":
-            //                 R[option.name] = (...args) => {
-            //                     let d = old_func.apply(R, args);
-            //                     d = option.func(d);
-            //                     return d;
-            //                 };
-            //                 break;
-            //             case "replace":
-            //                 R[option.name] = option.func;
-            //                 break;
-            //         }
-
-            //         break;
-            //     case "function":
-            //         option(baseResources, R);
-            //         break;
-            // }
         },
         require: require,
         define: oDefine,
@@ -548,6 +511,17 @@
     };
 
     //init
+    // 初始化版本号
+    let cScript = Docum.currentScript;
+    if (!cScript) {
+        cScript = Docum.querySelector(['drill-cache']);
+    }
+    if (cScript) {
+        let cacheVersion = cScript.getAttribute('drill-cache');
+        cacheVersion && (drill.cacheInfo.v = cacheVersion);
+    }
+
+    // 外部使用的变量
     glo.require || (glo.require = require);
     glo.define || (glo.define = oDefine);
     glo.task || (glo.task = oTask);
