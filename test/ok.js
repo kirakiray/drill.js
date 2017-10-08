@@ -19,6 +19,10 @@
             color:#96aa2d;
         }
 
+        .succeed .title{
+            color:#5489b6;
+        }
+
         .error{
             color:#d8353b;
         }
@@ -62,7 +66,8 @@
 
         // 添加标题
         let titleEle = getDiv("count(" + count + "):" + title);
-        titleEle.style['color'] = "#5489b6";
+        titleEle.setAttribute('class', "title");
+        // titleEle.style['color'] = ;
         titleEle && (mainEle.appendChild(titleEle));
 
         return {

@@ -7,8 +7,8 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>test</title>
     <script src="ok.js"></script>
-    <script src="../src/drill.js"></script>
-    <script src="../plugin/drill-installer.js"></script>
+    <script src="../src/drill.js" drill-cache="21"></script>
+    <script src="../plugin/drill-installer.js" drill-isinstall="true"></script>
 </head>
 
 <body>
@@ -16,15 +16,12 @@
         drill.setModule('js/define/define01.js', 'data:text/javascript;base64,ZGVmaW5lKHsKICAgIHZhbDogIkkgYW0gZGVmaW5lMDEiCn0pOwoKb25jZSgxLCAnbG9hZCBkZWZpbmUwMSBvaycpOwovL0Agc291cmNlTWFwcGluZ1VSTD1oYWhh');
 
         // 设置安装版本
-        drill.isInstall = true;
+        // drill.isInstall = false;
 
         (async() => {
             drill.config({
                 baseUrl: "js/"
             });
-
-            // 设置版本号
-            drill.cacheInfo.v = 1;
 
             let d1 = await require('define/define01');
             let d2 = await require('define/define02');

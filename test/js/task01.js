@@ -5,6 +5,7 @@ task(async(require, data, { FILE }) => {
     ok(d1.val == "I am define01", "relative path");
 
     var [n1, n2] = data;
+    g2.ok(1, "task01");
 
     ok(FILE == "js/task01.js", "FILE(task01) is ok");
 
