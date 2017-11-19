@@ -14,7 +14,7 @@
 <script>
     var g1 = expect(10, '主进程');
 
-    window.drill = (async(drill) => {
+    window.drill = async(drill) => {
         drill.config({
             baseUrl: "js/"
         });
@@ -46,7 +46,7 @@
 
         var t2 = await require('task01').post([220, 230]);
         g1.ok(t2 === 450, 'task01 data ok 2');
-    });
+    };
 </script>
 <script src="../src/drill.js" async></script>
 

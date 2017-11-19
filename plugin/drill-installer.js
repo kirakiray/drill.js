@@ -1,24 +1,4 @@
 drill.extend((baseResources, R) => {
-    //改良异步方法
-    const windowHead = document.head;
-    var nextTick = (() => {
-        let isTick = false;
-        let nextTickArr = [];
-        return (fun) => {
-            if (!isTick) {
-                isTick = true;
-                setTimeout(() => {
-                    for (let i = 0; i < nextTickArr.length; i++) {
-                        nextTickArr[i]();
-                    }
-                    nextTickArr = [];
-                    isTick = false;
-                }, 0);
-            }
-            nextTickArr.push(fun);
-        };
-    })();
-
     // 旧的方法
     let old_loadscript = R.loadScript;
 
