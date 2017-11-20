@@ -29,9 +29,12 @@
         await require('file/file01');
         g1.ok(1, 'run file01 ok 2');
 
-        var [d1, d2, d3] = await require('define/define01', 'define/define02', 'define/define03');
+        // root test
+        var [d1, d2, d3] = await require('define/define01', 'define/define02', 'js/define/define03  -r');
         console.log('d1 and d2 => ', d1, d2);
-        g1.ok(1, 'run define01 define02 define03 ok');
+        if (d1.val === "I am define01" && d2.val === "I am define02" && d3.val === "I am define03") {
+            g1.ok(1, 'run define01 define02 define03 ok');
+        }
 
         console.log('d3 => ', d3);
         g1.ok(d3.d1 === d1, 'd3 data ok');
@@ -48,6 +51,9 @@
 
         var t2 = await require('task01').post([220, 230]);
         g1.ok(t2 === 450, 'task01 data ok 2');
+
+        // 测试root参数
+
     })();
 </script>
 

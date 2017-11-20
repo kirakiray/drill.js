@@ -105,23 +105,18 @@
 
     // 拆分参数和真实地址
     var split_drill_param = url => {
-        var sarr = url.split(" ");
+        var sarr = url.split(" ").filter((e) => {
+            if (e) return e;
+        });
         return [sarr[0], sarr.slice(1)];
     };
-
-    // 还原参数和真实地址
-    var reduce_drill_param = (url, paramsArr) => {
-        var narr = paramsArr.slice();
-        narr.unshift(url);
-        return narr.join(" ");
-    }
 
     //main
     //主业务逻辑
     var R = {
         //加载script的方法
-        loadScript: url => {
-            [url, ] = split_drill_param(url);
+        loadScript: pData => {
+            let url = pData.path;
             let script = Docum.createElement('script');
 
             //判断版本号
@@ -147,9 +142,8 @@
             return script;
         },
         //载入单个资源的代理方法
-        agent: (path, pubData) => promise((res, rej) => {
-            let param;
-            [path, param] = split_drill_param(path);
+        agent: (pData, pubData) => promise((res, rej) => {
+            let { param, path } = pData;
             let tar = dataMap[path];
             if (tar) {
                 switch (tar.state) {
@@ -189,14 +183,11 @@
                     }]
                 };
 
-                // 还原回去
-                path = reduce_drill_param(path, param);
-
-                let script = R.loadScript(path);
+                let script = R.loadScript(pData);
 
                 script.onload = () => {
                     tar.state = LOADED;
-                    R.setTemp(path);
+                    R.setTemp(pData);
                     baseResources.tempM = {};
                 };
                 script.onerror = () => {
@@ -230,12 +221,12 @@
                     }
                 };
 
-                arrayEach(args, (e, i) => {
+                arrayEach(args, (pData, i) => {
                     //获取实际路径
-                    let path = R.getPath(e, pubData);
+                    pData = R.getPath(pData, pubData);
 
                     //获取promise模块
-                    let p = R.agent(path, pubData);
+                    let p = R.agent(pData, pubData);
 
                     p.then((data) => {
                         arr[i] = data;
@@ -257,8 +248,9 @@
         },
         // 设定默认文件类型
         // 默认支持的 普通js文件（file），define模块，task进程
-        setTemp: path => {
-            [path, ] = split_drill_param(path);
+        setTemp: pData => {
+            let { path } = pData;
+
             //获取模块数据
             let { tempM } = baseResources;
             let data = tempM.d;
@@ -376,22 +368,20 @@
             };
         },
         //转换路径
-        getPath: (target, pubData) => {
-            // 拆分参数和值
-            let param;
-            [target, param] = split_drill_param(target);
+        getPath: (pData, pubData) => {
+            let { param, path } = pData;
 
             let relatePath = pubData.rel;
             //判断是否已经注册了路径
-            if (paths[target]) {
-                target = paths[target];
+            if (paths[path]) {
+                path = paths[path];
             } else {
                 let tarreg;
                 //判断是否注册目录
                 for (let i in dirpaths) {
                     tarreg = new RegExp('^' + i);
-                    if (tarreg.test(target)) {
-                        target = target.replace(tarreg, dirpaths[i]);
+                    if (tarreg.test(path)) {
+                        path = path.replace(tarreg, dirpaths[i]);
                         break
                     }
                 }
@@ -399,37 +389,48 @@
 
             //判断是否带协议头部
             //没有协议
-            if (!/^.+?\/\//.test(target)) {
+            if (!/^.+?\/\//.test(path)) {
                 //是否带参数
-                if (!/\?.+$/.test(target) && !/.js$/.test(target)) {
+                if (!/\?.+$/.test(path) && !/.js$/.test(path)) {
                     //没有js的话加上js后缀
-                    target += ".js";
+                    path += ".js";
                 }
 
                 //判断是否有相对路径字样
-                let rePath = target.match(/^\.\/(.+)/);
+                let rePath = path.match(/^\.\/(.+)/);
                 if (rePath) {
                     //获取相对目录
-                    target = getDir(relatePath) + rePath[1];
+                    path = getDir(relatePath) + rePath[1];
                 } else {
                     // 判断是否有 -r(root)参数
                     if (param.indexOf('-r') == -1) {
                         //加上根目录
-                        target = baseResources.baseUrl + target;
+                        path = baseResources.baseUrl + path;
                     }
                 }
 
                 //去除相对上级目录
-                target = removeParentPath(target);
+                path = removeParentPath(path);
             }
 
-            //还原参数和值
-            target = reduce_drill_param(target, param);
-            return target;
+            // 修正参数值
+            pData.path = path;
+
+            return pData;
         },
         //引用模块
         require: (args, pubData = {}) => {
-            let p = R.toProm(args, pubData);
+            let new_args = [];
+            // 拆分args的参数
+            arrayEach(args, (e) => {
+                let [path, param] = split_drill_param(e);
+                new_args.push({
+                    path,
+                    param
+                });
+            });
+
+            let p = R.toProm(new_args, pubData);
 
             //添加post方法
             p.post = (data) => {
@@ -485,7 +486,7 @@
         },
         remove: url => {
             //获取路径
-            let path = R.getPath(url, {});
+            let { path } = R.getPath({ path: url }, {});
 
             //获取寄存对象
             let tarData = dataMap[path];
