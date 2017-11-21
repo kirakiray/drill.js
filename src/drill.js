@@ -43,6 +43,9 @@
     var objectToString = Object.prototype.toString;
     var getType = value => objectToString.call(value).toLowerCase().replace(/(\[object )|(])/g, '');
 
+    // 判断是否function类型（包括asyncFunction）
+    var isFunction = d => getType(d).indexOf('function') > -1;
+
     //array类型的遍历
     var arrayEach = (arr, func) => {
         !(arr instanceof Array) && (arr = makeArray(arr));
@@ -142,7 +145,7 @@
             return script;
         },
         //载入单个资源的代理方法
-        agent: (pData, pubData) => promise((res, rej) => {
+        agent: (pData, groupData) => promise((res, rej) => {
             let { param, path } = pData;
             let tar = dataMap[path];
             if (tar) {
@@ -151,7 +154,7 @@
                     case PENDING:
                         tar.c.push({
                             res,
-                            pubData
+                            groupData
                         });
                         break;
                     case RESOLVED:
@@ -159,7 +162,7 @@
                             if (tar.get) {
                                 tar.get((data) => {
                                     res(data);
-                                }, pubData);
+                                }, groupData);
                             } else {
                                 res();
                             }
@@ -179,7 +182,7 @@
                     c: [{
                         res,
                         rej,
-                        pubData
+                        groupData
                     }]
                 };
 
@@ -200,52 +203,6 @@
                 }
             }
         }),
-        //根据数组内的路径进行封装返回Promise对象
-        toProm: (args, pubData) => {
-            let pendFun;
-
-            let pms = promise((res, rej) => {
-                let arr = [];
-                let len = args.length;
-
-                //确认返回数据的方法
-                let monitFun = () => {
-                    len--;
-                    if (!len) {
-                        pendFun = null;
-                        if (arr.length == 1) {
-                            res(arr[0]);
-                        } else {
-                            res(arr);
-                        };
-                    }
-                };
-
-                arrayEach(args, (pData, i) => {
-                    //获取实际路径
-                    pData = R.getPath(pData, pubData);
-
-                    //获取promise模块
-                    let p = R.agent(pData, pubData);
-
-                    p.then((data) => {
-                        arr[i] = data;
-                        pendFun && pendFun(data, i);
-                        monitFun();
-                    }).catch((err) => {
-                        rej(err);
-                    });
-                });
-            });
-
-            //加入pend事件
-            pms.pend = (func) => {
-                pendFun = func;
-                return pms;
-            };
-
-            return pms;
-        },
         // 设定默认文件类型
         // 默认支持的 普通js文件（file），define模块，task进程
         setTemp: pData => {
@@ -299,14 +256,14 @@
                     //模块类型
                 case "define":
                     //判断是否是函数
-                    if (getType(data).search('function') > -1) {
+                    if (isFunction(data)) {
                         let exports = {},
                             module = {
                                 exports: exports
                             };
 
                         //判断返回值是否promise
-                        let p = data(function(...args) {
+                        let p = data((...args) => {
                             return R.require(args, {
                                 rel: path
                             });
@@ -333,13 +290,13 @@
                 case "task":
                     runFunc = null;
                     //设定数据值
-                    if (getType(data).search('function') > -1) {
-                        let getFun = tar.get = (res, pubData) => {
-                            let p = data(function(...args) {
+                    if (isFunction(data)) {
+                        let getFun = tar.get = (res, groupData) => {
+                            let p = data((...args) => {
                                 return R.require(args, {
                                     rel: path
                                 });
-                            }, pubData.pdata, {
+                            }, groupData.pdata, {
                                 FILE: path
                             });
                             p.then((d) => {
@@ -351,9 +308,9 @@
                         while (0 in tar.c) {
                             let {
                                 res,
-                                pubData
+                                groupData
                             } = tar.c.shift();
-                            getFun(res, pubData);
+                            getFun(res, groupData);
                         }
                     } else {
                         throw 'task module type error';
@@ -368,10 +325,10 @@
             };
         },
         //转换路径
-        getPath: (pData, pubData) => {
+        fixPath: (pData, groupData) => {
             let { param, path } = pData;
 
-            let relatePath = pubData.rel;
+            let relatePath = groupData.rel;
             //判断是否已经注册了路径
             if (paths[path]) {
                 path = paths[path];
@@ -413,13 +370,59 @@
                 path = removeParentPath(path);
             }
 
-            // 修正参数值
+            // 修正path参数值
             pData.path = path;
 
             return pData;
         },
+        //根据数组内的路径进行封装返回Promise对象
+        toProm: (args, groupData) => {
+            let pendFun;
+
+            let pms = promise((res, rej) => {
+                let arr = [];
+                let len = args.length;
+
+                //确认返回数据的方法
+                let monitFun = () => {
+                    len--;
+                    if (!len) {
+                        pendFun = null;
+                        if (arr.length == 1) {
+                            res(arr[0]);
+                        } else {
+                            res(arr);
+                        };
+                    }
+                };
+
+                arrayEach(args, (pData, i) => {
+                    //获取实际路径
+                    pData = R.fixPath(pData, groupData);
+
+                    //获取promise模块
+                    let p = R.agent(pData, groupData);
+
+                    p.then((data) => {
+                        arr[i] = data;
+                        pendFun && pendFun(data, i);
+                        monitFun();
+                    }).catch((err) => {
+                        rej(err);
+                    });
+                });
+            });
+
+            //加入pend事件
+            pms.pend = (func) => {
+                pendFun = func;
+                return pms;
+            };
+
+            return pms;
+        },
         //引用模块
-        require: (args, pubData = {}) => {
+        require: (args, groupData = {}) => {
             let new_args = [];
             // 拆分args的参数
             arrayEach(args, (e) => {
@@ -430,11 +433,11 @@
                 });
             });
 
-            let p = R.toProm(new_args, pubData);
+            let p = R.toProm(new_args, groupData);
 
             //添加post方法
             p.post = (data) => {
-                pubData.pdata = data;
+                groupData.pdata = data;
                 return p;
             }
             return p;
@@ -486,7 +489,7 @@
         },
         remove: url => {
             //获取路径
-            let { path } = R.getPath({ path: url }, {});
+            let { path } = R.fixPath({ path: url }, {});
 
             //获取寄存对象
             let tarData = dataMap[path];
@@ -527,7 +530,7 @@
     glo.define || (glo.define = oDefine);
     glo.task || (glo.task = oTask);
     if (glo.drill) {
-        if (getType(glo.drill)) {
+        if (isFunction(glo.drill)) {
             glo.drill(drill);
         } else {
             throw "async drill.js type error";

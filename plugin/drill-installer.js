@@ -145,7 +145,8 @@ drill.extend((baseResources, R) => {
     var instantData = {};
 
     // 替换主体方法
-    R.loadScript = url => {
+    R.loadScript = pData => {
+        let url = pData.path;
         let script;
 
         if (instantData[url]) {
