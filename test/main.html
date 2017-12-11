@@ -7,14 +7,15 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>drill.js test</title>
     <script src="../src/drill.js" drill-cache="19"></script>
-    <!-- <script src="../plugin/drill-installer.js" drill-isinstall="true"></script> -->
     <script src="ok.js"></script>
 </head>
 
 <body>
 </body>
 <script>
-    var g1 = expect(10, '主进程');
+    var g1 = expect(11, '主进程');
+
+    var g2 = expect(3, 'pend函数');
 
     (async() => {
         drill.config({
@@ -25,9 +26,18 @@
         await require('file/file01');
         g1.ok(1, 'run file01 ok 1');
 
-        //同样是file，已经加载过，会变得无效
+        // 同样是file，已经加载过，会变得无效
         await require('file/file01');
         g1.ok(1, 'run file01 ok 2');
+
+        // pend test
+        var [d1, d2, d3] = await require('define/define01', 'define/define02', 'define/define03')
+            .pend((e, i) => {
+                g2.ok(1, e.val);
+            })
+            .catch(function(err) {
+                console.error('err=>', err);
+            });
 
         // root test
         var [d1, d2, d3] = await require('define/define01', 'define/define02', 'js/define/define03  -r');
@@ -52,8 +62,14 @@
         var t2 = await require('task01').post([220, 230]);
         g1.ok(t2 === 450, 'task01 data ok 2');
 
-        // 测试root参数
+        // task test
+        let num = await require('task/t2')
+            .post({
+                d1: 100,
+                d2: 200
+            });
 
+        g1.ok(1, 'task test ok');
     })();
 </script>
 

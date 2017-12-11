@@ -118,8 +118,8 @@
     //主业务逻辑
     var R = {
         //加载script的方法
-        loadScript: pData => {
-            let url = pData.path;
+        loadScript: (pathOption, res, rej) => {
+            let url = pathOption.path;
             let script = Docum.createElement('script');
 
             //判断版本号
@@ -137,6 +137,9 @@
             script.async = true;
             url && (script.src = url);
 
+            script.onload = res;
+            script.onerror = rej;
+
             //ie10对 async支持差的修正方案
             nextTick(() => {
                 windowHead.appendChild(script);
@@ -145,8 +148,8 @@
             return script;
         },
         //载入单个资源的代理方法
-        agent: (pData, groupData) => promise((res, rej) => {
-            let { param, path } = pData;
+        agent: (pathOption, groupData) => promise((res, rej) => {
+            let { param, path } = pathOption;
             let tar = dataMap[path];
             if (tar) {
                 switch (tar.state) {
@@ -186,27 +189,24 @@
                     }]
                 };
 
-                let script = R.loadScript(pData);
-
-                script.onload = () => {
+                R.loadScript(pathOption, () => {
                     tar.state = LOADED;
-                    R.setTemp(pData);
+                    R.setTemp(pathOption);
                     baseResources.tempM = {};
-                };
-                script.onerror = () => {
+                }, () => {
                     while (0 in tar.c) {
                         tar.c.shift().rej('load script error => ' + path);
                     }
                     baseResources.tempM = {};
                     tar.state = REJECTED;
                     delete tar.c;
-                }
+                });
             }
         }),
         // 设定默认文件类型
         // 默认支持的 普通js文件（file），define模块，task进程
-        setTemp: pData => {
-            let { path } = pData;
+        setTemp: pathOption => {
+            let { path } = pathOption;
 
             //获取模块数据
             let { tempM } = baseResources;
@@ -325,8 +325,8 @@
             };
         },
         //转换路径
-        fixPath: (pData, groupData) => {
-            let { param, path } = pData;
+        fixPath: (pathOption, groupData) => {
+            let { param, path } = pathOption;
 
             let relatePath = groupData.rel;
             //判断是否已经注册了路径
@@ -371,9 +371,9 @@
             }
 
             // 修正path参数值
-            pData.path = path;
+            pathOption.path = path;
 
-            return pData;
+            return pathOption;
         },
         //根据数组内的路径进行封装返回Promise对象
         toProm: (args, groupData) => {
@@ -396,12 +396,12 @@
                     }
                 };
 
-                arrayEach(args, (pData, i) => {
+                arrayEach(args, (pathOption, i) => {
                     //获取实际路径
-                    pData = R.fixPath(pData, groupData);
+                    pathOption = R.fixPath(pathOption, groupData);
 
                     //获取promise模块
-                    let p = R.agent(pData, groupData);
+                    let p = R.agent(pathOption, groupData);
 
                     p.then((data) => {
                         arr[i] = data;
@@ -502,7 +502,15 @@
         },
         //扩展函数
         extend: option => {
-            option(baseResources, R);
+            if (isFunction(option)) {
+                option(baseResources, R);
+            } else {
+                let defaults = {
+                    // 承接函数的名字
+                    name: ""
+                };
+
+            }
         },
         require: require,
         define: oDefine,
