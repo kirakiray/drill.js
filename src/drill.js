@@ -108,7 +108,7 @@
 
     // 拆分参数和真实地址
     var split_drill_param = url => {
-        var sarr = url.split(" ").filter((e) => {
+        let sarr = url.split(" ").filter((e) => {
             if (e) return e;
         });
         return [sarr[0], sarr.slice(1)];
