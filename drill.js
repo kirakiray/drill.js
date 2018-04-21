@@ -250,8 +250,6 @@
         // 根据资源地址计算资源目录
         urlData.dir = getDir(path);
 
-        console.log('urlData=>', urlData);
-
         return urlData;
     };
 
@@ -703,9 +701,8 @@
 
     // 初始化版本号
     let cScript = document.currentScript;
-    if (!cScript) {
-        cScript = document.querySelector(['drill-cache']);
-    }
+    !cScript && (cScript = document.querySelector(['drill-cache']));
+
     if (cScript) {
         let cacheVersion = cScript.getAttribute('drill-cache');
         cacheVersion && (drill.cacheInfo.v = cacheVersion);
@@ -714,19 +711,18 @@
     glo.require || (glo.require = drill.require);
 
     // 判断全局是否存在变量 drill
-    if (glo.drill) {
-        glo.drill(drill);
-        glo.drill = drill;
-    } else {
-        defineProperty(glo, 'drill', {
-            get: () => drill,
-            set(func) {
-                // let fType = getType(func);
-                // if (fType.search('function') > -1) {
-                if (isFunction(func)) {
-                    func(drill);
-                }
+    let gloDrill = glo.drill;
+    gloDrill && gloDrill(drill);
+
+    // 定义全局drill
+    defineProperty(glo, 'drill', {
+        get: () => drill,
+        set(func) {
+            if (isFunction(func)) {
+                func(drill);
+            } else {
+                console.error('drill type error =>', func);
             }
-        });
-    }
+        }
+    });
 })(window);
