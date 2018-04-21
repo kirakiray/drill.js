@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="drill.js" drill-cache="20" async></script>
+</head>
+
+<body>
+    <script>
+        drill = async(drill) => {
+            drill.config({
+                baseUrl: "js/",
+                paths: {
+                    aa: "dir1/d1",
+                    'a/': "dir1/"
+                }
+            });
+            // require('a?a=a1&b=b1   -r', 'b.js', 'c', 'd')
+            //     .pend(data => {
+            //         console.log('pend => ', data);
+            //     })
+            //     .then(([a, b, c, d]) => {
+            //         console.log('结束', a, b, c, d);
+            //     });
+            // require('c')
+            //     .pend(data => {
+            //         console.log('pend2 => ', data);
+            //     })
+            //     .then((c) => {
+            //         console.log('c的值是=>', c);
+            //     });
+
+            setTimeout(async() => {
+                let data = await require('d').post({
+                    pp: "I am post data"
+                });
+
+                console.log('after task => ', data);
+            }, 100);
+
+            let d1 = await require('dir1/d1');
+            // let d1 = await require('aa');
+            // let d1 = await require('a/d1');
+
+            console.log('d1 => ', d1);
+        }
+    </script>
+</body>
+
+</html>

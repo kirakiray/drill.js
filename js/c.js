@@ -1,0 +1,3 @@
+define((require) => {
+    return 'hahahahahahahahahaha';
+});
