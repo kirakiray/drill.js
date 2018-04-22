@@ -17,9 +17,17 @@
 
     var g2 = expect(3, 'pend函数');
 
-    (async () => {
+    var g3 = expect(2, '映射目录测试');
+
+    drill = async (drill) => {
         drill.config({
-            baseUrl: "js/"
+            baseUrl: "js/",
+            paths: {
+                // 映射目录
+                "long/": "long1/long2/long3/",
+                // 映射文件
+                fileL2: "long1/long2/long3/l2"
+            }
         });
 
         g1.ok(1, 'run file01 start');
@@ -70,7 +78,19 @@
             });
 
         g1.ok(1, 'task test ok');
-    })();
+
+        // 映射目录测试
+        let fileL1 = await require('long/l1');
+        if (fileL1 == 'long file01') {
+            g3.ok(1, '映射目录成功');
+        }
+
+        // 映射文件测试
+        let fileL2 = await require('fileL2');
+        if (fileL2 == 'long file02') {
+            g3.ok(1, 'fileL2文件读取成功');
+        }
+    };
 </script>
 
 </html>

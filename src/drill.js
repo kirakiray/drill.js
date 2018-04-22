@@ -36,6 +36,7 @@
         tempM: {}
     };
 
+    // test
     glo.baseResources = baseResources;
 
     // function
@@ -135,65 +136,6 @@
         }
     }
 
-    // extendCommon
-    // const ANALYZEURL = 'analyzeUrl',
-    //     FIXPATH = "fixPath",
-    //     REQUIRE = "require";
-
-    // // extend 主体扩展框架
-
-    // // 扩展方法寄存对象
-    // let extObj = {};
-
-    // // 写入逻辑
-    // each([ANALYZEURL, FIXPATH, REQUIRE], name => {
-    //     // 数组
-    //     let arr = [];
-
-    //     // 记录器
-    //     extObj[name] = {
-    //         // arg method
-    //         a(arg) {
-    //             return arg;
-    //         },
-    //         // return method
-    //         r(reobj) {
-    //             return reobj;
-    //         },
-    //         // funcitons
-    //         f: arr
-    //     };
-    // });
-
-    // // 主体扩展方法
-    // const ext = (name, func) => {
-    //     let tar = extObj[name];
-    //     if (tar) {
-    //         tar.f.push(func);
-    //     }
-    // }
-
-    // 主体扩展方法
-    const ext = (f_name, func) => {
-        // 参数数组
-        let args = [];
-
-        // 旧的方法
-        let oldFunc;
-
-        // 中间件方法
-        let middlewareFunc = (...args) => {
-            return func(args, oldFunc);
-        };
-
-        switch (f_name) {
-            case "analyzeUrl":
-                oldFunc = analyzeUrl;
-                analyzeUrl = middlewareFunc;
-                break;
-        }
-    }
-
     // main
     /**
      * 初步简单拆分url数据，将url字符串转换为object
@@ -260,7 +202,7 @@
      * 修正paths映射地址
      * 根据path得出fileType
      */
-    const fixPath = urlData => {
+    let fixPath = urlData => {
         let {
             ori
         } = urlData;
@@ -319,11 +261,13 @@
 
         // 添加后缀
         path += "." + urlData.fileType;
-
         urlData.path = path;
 
         // 根据资源地址计算资源目录
         urlData.dir = getDir(path);
+
+        // 写入最终请求资源地址
+        urlData.link = path + "?" + urlData.search;
 
         return urlData;
     };
@@ -332,7 +276,7 @@
      * 主体require方法
      * 负责组装基础业务
      */
-    const require = (urlObjs) => {
+    let require = urlObjs => {
         // pend函数寄存
         let pendFunc;
 
@@ -430,7 +374,7 @@
      * 加载资源前的代理操作
      * 如果加载过就直接返回内存里的数据
      */
-    const loadAgent = urlData => promise((res, rej) => {
+    let loadAgent = urlData => promise((res, rej) => {
         let {
             path
         } = urlData;
@@ -526,7 +470,7 @@
      * 加载资源
      * 资源判断，js文件就进行loadjs
      */
-    const loadSource = async urlData => {
+    let loadSource = async urlData => {
         let statData;
         let {
             fileType
@@ -554,7 +498,7 @@
      * define 模块类型
      * task 进程类型
      */
-    const loadJS = async urlData => {
+    let loadJS = async urlData => {
         // 获取状态信息
         let statData = await loadScript(urlData);
 
@@ -603,12 +547,11 @@
     /**
      * 加载 script
      */
-    const loadScript = urlData => promise(res => {
+    let loadScript = urlData => promise(res => {
         let {
+            link,
             path,
-            search
         } = urlData;
-        search && (path = path + "?" + search);
 
         // 主体script
         let script = document.createElement('script');
@@ -616,7 +559,7 @@
         //填充相应数据
         script.type = 'text/javascript';
         script.async = true;
-        path && (script.src = path);
+        path && (script.src = link);
 
         // 添加事件
         script.addEventListener('load', () => {
@@ -661,7 +604,7 @@
     }));
 
     // 设置define模块
-    const setDefine = async urlData => {
+    let setDefine = async urlData => {
         // 获取临时数据
         let {
             d
@@ -708,7 +651,7 @@
     }
 
     // 设置task模块
-    const setTask = async urlData => {
+    let setTask = async urlData => {
         // 获取临时数据
         let {
             tempM
@@ -798,7 +741,55 @@
             }
         },
         // 中间件扩展方法
-        ext
+        ext(f_name, func) {
+            // 旧的方法
+            let oldFunc;
+
+            // 中间件方法
+            let middlewareFunc = (...args) => func(args, oldFunc, {
+                baseResources
+            });
+
+            // 替换中间方法
+            switch (f_name) {
+                case "analyzeUrl":
+                    oldFunc = analyzeUrl;
+                    analyzeUrl = middlewareFunc;
+                    break;
+                case "fixPath":
+                    oldFunc = fixPath;
+                    fixPath = middlewareFunc;
+                    break;
+                case "require":
+                    oldFunc = require;
+                    require = middlewareFunc;
+                    break;
+                case "loadAgent":
+                    oldFunc = loadAgent;
+                    loadAgent = middlewareFunc;
+                    break;
+                case "loadSource":
+                    oldFunc = loadSource;
+                    loadSource = middlewareFunc;
+                    break;
+                case "loadJS":
+                    oldFunc = loadJS;
+                    loadJS = middlewareFunc;
+                    break;
+                case "loadScript":
+                    oldFunc = loadScript;
+                    loadScript = middlewareFunc;
+                    break;
+                case "setDefine":
+                    oldFunc = setDefine;
+                    setDefine = middlewareFunc;
+                    break;
+                case "setTask":
+                    oldFunc = setTask;
+                    setTask = middlewareFunc;
+                    break;
+            }
+        }
     };
 
     // 模块初始化类型

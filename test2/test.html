@@ -21,26 +21,25 @@
             });
 
             // 模拟扩展
-            drill.ext('analyzeUrl', ([str], next) => {
-                debugger
-                let reobj = next(str);
+            drill.ext('analyzeUrl', ([...arg], next) => {
+                let reobj = next(...arg);
                 return reobj;
             });
+
 
             // 模拟扩展
-            drill.ext('analyzeUrl', ([str], next) => {
-                debugger
-                let reobj = next(str);
+            drill.ext('loadAgent', ([...arg], next) => {
+                let reobj = next(...arg);
                 return reobj;
             });
 
-            // require('a?a=a1&b=b1', 'b.js', 'c', 'd')
-            //     .pend(data => {
-            //         console.log('pend => ', data);
-            //     })
-            //     .then(([a, b, c, d]) => {
-            //         console.log('结束', a, b, c, d);
-            //     });
+            require('a?a=a1&b=b1', 'b.js', 'c', 'd')
+                .pend(data => {
+                    console.log('pend => ', data);
+                })
+                .then(([a, b, c, d]) => {
+                    console.log('结束', a, b, c, d);
+                });
             // require('c')
             //     .pend(data => {
             //         console.log('pend2 => ', data);
@@ -49,14 +48,16 @@
             //         console.log('c的值是=>', c);
             //     });
 
-            setTimeout(async () => {
-                let data = await require('d').post({
-                    // let data = await require('js/d -r').post({
-                    pp: "I am post data"
-                });
 
-                console.log('after task => ', data);
-            }, 100);
+            // setTimeout(async () => {
+            //     let data = await require('d').post({
+            //         // let data = await require('js/d -r').post({
+            //         pp: "I am post data"
+            //     });
+
+            //     console.log('after task => ', data);
+            // }, 100);
+
 
             // drill.loaders.min = async (urlData) => {
             //     debugger
@@ -74,10 +75,10 @@
             //     };
             // };
 
+
             let d1 = await require('dir1/d1');
             // let d1 = await require('aa');
             // let d1 = await require('a/d1');
-
             console.log('d1 => ', d1);
         }
     </script>
