@@ -6,12 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
-    <script src="drill.js" drill-cache="21" async></script>
+    <script src="../src/drill.js" drill-cache="22" async></script>
 </head>
 
 <body>
     <script>
-        drill = async(drill) => {
+        drill = async (drill) => {
             drill.config({
                 baseUrl: "js/",
                 paths: {
@@ -19,7 +19,7 @@
                     'a/': "dir1/"
                 }
             });
-            // require('a?a=a1&b=b1   -r', 'b.js', 'c', 'd')
+            // require('a?a=a1&b=b1', 'b.js', 'c', 'd')
             //     .pend(data => {
             //         console.log('pend => ', data);
             //     })
@@ -34,13 +34,30 @@
             //         console.log('c的值是=>', c);
             //     });
 
-            setTimeout(async() => {
+            setTimeout(async () => {
                 let data = await require('d').post({
+                    // let data = await require('js/d -r').post({
                     pp: "I am post data"
                 });
 
                 console.log('after task => ', data);
             }, 100);
+
+            // drill.loaders.min = async (urlData) => {
+            //     debugger
+            //     return {
+            //         stat: 1,
+            //         o: {
+            //             async get() {
+            //                 return await new Promise(res => {
+            //                     setTimeout(() => {
+            //                         res(100000);
+            //                     }, 1000);
+            //                 });
+            //             }
+            //         }
+            //     };
+            // };
 
             let d1 = await require('dir1/d1');
             // let d1 = await require('aa');

@@ -92,13 +92,18 @@
     const promise = func => new Promise(func);
     // 数组each
     const each = (arr, func) => arr.forEach(func);
-    const { assign, defineProperty } = Object;
+    const {
+        assign,
+        defineProperty,
+        keys
+    } = Object;
     //获取类型
     var objectToString = Object.prototype.toString;
     var getType = value => objectToString.call(value).toLowerCase().replace(/(\[object )|(])/g, '');
     var isFunction = d => getType(d).search('function') > -1;
     // 获取随机id
     var getRandomId = () => Math.random().toString(32).substr(2);
+    var isEmptyObj = obj => !(0 in keys(obj));
 
     // Class
     // 状态记录器类
@@ -109,7 +114,7 @@
                 tobe: [],
                 fileType,
                 // 默认是空的获取函数
-                get: async() => {},
+                get: async () => {},
                 // stat监听函数存放列表
                 _sl: []
             });
@@ -135,7 +140,7 @@
      * 初步简单拆分url数据，将url字符串转换为object
      * 按空格拆分数组，第二个数开始是附加参数
      */
-    const analyzeUrl = urls => urls.map(str => {
+    const analyzeUrl = str => {
         // 拆分空格数据
         let ndata = str.split(/\s/).filter(e => e && e);
 
@@ -150,16 +155,19 @@
         }
 
         // 判断是否要加版本号
-        let { k, v } = drill.cacheInfo;
+        let {
+            k,
+            v
+        } = drill.cacheInfo;
         if (k && v) {
             search && (search += "&");
             search += k + '=' + v;
         }
 
-        let fileType = getFileType(ori) || "js";
-
         // 加载错误时间和间隔时间
-        let { loadNum } = errInfo;
+        let {
+            loadNum
+        } = errInfo;
         let errLoadTime = errInfo.time;
 
         // 返回数据
@@ -168,7 +176,6 @@
             str,
             // 资源地址
             ori,
-            fileType,
             // url参数
             search,
             // 空格组参数
@@ -183,7 +190,7 @@
                 rid: getRandomId()
             }
         };
-    });
+    };
 
     /**
      * 修正地址，得出path
@@ -193,7 +200,9 @@
      * 根据path得出fileType
      */
     const fixPath = urlData => {
-        let { ori } = urlData;
+        let {
+            ori
+        } = urlData;
 
         // 查看是否有映射路径
         let tarpath = paths[ori];
@@ -214,19 +223,24 @@
 
         // 得出fileType
         let fileType = getFileType(ori);
-        if (!fileType) {
+
+        // 查看loader内是否存在这个类型
+        if (!fileType || !loaders[fileType]) {
             fileType = 'js';
-        } else {
-            // ori去掉后缀
-            ori = ori.replace(new RegExp('\\.' + fileType + "$"), "")
         }
+
         urlData.fileType = fileType;
+
+        // ori去掉后缀
+        ori = ori.replace(new RegExp('\\.' + fileType + "$"), "")
 
         // 主体path
         let path = ori;
 
-        // 分析前缀，是否有相对路径，并对其修正
-        if (urlData.rel) {
+        // 判断是否有基于根目录参数
+        if (urlData.param.indexOf('-r') > -1) {
+            // debugger
+        } else if (urlData.rel && /^\./.test(path)) {
             // 添加相对路径
             path = urlData.rel + path;
         } else {
@@ -258,14 +272,18 @@
      * 如果加载过就直接返回内存里的数据
      */
     const loadAgent = urlData => promise((res, rej) => {
-        let { path } = urlData;
+        let {
+            path
+        } = urlData;
         let tar = bag[path];
 
         if (!tar) {
             tar = bag[path] = new DrillStat(urlData.fileType);
 
             // 错误加载次数
-            let { loadNum } = urlData;
+            let {
+                loadNum
+            } = urlData;
 
             // 加载资源
             let loadfun = () => {
@@ -305,11 +323,12 @@
                         });
 
                         // 清空
-                        loadfun = null;
+                        delete bag[path];
                     }
 
-                    // 清空内存
+                    // 清空
                     delete tar.tobe;
+                    loadfun = null;
                 })
             }
             loadfun();
@@ -353,14 +372,15 @@
      */
     const loadSource = async urlData => {
         let statData;
-        let { fileType } = urlData;
+        let {
+            fileType
+        } = urlData;
         // 主体加载js类型
         if (fileType === "js") {
             statData = await loadJS(urlData);
         } else if (loaders[fileType]) {
             // 加载其他文件类型
-            debugger
-            statData = await loaders[fileType];
+            statData = await loaders[fileType](urlData);
         } else {
             // 不能加载这种文件类型
             statData = {
@@ -383,8 +403,12 @@
         let statData = await loadScript(urlData);
 
         // 获取临时数据
-        let { tempM } = baseResources;
-        let { type } = tempM;
+        let {
+            tempM
+        } = baseResources;
+        let {
+            type
+        } = tempM;
 
         if (type) {
             // 设置类型
@@ -424,7 +448,10 @@
      * 加载 script
      */
     const loadScript = urlData => promise(res => {
-        let { path, search } = urlData;
+        let {
+            path,
+            search
+        } = urlData;
         search && (path = path + "?" + search);
 
         // 主体script
@@ -440,7 +467,9 @@
             res({
                 stat: 1,
                 // 最终合并到bag
-                o: { script }
+                o: {
+                    script
+                }
             });
         });
 
@@ -463,75 +492,78 @@
     });
 
     // 生成内部用的require
-    let getInRequire = (dir, hand) => {
-        return (...args) => {
-            let urlObjs = analyzeUrl(args);
+    let getInRequire = (dir, hand) => (...args) => require(args.map(e => {
+        e = analyzeUrl(e)
 
-            // 添加相对目录地址
-            each(urlObjs, e => {
-                e.rel = dir;
+        // 添加相对目录
+        e.rel = dir;
 
-                // 握手数据
-                e.parHand = hand;
-            });
+        // 握手数据
+        e.parHand = hand;
 
-            return require(urlObjs.map(e => fixPath(e)));
-        };
-    }
+        return fixPath(e);
+    }));
 
     // 设置define模块
     const setDefine = async urlData => {
         // 获取临时数据
-        let { tempM } = baseResources;
-        let { d } = tempM;
-
-        // get函数
-        let getFunc;
-
-        // 根据内容填充函数
-        // let dType = getType(d);
-        // if (dType.search('function') > -1) {
-        if (isFunction(d)) {
-            let { dir, hand } = urlData;
-            // 函数类型
-            let v = d(getInRequire(dir, hand));
-
-            // Promise函数
-            if (v instanceof Promise) {
-                // 等待获取
-                v = await v;
-            }
-            // 直接返回获取的数据
-            getFunc = async() => v;
-        } else {
-            // Promise函数
-            if (d instanceof Promise) {
-                // 等待获取
-                d = await d;
-            }
-            // 直接获取数据
-            getFunc = async() => d;
-        }
+        let {
+            d
+        } = baseResources.tempM;
 
         // 清空tempM
         baseResources.tempM = {};
 
+        let exports = {},
+            module = {
+                exports
+            };
+
+        // 根据内容填充函数
+        if (isFunction(d)) {
+            let {
+                dir,
+                hand,
+                path
+            } = urlData;
+
+            // 函数类型
+            d = d(getInRequire(dir, hand), exports, module, {
+                FILE: path,
+                DIR: dir
+            });
+        }
+
+        // Promise函数
+        if (d instanceof Promise) {
+            // 等待获取
+            d = await d;
+        }
+
+        // 判断值是否在 exports 上
+        if (!d && !isEmptyObj(module.exports)) {
+            d = module.exports;
+        }
+
         // 返回 get函数
         return {
-            get: getFunc
+            get: async () => d
         };
     }
 
     // 设置task模块
     const setTask = async urlData => {
         // 获取临时数据
-        let { tempM } = baseResources;
-        let { d } = tempM;
+        let {
+            tempM
+        } = baseResources;
+        let {
+            d
+        } = tempM;
 
         // 判断d是否函数
-        // if (getType(d).search('function') == -1) {
         if (!isFunction(d)) {
-            throw 'set task error, it must be a function';
+            throw 'drill\'s task must be a function';
         }
 
         // 清空tempM
@@ -539,9 +571,20 @@
 
         // 直接设置函数
         return {
-            get: async(urlData) => {
-                let { dir, hand } = urlData;
-                return await d(getInRequire(dir, hand), urlData.data);
+            get: async (urlData) => {
+                let {
+                    dir,
+                    hand,
+                    path,
+                    data
+                } = urlData;
+
+                let p = d(getInRequire(dir, hand), data, {
+                    FILE: path,
+                    DIR: dir
+                });
+
+                return await p;
             }
         };
     }
@@ -584,7 +627,7 @@
                         let errors = [];
 
                         // 遍历加载
-                        each(urlObjs, async(urlData, i) => {
+                        each(urlObjs, async (urlData, i) => {
                             let stat = 1;
                             // 获取数据
                             let sdata = await loadAgent(urlData).catch(() => {
@@ -648,7 +691,7 @@
     // 暴露给外部用的主体对象
     let drill = {
         // 外部用require
-        require: (...args) => require(analyzeUrl(args).map(e => fixPath(e))),
+        require: (...args) => require(args.map(e => fixPath(analyzeUrl(e)))),
         // 加载器
         loaders,
         // 处理器
@@ -682,6 +725,19 @@
             k: "d_ver",
             // // value
             // v: ""
+        },
+        remove(url) {
+            //获取路径
+            let {
+                path
+            } = fixPath(analyzeUrl(url));
+
+            if (bag[path]) {
+                delete bag[path];
+
+                //告示删除成功
+                return !0;
+            }
         }
     };
 
