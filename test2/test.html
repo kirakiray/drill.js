@@ -19,6 +19,21 @@
                     'a/': "dir1/"
                 }
             });
+
+            // 模拟扩展
+            drill.ext('analyzeUrl', ([str], next) => {
+                debugger
+                let reobj = next(str);
+                return reobj;
+            });
+
+            // 模拟扩展
+            drill.ext('analyzeUrl', ([str], next) => {
+                debugger
+                let reobj = next(str);
+                return reobj;
+            });
+
             // require('a?a=a1&b=b1', 'b.js', 'c', 'd')
             //     .pend(data => {
             //         console.log('pend => ', data);

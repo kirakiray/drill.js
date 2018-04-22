@@ -114,7 +114,7 @@
                 tobe: [],
                 fileType,
                 // 默认是空的获取函数
-                get: async () => {},
+                get: async () => { },
                 // stat监听函数存放列表
                 _sl: []
             });
@@ -135,12 +135,71 @@
         }
     }
 
+    // extendCommon
+    // const ANALYZEURL = 'analyzeUrl',
+    //     FIXPATH = "fixPath",
+    //     REQUIRE = "require";
+
+    // // extend 主体扩展框架
+
+    // // 扩展方法寄存对象
+    // let extObj = {};
+
+    // // 写入逻辑
+    // each([ANALYZEURL, FIXPATH, REQUIRE], name => {
+    //     // 数组
+    //     let arr = [];
+
+    //     // 记录器
+    //     extObj[name] = {
+    //         // arg method
+    //         a(arg) {
+    //             return arg;
+    //         },
+    //         // return method
+    //         r(reobj) {
+    //             return reobj;
+    //         },
+    //         // funcitons
+    //         f: arr
+    //     };
+    // });
+
+    // // 主体扩展方法
+    // const ext = (name, func) => {
+    //     let tar = extObj[name];
+    //     if (tar) {
+    //         tar.f.push(func);
+    //     }
+    // }
+
+    // 主体扩展方法
+    const ext = (f_name, func) => {
+        // 参数数组
+        let args = [];
+
+        // 旧的方法
+        let oldFunc;
+
+        // 中间件方法
+        let middlewareFunc = (...args) => {
+            return func(args, oldFunc);
+        };
+
+        switch (f_name) {
+            case "analyzeUrl":
+                oldFunc = analyzeUrl;
+                analyzeUrl = middlewareFunc;
+                break;
+        }
+    }
+
     // main
     /**
      * 初步简单拆分url数据，将url字符串转换为object
      * 按空格拆分数组，第二个数开始是附加参数
      */
-    const analyzeUrl = str => {
+    let analyzeUrl = str => {
         // 拆分空格数据
         let ndata = str.split(/\s/).filter(e => e && e);
 
@@ -170,8 +229,7 @@
         } = errInfo;
         let errLoadTime = errInfo.time;
 
-        // 返回数据
-        return {
+        let reobj = {
             // 最初是字符串
             str,
             // 资源地址
@@ -189,7 +247,10 @@
             hand: {
                 rid: getRandomId()
             }
-        };
+        }
+
+        // 返回数据
+        return reobj;
     };
 
     /**
@@ -239,13 +300,13 @@
 
         // 判断是否有基于根目录参数
         if (urlData.param.indexOf('-r') > -1) {
-            // debugger
-        } else if (urlData.rel && /^\./.test(path)) {
+            path = ori;
+        } else if (urlData.rel && /^\./.test(ori)) {
             // 添加相对路径
-            path = urlData.rel + path;
+            path = urlData.rel + ori;
         } else {
             // 添加相对目录，得出资源地址
-            path = baseResources.baseUrl + path;
+            path = baseResources.baseUrl + ori;
         }
 
         // 修正单点
@@ -266,6 +327,104 @@
 
         return urlData;
     };
+
+    /**
+     * 主体require方法
+     * 负责组装基础业务
+     */
+    const require = (urlObjs) => {
+        // pend函数寄存
+        let pendFunc;
+
+        let p = promise((res, rej) => {
+            nextTick(() => {
+                let len = urlObjs.length;
+                let sum = len;
+                switch (len) {
+                    case 0:
+                        // 空的你还引用干嘛
+                        throw ('no resource path');
+                    case 1:
+                        // 单个直接返回
+                        loadAgent(urlObjs[0]).then(d => {
+                            pendFunc && pendFunc({
+                                id: 0,
+                                sum,
+                                // 成功
+                                stat: 1
+                            });
+                            res(d);
+                        }).catch(e => {
+                            rej();
+                        });
+                        break;
+                    default:
+                        // 多个情况下返回数组
+                        let reDatas = [];
+
+                        // 是否有错误
+                        let errors = [];
+
+                        // 遍历加载
+                        each(urlObjs, async (urlData, i) => {
+                            let stat = 1;
+                            // 获取数据
+                            let sdata = await loadAgent(urlData).catch(() => {
+                                errors.push(i);
+                                stat = 0;
+                            });
+
+                            // 设置数据
+                            reDatas[i] = sdata;
+
+                            // 触发pending
+                            pendFunc && pendFunc({
+                                // 当前所处id
+                                id: i,
+                                // 总数
+                                sum,
+                                stat
+                            });
+
+                            // 递减数目
+                            len--;
+
+                            // 当达到数目，返回数据
+                            if (!len) {
+                                if (0 in errors) {
+                                    rej({
+                                        // 总共错误的id
+                                        errors,
+                                        // 返回总结果
+                                        result: reDatas
+                                    });
+                                } else {
+                                    res(reDatas);
+                                }
+                            }
+                        });
+                }
+            });
+        });
+
+        // 传送数据的方法
+        p.post = d => {
+            // 将数据设置到urlObject上
+            each(urlObjs, e => {
+                e.data = d;
+            });
+            return p;
+        };
+
+        // pending记录
+        p.pend = func => {
+            pendFunc = func;
+            return p;
+        }
+
+        // 放回promise
+        return p;
+    }
 
     /**
      * 加载资源前的代理操作
@@ -360,9 +519,6 @@
                     rej
                 });
                 break;
-            default:
-                // 其他状态一律是错误
-                debugger
         }
     })
 
@@ -589,104 +745,6 @@
         };
     }
 
-    /**
-     * 主体require方法
-     * 负责组装基础业务
-     */
-    const require = (urlObjs) => {
-        // pend函数寄存
-        let pendFunc;
-
-        let p = promise((res, rej) => {
-            nextTick(() => {
-                let len = urlObjs.length;
-                let sum = len;
-                switch (len) {
-                    case 0:
-                        // 空的你还引用干嘛
-                        throw ('no resource path');
-                    case 1:
-                        // 单个直接返回
-                        loadAgent(urlObjs[0]).then(d => {
-                            pendFunc && pendFunc({
-                                id: 0,
-                                sum,
-                                // 成功
-                                stat: 1
-                            });
-                            res(d);
-                        }).catch(e => {
-                            rej();
-                        });
-                        break;
-                    default:
-                        // 多个情况下返回数组
-                        let reDatas = [];
-
-                        // 是否有错误
-                        let errors = [];
-
-                        // 遍历加载
-                        each(urlObjs, async (urlData, i) => {
-                            let stat = 1;
-                            // 获取数据
-                            let sdata = await loadAgent(urlData).catch(() => {
-                                errors.push(i);
-                                stat = 0;
-                            });
-
-                            // 设置数据
-                            reDatas[i] = sdata;
-
-                            // 触发pending
-                            pendFunc && pendFunc({
-                                // 当前所处id
-                                id: i,
-                                // 总数
-                                sum,
-                                stat
-                            });
-
-                            // 递减数目
-                            len--;
-
-                            // 当达到数目，返回数据
-                            if (!len) {
-                                if (0 in errors) {
-                                    rej({
-                                        // 总共错误的id
-                                        errors,
-                                        // 返回总结果
-                                        result: reDatas
-                                    });
-                                } else {
-                                    res(reDatas);
-                                }
-                            }
-                        });
-                }
-            });
-        });
-
-        // 传送数据的方法
-        p.post = d => {
-            // 将数据设置到urlObject上
-            each(urlObjs, e => {
-                e.data = d;
-            });
-            return p;
-        };
-
-        // pending记录
-        p.pend = func => {
-            pendFunc = func;
-            return p;
-        }
-
-        // 放回promise
-        return p;
-    }
-
     // init
     // 暴露给外部用的主体对象
     let drill = {
@@ -738,7 +796,9 @@
                 //告示删除成功
                 return !0;
             }
-        }
+        },
+        // 中间件扩展方法
+        ext
     };
 
     // 模块初始化类型
