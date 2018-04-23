@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
-    <script src="../src/drill.js" drill-cache="22" async></script>
+    <script src="../src/drill.js" drill-cache="22"></script>
 </head>
 
 <body>
@@ -76,10 +76,10 @@
             // };
 
 
-            let d1 = await require('dir1/d1');
+            let [d1, jsondata] = await require('dir1/d1', 'test.json');
             // let d1 = await require('aa');
             // let d1 = await require('a/d1');
-            console.log('d1 => ', d1);
+            console.log('d1 => ', d1, '  test.json => ', jsondata);
         }
     </script>
 </body>

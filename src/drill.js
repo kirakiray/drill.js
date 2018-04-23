@@ -10,13 +10,6 @@
     // 载入状态路径映射对象
     let bag = {};
 
-    // 加载器（针对文件类型）
-    let loaders = {
-        css(urlData) {
-            debugger
-        }
-    };
-
     // 处理器（针对js类型）
     let processor = {};
 
@@ -109,6 +102,54 @@
     // 获取随机id
     var getRandomId = () => Math.random().toString(32).substr(2);
     var isEmptyObj = obj => !(0 in keys(obj));
+
+    // 加载器（针对文件类型）
+    let loaders = {
+        // 样式文件
+        css: urlData => promise(res => {
+            // 给主体添加css
+            let linkEle = document.createElement('link');
+            linkEle.rel = "stylesheet";
+            linkEle.href = urlData.link;
+
+            linkEle.onload = () => {
+                res({
+                    stat: 1
+                })
+            }
+
+            linkEle.onerror = () => {
+                res({
+                    stat: 0
+                })
+            }
+
+            // 设置状态
+            bag[urlData.path].stat = 3;
+
+            // 添加到head
+            document.head.appendChild(linkEle);
+        }),
+        json: async urlData => {
+            // 设置状态
+            bag[urlData.path].stat = 3;
+
+            // 请求数据
+            let data = await fetch(urlData.link);
+
+            // 转换json格式
+            data = await data.json();
+
+            return {
+                stat: 1,
+                o: {
+                    async get() {
+                        return data;
+                    }
+                }
+            };
+        }
+    };
 
     // Class
     // 状态记录器类

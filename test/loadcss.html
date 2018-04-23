@@ -13,8 +13,9 @@
     我是正文，看看 css 文件是否异步载入成功了
 </body>
 <script>
-    setTimeout(function () {
-        require('css/incss/test.css');
+    setTimeout(async function () {
+        let a = await require('css/incss/test.css');
+        let b = await require('css/incss/test.css');
     }, 1000);
 </script>
 

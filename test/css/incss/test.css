@@ -1,4 +1,6 @@
 body {
     background-color: #aaa;
     color: #333;
+    font-size: 14px;
+    transition: all ease 1s;
 }
