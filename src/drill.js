@@ -11,7 +11,11 @@
     let bag = {};
 
     // 加载器（针对文件类型）
-    let loaders = {};
+    let loaders = {
+        css(urlData) {
+            debugger
+        }
+    };
 
     // 处理器（针对js类型）
     let processor = {};
@@ -115,7 +119,7 @@
                 tobe: [],
                 fileType,
                 // 默认是空的获取函数
-                get: async () => { },
+                get: async () => {},
                 // stat监听函数存放列表
                 _sl: []
             });
