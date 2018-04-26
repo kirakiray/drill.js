@@ -12,19 +12,19 @@
 <body>
     <script>
         // (async function () {
-            
+
         // })()
         require('a');
 
 
-define(async(require)=>{
-    let d1 = await require('js/d1');
-    
-    return {
-        val:"I am d2.js",
-        d1val:d1.val
-    };
-});
+        define(async (require) => {
+            let d1 = await require('js/d1');
+
+            return {
+                val: "I am d2.js",
+                d1val: d1.val
+            };
+        });
     </script>
 </body>
 
