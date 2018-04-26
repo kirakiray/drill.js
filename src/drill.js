@@ -864,7 +864,6 @@
 
     // 判断全局是否存在变量 drill
     let gloDrill = glo.drill;
-    gloDrill && gloDrill(drill);
 
     // 定义全局drill
     defineProperty(glo, 'drill', {
@@ -877,4 +876,7 @@
             }
         }
     });
+
+    // 执行全局的 drill函数
+    gloDrill && gloDrill(drill);
 })(window);
