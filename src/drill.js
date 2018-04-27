@@ -339,6 +339,7 @@
                             pendFunc && pendFunc({
                                 id: 0,
                                 sum,
+                                ready: 1,
                                 // 成功
                                 stat: 1
                             });
@@ -372,6 +373,7 @@
                                 id: i,
                                 // 总数
                                 sum,
+                                ready: sum - len + 1,
                                 stat
                             });
 
@@ -552,8 +554,14 @@
             tempM
         } = baseResources;
         let {
-            type
+            type,
+            moduleId
         } = tempM;
+
+        // 判断是否有自定义id
+        if (moduleId) {
+            bag[moduleId] || (bag[moduleId] = bag[urlData.path]);
+        }
 
         if (type) {
             // 设置类型
@@ -702,7 +710,8 @@
             tempM
         } = baseResources;
         let {
-            d
+            d,
+            moduleId
         } = tempM;
 
         // 判断d是否函数
