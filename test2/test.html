@@ -20,6 +20,10 @@
                 }
             });
 
+            // drill.onerror = (err)=>{
+            //     debugger
+            // }
+
             // 模拟扩展
             drill.ext('analyzeUrl', ([...arg], next) => {
                 let reobj = next(...arg);

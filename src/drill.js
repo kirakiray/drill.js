@@ -389,6 +389,16 @@
                                         // 返回总结果
                                         result: reDatas
                                     });
+
+                                    // 全局错误
+                                    drill.onerror && drill.onerror({
+                                        // 总共错误的id
+                                        errors,
+                                        // 返回总结果
+                                        result: reDatas,
+                                        args: urlObjs.map(e => e.str)
+                                    });
+
                                 } else {
                                     res(reDatas);
                                 }
