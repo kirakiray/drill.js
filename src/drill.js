@@ -33,9 +33,6 @@
         tempM: {}
     };
 
-    // test
-    glo.baseResources = baseResources;
-
     // function
     //改良异步方法
     const nextTick = (() => {
@@ -217,7 +214,7 @@
         let errLoadTime = errInfo.time;
 
         let reobj = {
-            // 最初是字符串
+            // 最初的字符串
             str,
             // 资源地址
             ori,
@@ -603,6 +600,9 @@
             statData.o.jsType = "file";
         }
 
+        // 清空tempM
+        baseResources.tempM = {};
+
         // 返回状态信息
         return statData;
     };
@@ -673,9 +673,6 @@
             d
         } = baseResources.tempM;
 
-        // 清空tempM
-        baseResources.tempM = {};
-
         let exports = {},
             module = {
                 exports
@@ -729,9 +726,6 @@
             throw 'drill\'s task must be a function';
         }
 
-        // 清空tempM
-        baseResources.tempM = {};
-
         // 直接设置函数
         return {
             get: async (urlData) => {
@@ -755,6 +749,8 @@
     // init
     // 暴露给外部用的主体对象
     let drill = {
+        // 内部基础数据对象
+        baseResources,
         // 外部用require
         require: (...args) => require(args.map(e => fixPath(analyzeUrl(e)))),
         // 加载器
