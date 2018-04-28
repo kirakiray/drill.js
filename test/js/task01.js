@@ -1,6 +1,9 @@
 var g2 = expect(2, '两次task01运行');
 
-task(async(require, data, { FILE }) => {
+task(async (require, data, {
+    FILE
+}) => {
+
     let d1 = await require('./define/define01');
     ok(d1.val == "I am define01", "relative path");
 
@@ -9,7 +12,7 @@ task(async(require, data, { FILE }) => {
 
     ok(FILE == "js/task01.js", "FILE(task01) is ok");
 
-    var data = await new Promise((res, rej) => {
+    data = await new Promise((res, rej) => {
         setTimeout(() => {
             res(n1 + n2);
         }, 500);

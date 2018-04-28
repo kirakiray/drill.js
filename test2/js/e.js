@@ -1,0 +1,3 @@
+task(async(require) => {
+    require();
+});

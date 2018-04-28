@@ -1,63 +1,55 @@
-drill.extend((baseResources, R) => {
-    // 旧的方法
-    let old_loadscript = R.loadScript;
-
-    // 基础替换 ------
-    R.loadScript = (pathOption, res, rej) => {
-        let script;
-
-        // 判断b64数据库里是否有
-        let b64data = b64Databases[pathOption.path];
-        if (b64data) {
-            // 清理b64对象数据
-            b64Databases[pathOption.path] = !1;
-
-            // 执行旧方法得到script
-            script = old_loadscript({
-                path: ""
-            }, res, rej);
-
-            // 替换base64地址
-            script.src = b64data;
-        } else if (isInstall && loadStall) {
-            script = loadStall(pathOption, res, rej);
-        } else {
-            // 继承旧的方法
-            script = old_loadscript.call(R, pathOption, res, rej);
-        }
-        return script;
-    }
-
+// 离线存储插件
+(() => {
     // base64数据库（内存数据库） ------
     let b64Databases = {};
     drill.setModule = (pathname, b64) => {
         b64Databases[pathname] = b64;
     }
 
-    // indexDB离线数据库(硬盘数据库) ------
-    var installer = drill.installer = {};
-
     // 是否离线安装
     // 默认安装选择是false
-    let isInstall = false;
+    let isInstall = true;
+
+    // 间接扩展
+    drill.ext('loadSource', async ([...args], next) => {
+        let [urlObj] = args;
+
+        // 判断是否在base64库里面
+        if (b64Databases[urlObj.path]) {
+            urlObj.link = b64Databases[urlObj.path];
+        } else if (isInstall && loadStall) {
+            await loadStall(urlObj);
+        }
+
+        // 继承返回
+        return next(...args);
+    });
+
+    // 从安装器读取数据
+    var loadStall;
+
     let indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
 
     // 初始化是否 install
     let cScript = document.currentScript;
     if (!cScript) {
-        cScript = document.querySelector(['drill-isinstall']);
+        cScript = document.querySelector(['drill-install']);
     }
     if (cScript) {
-        let isInstall_str = cScript.getAttribute('drill-isinstall');
-        if (isInstall_str && isInstall_str != 'false' && isInstall_str != '0') {
-            isInstall = true;
+        let isInstall_str = cScript.getAttribute('drill-install');
+        if (isInstall_str == 'false' || isInstall_str == '0') {
+            isInstall = false;
         }
     }
 
-    drill.isInstall = isInstall;
-
-    // 从安装器读取数据
-    var loadStall;
+    Object.defineProperty(drill, 'installer', {
+        set(val) {
+            isInstall = val;
+        },
+        get() {
+            return isInstall;
+        }
+    });
 
     // 初始化IndexDB逻辑
     if (indexedDB && isInstall) {
@@ -91,6 +83,8 @@ drill.extend((baseResources, R) => {
                 });
             }
         };
+
+        // 初始成功
         openRequest.onsuccess = (e) => {
             // 挂载主体db
             db = e.target.result;
@@ -103,20 +97,12 @@ drill.extend((baseResources, R) => {
                 // 返回数据
                 e.res(data);
             });
-            saveQueue.forEach(async e => {
-                // 保存数据
-                let data = await saveData(e.url, e.b64);
-
-                // 返回数据
-                e.res(data);
-            });
 
             // 清空
-            loadQueue = saveQueue = null;
+            loadQueue = null;
         }
 
         // 队列数组
-        let saveQueue = [];
         let loadQueue = [];
 
         // 获取数据方法
@@ -163,7 +149,7 @@ drill.extend((baseResources, R) => {
                     res({
                         stat: 0
                     })
-                    console.error(`save data(${url}) error`, e);
+                    console.error(`save (${url}) error`, e);
                 };
             } else {
                 // 判断是否存在db，不存在先加入队列
@@ -175,44 +161,68 @@ drill.extend((baseResources, R) => {
             }
         });
 
-        loadStall = async(pathOption, res, rej) => {
-            let { path } = pathOption;
+        // 内存寄存对象
+        let memoryData = {};
 
-            // 先读取目录，看存不存在
-            let b64_path = await loadData(path);
+        loadStall = async (urlObj) => {
+            let { path } = urlObj;
 
-            // 没有数据请求线上数据
-            if (!b64_path) {
-                let f = await fetch(path);
+            // 文件资源地址
+            let filelink;
 
-                // 转换成file
-                let file = await f.blob();
+            // 查看是否在内存数据内
+            if (memoryData[path]) {
+                filelink = memoryData[path];
+            } else {
+                // 先读取目录，看存不存在
+                let fileObject = await loadData(path);
 
-                // 转存base64
-                let b64 = await new Promise(res => {
-                    let fs = new FileReader();
-                    fs.onload = () => {
-                        res(fs.result);
-                    }
-                    fs.readAsDataURL(file);
-                });
+                // 没有数据请求线上数据
+                if (!fileObject) {
+                    // let f = await fetch(path);
 
-                // 存储数据
-                await saveData(path, b64);
+                    // // 转换成file
+                    // fileObject = await f.blob();
 
-                // 设置数据
-                b64_path = b64;
+                    // 直接获取file
+                    fileObject = await new Promise(res => {
+                        var xhr = new XMLHttpRequest();
+                        xhr.open('GET', path, true);
+                        xhr.responseType = 'blob';
+                        xhr.onload = function (e) {
+                            if (this.status == 200) {
+                                var blob = this.response;
+                                res(blob);
+                            }
+                        };
+                        xhr.send();
+                    });
+
+                    // 存储数据
+                    await saveData(path, fileObject);
+                }
+
+                switch (isInstall) {
+                    case "base64":
+                        filelink = await new Promise(res => {
+                            let fs = new FileReader();
+                            fs.onload = () => {
+                                res(fs.result);
+                            }
+                            fs.readAsDataURL(fileObject);
+                        });
+                        break;
+                    default:
+                        // 生成内存地址
+                        filelink = URL.createObjectURL(fileObject);
+                }
+
+                // 写入映射
+                memoryData[path] = filelink;
             }
 
-            // 继承旧的方法 
-            let script = old_loadscript({
-                path: ""
-            }, res, rej);
-
-            // 设置b64地址
-            script.src = b64_path;
-
-            return script;
+            // 替换link
+            urlObj.link = filelink;
         };
     }
-});
+})();
