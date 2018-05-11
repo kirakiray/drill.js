@@ -293,9 +293,13 @@
         // 判断是否有基于根目录参数
         if (urlData.param.indexOf('-r') > -1) {
             path = ori;
-        } else if (urlData.rel && /^\./.test(ori)) {
-            // 添加相对路径
-            path = urlData.rel + ori;
+        } else if (/^\./.test(ori)) {
+            if (urlData.rel) {
+                // 添加相对路径
+                path = urlData.rel + ori;
+            } else {
+                path = ori.replace(/^\.\//, "");
+            }
         } else {
             // 添加相对目录，得出资源地址
             path = baseResources.baseUrl + ori;
@@ -573,6 +577,9 @@
             moduleId
         } = tempM;
 
+        // 清空tempM
+        baseResources.tempM = {};
+
         // 判断是否有自定义id
         if (moduleId) {
             bag[moduleId] || (bag[moduleId] = bag[urlData.path]);
@@ -588,15 +595,15 @@
             let sData;
             switch (type) {
                 case "define":
-                    sData = await setDefine(urlData);
+                    sData = await setDefine(urlData, tempM);
                     break;
                 case "task":
-                    sData = await setTask(urlData);
+                    sData = await setTask(urlData, tempM);
                     break;
                 default:
                     let tarProcessor = processor[type];
                     if (tarProcessor) {
-                        sData = await tarProcessor(urlData);
+                        sData = await tarProcessor(urlData, tempM);
                     }
             }
 
@@ -607,9 +614,6 @@
             // 默认都会当成file类型
             statData.o.jsType = "file";
         }
-
-        // 清空tempM
-        baseResources.tempM = {};
 
         // 返回状态信息
         return statData;
@@ -675,11 +679,11 @@
     }));
 
     // 设置define模块
-    let setDefine = async urlData => {
+    let setDefine = async (urlData, tempM) => {
         // 获取临时数据
         let {
             d
-        } = baseResources.tempM;
+        } = tempM;
 
         let exports = {},
             module = {
@@ -719,14 +723,9 @@
     }
 
     // 设置task模块
-    let setTask = async urlData => {
-        // 获取临时数据
+    let setTask = async (urlData, tempM) => {
         let {
-            tempM
-        } = baseResources;
-        let {
-            d,
-            moduleId
+            d
         } = tempM;
 
         // 判断d是否函数
