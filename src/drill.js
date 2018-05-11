@@ -282,6 +282,14 @@
         // 主体path
         let path = ori;
 
+        if (urlData.param.indexOf('-pack') > -1) {
+            let pathArr = path.match(/(.+)\/(.+)/);
+            if (2 in pathArr) {
+                ori = path = pathArr[1] + "/" + pathArr[2] + "/" + pathArr[2];
+
+            }
+        }
+
         // 判断是否有基于根目录参数
         if (urlData.param.indexOf('-r') > -1) {
             path = ori;
