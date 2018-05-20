@@ -157,7 +157,7 @@
                 tobe: [],
                 fileType,
                 // 默认是空的获取函数
-                get: async () => {},
+                get: async () => { },
                 // stat监听函数存放列表
                 _sl: []
             });
@@ -282,16 +282,16 @@
         // 主体path
         let path = ori;
 
+        // 判断是否包
         if (urlData.param.indexOf('-pack') > -1) {
             let pathArr = path.match(/(.+)\/(.+)/);
             if (2 in pathArr) {
                 ori = path = pathArr[1] + "/" + pathArr[2] + "/" + pathArr[2];
-
             }
         }
 
         // 判断是否有基于根目录参数
-        if (urlData.param.indexOf('-r') > -1) {
+        if (urlData.param.indexOf('-r') > -1 || /^.+:\/\//.test(ori)) {
             path = ori;
         } else if (/^\./.test(ori)) {
             if (urlData.rel) {
