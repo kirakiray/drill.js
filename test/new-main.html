@@ -13,5 +13,14 @@
 <body>
 
 </body>
+<script>
+    drill.config({
+        baseUrl: "js/"
+    });
+
+    load('file/file01?v=1&k=111').then((data) => {
+        console.log("data => ", data);
+    });
+</script>
 
 </html>

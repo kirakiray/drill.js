@@ -4,6 +4,8 @@
 
 将载入函数名改为 `load` 而不是 `require`，从此不会在 `electron` 等CMD框架内起冲突；
 
+将会大大增强扩展性，进一步精简代码减少结构，降低开发扩展的难度；
+
 ## drill.js 2.0
 
 与 CMD 和 es6 module 不同，drill.js 是专注于懒加载的模块化方案；
