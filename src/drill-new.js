@@ -30,7 +30,12 @@
 
     // function
     // 获取随机id
-    var getRandomId = () => Math.random().toString(32).substr(2);
+    const getRandomId = () => Math.random().toString(32).substr(2);
+
+    var objectToString = Object.prototype.toString;
+    var getType = value => objectToString.call(value).toLowerCase().replace(/(\[object )|(])/g, '');
+    const isFunction = d => getType(d).search('function') > -1;
+    var isEmptyObj = obj => !(0 in keys(obj));
 
     // 获取文件类型
     const getFileType = url => {
@@ -44,17 +49,84 @@
         return fileType;
     };
 
+    // 获取目录名
+    const getDir = url => {
+        let urlArr = url.match(/(.+\/).+/);
+        return urlArr && urlArr[1];
+    };
+
     // main
     // processors添加普通文件加载方式
     processors.set("file", (packData) => {
         // 直接修改完成状态
         packData.stat = 3;
     });
-    processors.set("define", (packData) => {
-        debugger
+    processors.set("define", async (packData) => {
+        let d = base.tempM.d;
+
+        let exports = {},
+            module = {
+                exports
+            };
+
+        // 根据内容填充函数
+        if (isFunction(d)) {
+            let {
+                path
+            } = packData;
+
+            // 函数类型
+            d = d((...args) => {
+                let urlObjs = toUrlObjs(args);
+                urlObjs.forEach(e => e.relative = packData.dir);
+                return load(urlObjs);
+            }, exports, module, {
+                FILE: path,
+            });
+        }
+
+        // Promise函数
+        if (d instanceof Promise) {
+            // 等待获取
+            d = await d;
+        }
+
+        // 判断值是否在 exports 上
+        if (!d && !isEmptyObj(module.exports)) {
+            d = module.exports;
+        }
+
+        // 修正getPack方法
+        packData.getPack = async () => {
+            return d;
+        }
+
+        // 修正状态
+        packData.stat = 3;
     });
     processors.set("task", (packData) => {
-        debugger
+        let d = base.tempM.d;
+
+        // 判断d是否函数
+        if (!isFunction(d)) {
+            throw 'task must be a function';
+        }
+
+        // 修正getPack方法
+        packData.getPack = async (urlData) => {
+            let reData = await d((...args) => {
+                let urlObjs = toUrlObjs(args);
+                urlObjs.forEach(e => e.relative = urlData.dir);
+                return load(urlObjs);
+            }, urlData.data, {
+                FILE: urlData.path,
+            });
+
+            return reData;
+        }
+
+        // 修正状态
+        packData.stat = 3;
     });
 
     // loaders添加js加载方式
@@ -85,12 +157,9 @@
                 moduleId
             } = tempM;
 
-            // 清空tempM
-            base.tempM = {};
-
             // 判断是否有自定义id
             if (moduleId) {
-                bag.get(moduleId) && bag.set(moduleId, packData);
+                bag.get(moduleId) || bag.set(moduleId, packData);
             }
 
             // 进行processors断定
@@ -102,10 +171,14 @@
             } else {
                 throw "no such this processor => " + type;
             }
+
+            // 清空tempM
+            base.tempM = {};
         });
         script.addEventListener('error', () => {
             // 进行processors断定
             debugger
+            script
         });
 
         // 添加进主体
@@ -217,18 +290,36 @@
             let {
                 length
             } = urlObjs;
+            let sum = length;
 
             urlObjs.forEach(async (e, i) => {
                 // 中转加载资源
                 let d = await agent(e);
 
+                // 设置数据
                 reValue[i] = d;
+
+                // 触发pending
+                pendFunc && pendFunc({
+                    // 当前所处id
+                    id: i,
+                    // 总数
+                    sum,
+                    ready: sum - length + 1,
+                    stat: 1
+                });
 
                 // 计时减少
                 length--;
 
                 if (!length) {
-                    res(reValue);
+                    // 单个的话直接返回单个的数据
+                    if (sum == 1) {
+                        res(d);
+                    } else {
+                        res(reValue);
+                    }
+                    reValue = null;
                 }
             });
         });
@@ -302,16 +393,19 @@
         let path;
 
         if (param.includes('-pack')) {
-            debugger
+            let pathArr = path.match(/(.+)\/(.+)/);
+            if (2 in pathArr) {
+                ori = path = pathArr[1] + "/" + pathArr[2] + "/" + pathArr[2];
+            }
         }
 
         // 判断是否有基于根目录参数
         if (param.indexOf('-r') > -1 || /^.+:\/\//.test(ori)) {
             path = ori;
         } else if (/^\./.test(ori)) {
-            if (urlObj.rel) {
+            if (urlObj.relative) {
                 // 添加相对路径
-                path = urlObj.rel + ori;
+                path = urlObj.relative + ori;
             } else {
                 path = ori.replace(/^\.\//, "");
             }
@@ -323,30 +417,37 @@
         // 添加后缀
         path += "." + fileType;
 
+        // 根据资源地址计算资源目录
+        let dir = getDir(path);
+
         Object.assign(urlObj, {
             search,
             ori,
             fileType,
             path,
+            dir,
             param
         });
 
         return urlObj;
     }
 
+    // 轻转换函数
+    let toUrlObjs = (args) => {
+        // 生成组id
+        let groupId = getRandomId();
+
+        // 转化成urlObj
+        return args.map(url => fixUrlObj({
+            loadId: getRandomId(),
+            str: url,
+            groupId
+        }));
+    }
+
     const drill = {
         load(...args) {
-            // 生成组id
-            let groupId = getRandomId();
-
-            // 转化成urlObj
-            let urlObjs = args.map(url => fixUrlObj({
-                loadId: getRandomId(),
-                str: url,
-                groupId
-            }));
-
-            return load(urlObjs);
+            return load(toUrlObjs(args));
         },
         remove(url) {
             PushSubscription
@@ -371,11 +472,19 @@
                 }
             });
         },
-        define() {
-
+        define(d, moduleId) {
+            base.tempM = {
+                type: "define",
+                d,
+                moduleId
+            };
         },
-        task() {
-
+        task(d, moduleId) {
+            base.tempM = {
+                type: "task",
+                d,
+                moduleId
+            };
         },
         cacheInfo: {
             k: "",
@@ -384,9 +493,34 @@
     };
 
     // init 
-    glo.drill = drill;
     glo.load || (glo.load = drill.load);
     glo.define || (glo.define = drill.define);
     glo.task || (glo.task = drill.task);
 
+    // 初始化版本号
+    let cScript = document.currentScript;
+    !cScript && (cScript = document.querySelector(['drill-cache']));
+
+    if (cScript) {
+        let cacheVersion = cScript.getAttribute('drill-cache');
+        cacheVersion && (drill.cacheInfo.v = cacheVersion);
+    }
+
+    // 判断全局是否存在变量 drill
+    let gloDrill = glo.drill;
+
+    // 定义全局drill
+    Object.defineProperty(glo, 'drill', {
+        get: () => drill,
+        set(func) {
+            if (isFunction(func)) {
+                func(drill);
+            } else {
+                console.error('drill type error =>', func);
+            }
+        }
+    });
+
+    // 执行全局的 drill函数
+    gloDrill && gloDrill(drill);
 })(window);

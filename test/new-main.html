@@ -18,13 +18,26 @@
         baseUrl: "js/"
     });
 
-    load('file/file01').then((data) => {
+    load('define/d1', 'file/file01').then((data) => {
         console.log("data1 => ", data);
     });
 
-    load('file/file01').then((data) => {
+    load('define/d1', 'file/file01').then((data) => {
         console.log("data2 => ", data);
     });
+
+    load('define/d1').then((data) => {
+        console.log("data3 => ", data);
+    });
+
+    load('task/t1')
+        .post({
+            d1: 100,
+            d2: 50
+        })
+        .then((data) => {
+            console.log('task =>', data);
+        });
 </script>
 
 </html>
