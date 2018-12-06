@@ -18,8 +18,12 @@
         baseUrl: "js/"
     });
 
-    load('file/file01?v=1&k=111').then((data) => {
-        console.log("data => ", data);
+    load('file/file01').then((data) => {
+        console.log("data1 => ", data);
+    });
+
+    load('file/file01').then((data) => {
+        console.log("data2 => ", data);
     });
 </script>
 

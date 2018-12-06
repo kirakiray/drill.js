@@ -7,6 +7,8 @@
     // 地址寄存器
     const bag = new Map();
 
+    window.bag = bag;
+
     // 映射资源
     const paths = new Map();
 
@@ -98,7 +100,7 @@
             if (process) {
                 process(packData);
             } else {
-                throw "no such this procress => " + type;
+                throw "no such this processor => " + type;
             }
         });
         script.addEventListener('error', () => {
@@ -132,7 +134,7 @@
                     let oldStat = stat;
 
                     // 一样的值就别瞎折腾
-                    if (oldStat == stat) {
+                    if (oldStat == d) {
                         return;
                     }
 
@@ -141,13 +143,14 @@
 
                     // 改动stat的时候触发changes内的函数
                     this.changes.forEach(callback => callback({
+                        change: "stat",
                         oldStat,
                         stat
                     }));
                 },
                 path: urlObj.path,
                 // 改动事件记录器
-                changes: [],
+                changes: new Set(),
                 // 记录装载状态
                 fileType: urlObj.fileType,
                 // 包的getter函数
@@ -175,21 +178,18 @@
                 case 1:
                     // 添加状态改动callback，确认加载完成的状态后，进行callback
                     let statChangeCallback;
-                    packData.changes.push(statChangeCallback = (d) => {
+                    packData.changes.add(statChangeCallback = (d) => {
                         // 获取改动状态
                         let {
                             stat
                         } = d;
 
-                        debugger
-
-                        if (stat == 1) {
+                        if (stat == 3) {
                             // 加载完成，运行getPack函数
                             packData.getPack(urlObj).then(res);
 
                             // 清除自身callback
-                            let cid = packData.changes.indexOf(statChangeCallback);
-                            packData.changes.splice(cid, 1);
+                            packData.changes.delete(statChangeCallback);
                             packData = null;
                         }
                     });
@@ -211,13 +211,25 @@
         let pendFunc;
         let p = new Promise((res, rej) => {
             // 要返回的数据
-            let reValue;
+            let reValue = [];
 
-            urlObjs.forEach(async e => {
+            // 获取原来的长度
+            let {
+                length
+            } = urlObjs;
+
+            urlObjs.forEach(async (e, i) => {
                 // 中转加载资源
                 let d = await agent(e);
 
+                reValue[i] = d;
 
+                // 计时减少
+                length--;
+
+                if (!length) {
+                    res(reValue);
+                }
             });
         });
 
