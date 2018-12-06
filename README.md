@@ -1,10 +1,16 @@
-# drill.js 2.0
+# drill.js 3.0
+
+更改为浏览器的资源管理器，不单纯只是模块化框架；
+
+将载入函数名改为 `load` 而不是 `require`，从此不会在 `electron` 等CMD框架内起冲突；
+
+## drill.js 2.0
 
 与 CMD 和 es6 module 不同，drill.js 是专注于懒加载的模块化方案；
 
 与 AMD 模块化不同，drill.js 是真正做到按需加载的方案，而不是依赖前置来解决；
 
-## 相比 drill.js 1.0
+### 相比 drill.js 1.0
 
 1. 大幅增强扩展性；
 2. 支持载入css和json文件；
