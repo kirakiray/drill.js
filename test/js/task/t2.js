@@ -1,6 +1,6 @@
-task(async(require, data) => {
+task(async(load, data) => {
     let { d1, d2 } = data;
-    let val = await require('./t1').post({
+    let val = await load('./t1').post({
         d1,
         d2
     });

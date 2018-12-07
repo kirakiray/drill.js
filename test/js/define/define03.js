@@ -1,5 +1,5 @@
-define(async(require) => {
-    var d1 = await require('./define01');
+define(async(load) => {
+    var d1 = await load('./define01');
 
     once(1, 'load define03 ok');
 

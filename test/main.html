@@ -21,7 +21,7 @@
 
     drill = async (drill) => {
         drill.config({
-            baseUrl: "js2/",
+            baseUrl: "js/",
             paths: {
                 // 映射目录
                 "long/": "long1/long2/long3/",
@@ -48,7 +48,7 @@
             });
 
         // root test
-        var [d1, d2, d3] = await load('define/define01', 'define/define02', 'js2/define/define03  -r');
+        var [d1, d2, d3] = await load('define/define01', 'define/define02', 'js/define/define03  -r');
         console.log('d1 and d2 => ', d1, d2);
         if (d1.val === "I am define01" && d2.val === "I am define02" && d3.val === "I am define03") {
             g1.ok(1, 'run define01 define02 define03 ok');
