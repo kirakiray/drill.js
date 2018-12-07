@@ -31,11 +31,29 @@
     // function
     // 获取随机id
     const getRandomId = () => Math.random().toString(32).substr(2);
-
     var objectToString = Object.prototype.toString;
     var getType = value => objectToString.call(value).toLowerCase().replace(/(\[object )|(])/g, '');
     const isFunction = d => getType(d).search('function') > -1;
-    var isEmptyObj = obj => !(0 in keys(obj));
+    var isEmptyObj = obj => !(0 in Object.keys(obj));
+
+    //改良异步方法
+    const nextTick = (() => {
+        let isTick = false;
+        let nextTickArr = [];
+        return (fun) => {
+            if (!isTick) {
+                isTick = true;
+                setTimeout(() => {
+                    for (let i = 0; i < nextTickArr.length; i++) {
+                        nextTickArr[i]();
+                    }
+                    nextTickArr = [];
+                    isTick = false;
+                }, 0);
+            }
+            nextTickArr.push(fun);
+        };
+    })();
 
     // 获取文件类型
     const getFileType = url => {
@@ -77,9 +95,7 @@
 
             // 函数类型
             d = d((...args) => {
-                let urlObjs = toUrlObjs(args);
-                urlObjs.forEach(e => e.relative = packData.dir);
-                return load(urlObjs);
+                return load(toUrlObjs(args, packData.dir));
             }, exports, module, {
                 FILE: path,
             });
@@ -115,9 +131,7 @@
         // 修正getPack方法
         packData.getPack = async (urlData) => {
             let reData = await d((...args) => {
-                let urlObjs = toUrlObjs(args);
-                urlObjs.forEach(e => e.relative = urlData.dir);
-                return load(urlObjs);
+                return load(toUrlObjs(args, urlData.dir));
             }, urlData.data, {
                 FILE: urlData.path,
             });
@@ -222,6 +236,7 @@
                     }));
                 },
                 path: urlObj.path,
+                dir: urlObj.dir,
                 // 改动事件记录器
                 changes: new Set(),
                 // 记录装载状态
@@ -271,8 +286,10 @@
                     debugger
                     break;
                 case 3:
-                    // 已经加载完成的，直接获取
-                    packData.getPack(urlObj).then(res);
+                    nextTick(() => {
+                        // 已经加载完成的，直接获取
+                        packData.getPack(urlObj).then(res);
+                    });
                     break;
             }
         });
@@ -414,6 +431,14 @@
             path = base.baseUrl + ori;
         }
 
+        // 修正单点
+        path = path.replace(/\/\.\//, "/");
+
+        // 修正两点（上级目录）
+        if (/\.\.\//.test(path)) {
+            path = removeParentPath(path);
+        }
+
         // 添加后缀
         path += "." + fileType;
 
@@ -433,7 +458,7 @@
     }
 
     // 轻转换函数
-    let toUrlObjs = (args) => {
+    let toUrlObjs = (args, relative) => {
         // 生成组id
         let groupId = getRandomId();
 
@@ -441,7 +466,8 @@
         return args.map(url => fixUrlObj({
             loadId: getRandomId(),
             str: url,
-            groupId
+            groupId,
+            relative
         }));
     }
 
@@ -450,7 +476,7 @@
             return load(toUrlObjs(args));
         },
         remove(url) {
-            PushSubscription
+            debugger
         },
         config(options) {
             options.baseUrl && (base.baseUrl = options.baseUrl);
@@ -468,7 +494,7 @@
                     };
                 } else {
                     //属于资源类型
-                    paths[i] = oPaths[i];
+                    paths.set(i, oPaths[i]);
                 }
             });
         },

@@ -10,7 +10,7 @@ task(async (load, data, {
     var [n1, n2] = data;
     g2.ok(1, "task01");
 
-    ok(FILE == "js/task01.js", "FILE(task01) is ok");
+    ok(FILE == "js2/task01.js", "FILE(task01) is ok");
 
     data = await new Promise((res, rej) => {
         setTimeout(() => {
