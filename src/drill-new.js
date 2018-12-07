@@ -1,8 +1,8 @@
 ((glo) => {
     // common
-    // 进度寄存器
+    // 处理器（针对js类型）
     const processors = new Map();
-    // 加载寄存器
+    // 加载器（针对文件类型）
     const loaders = new Map();
     // 地址寄存器
     const bag = new Map();
@@ -14,6 +14,15 @@
 
     // 映射目录
     const dirpaths = {};
+
+    // 错误处理数据
+    let errInfo = {
+        // 每个错误资源的最大错误请求次数
+        // 默认错误的时候回再请求3次
+        loadNum: 3,
+        // 加载错误之后，再次加载的间隔时间(毫秒)
+        time: 2000
+    };
 
     // 基础数据对象
     let base = {
@@ -74,11 +83,50 @@
     };
 
     // main
+    // loaders添加css
+    loaders.set("css", (packData) => {
+        // 给主体添加css
+        let linkEle = document.createElement('link');
+        linkEle.rel = "stylesheet";
+        linkEle.href = packData.link;
+
+        linkEle.onload = () => {
+            // 设置完成
+            packData.stat = 3;
+        }
+
+        linkEle.onerror = () => {
+            packData.stat = 2;
+        }
+
+        // 添加到head
+        document.head.appendChild(linkEle);
+    });
+
+    // loaders添加json支持
+    loaders.set("json", async (packData) => {
+        // 请求数据
+        let data = await fetch(packData.link);
+
+        // 转换json格式
+        data = await data.json();
+
+        // 重置getPack
+        packData.getPack = async () => {
+            return data;
+        }
+
+        // 设置完成
+        packData.stat = 3;
+    });
+
     // processors添加普通文件加载方式
     processors.set("file", (packData) => {
         // 直接修改完成状态
         packData.stat = 3;
     });
+
+    // 添加define模块支持
     processors.set("define", async (packData) => {
         let d = base.tempM.d;
 
@@ -120,6 +168,8 @@
         // 修正状态
         packData.stat = 3;
     });
+
+    // 添加task模块支持
     processors.set("task", (packData) => {
         let d = base.tempM.d;
 
@@ -148,12 +198,11 @@
         // 主体script
         let script = document.createElement('script');
 
-        let path = packData.path;
 
         //填充相应数据
         script.type = 'text/javascript';
         script.async = true;
-        path && (script.src = path);
+        script.src = packData.link;
 
         // 添加事件
         script.addEventListener('load', () => {
@@ -190,9 +239,8 @@
             base.tempM = {};
         });
         script.addEventListener('error', () => {
-            // 进行processors断定
-            debugger
-            script
+            // 加载错误
+            packData.stat = 2;
         });
 
         // 添加进主体
@@ -208,8 +256,9 @@
         if (!packData) {
             // 加载状态
             // 1加载中
-            // 2加载错误
+            // 2加载错误，重新装载中
             // 3加载完成
+            // 4彻底加载错误，别瞎折腾了
             let stat = 1;
 
             packData = {
@@ -219,11 +268,6 @@
                 set stat(d) {
                     // 记录旧状态
                     let oldStat = stat;
-
-                    // 一样的值就别瞎折腾
-                    if (oldStat == d) {
-                        return;
-                    }
 
                     // set
                     stat = d;
@@ -236,6 +280,7 @@
                     }));
                 },
                 path: urlObj.path,
+                link: urlObj.link,
                 dir: urlObj.dir,
                 // 改动事件记录器
                 changes: new Set(),
@@ -254,7 +299,7 @@
 
             if (loader) {
                 // 存在Loader的话，进行加载
-                loader(packData)
+                loader(packData);
             } else {
                 throw "no such this loader => " + packData.fileType;
             }
@@ -263,6 +308,8 @@
         return new Promise((res, rej) => {
             // 根据状态进行处理
             switch (packData.stat) {
+                case 2:
+                    // 加载错误的重新装载，也加入队列
                 case 1:
                     // 添加状态改动callback，确认加载完成的状态后，进行callback
                     let statChangeCallback;
@@ -272,24 +319,49 @@
                             stat
                         } = d;
 
-                        if (stat == 3) {
-                            // 加载完成，运行getPack函数
-                            packData.getPack(urlObj).then(res);
+                        switch (stat) {
+                            case 3:
+                                // 加载完成，运行getPack函数
+                                packData.getPack(urlObj).then(res);
 
-                            // 清除自身callback
-                            packData.changes.delete(statChangeCallback);
-                            packData = null;
+                                // 清除自身callback
+                                packData.changes.delete(statChangeCallback);
+                                packData = null;
+                                break;
+                            case 2:
+                                // 重新装载
+                                // 获取计数器
+                                let loadCount = (packData.loadCount != undefined) ? packData.loadCount : (packData.loadCount = 0);
+
+                                // 存在次数
+                                if (loadCount < errInfo.loadNum) {
+                                    // 递增
+                                    packData.loadCount++;
+
+                                    // 重新装载
+                                    let loader = loaders.get(packData.fileType);
+                                    setTimeout(() => loader(packData), errInfo.time);
+                                } else {
+                                    // 载入不进去啊大佬，别费劲了
+                                    packData.stat = 4;
+                                }
+
+                                break;
+                            case 4:
+                                rej("source error");
+                                break;
                         }
                     });
-                    break;
-                case 2:
-                    debugger
                     break;
                 case 3:
                     nextTick(() => {
                         // 已经加载完成的，直接获取
                         packData.getPack(urlObj).then(res);
                     });
+                    break;
+                case 4:
+                    // 彻底加载错误的资源，就别瞎折腾了
+                    rej("source error");
                     break;
             }
         });
@@ -309,9 +381,23 @@
             } = urlObjs;
             let sum = length;
 
-            urlObjs.forEach(async (e, i) => {
+            // 是否有出错
+            let hasError = [];
+
+            urlObjs.forEach(async (obj, i) => {
+                // 载入的状态
+                let stat = "succeed";
+
                 // 中转加载资源
-                let d = await agent(e);
+                let d = await agent(obj).catch(e => {
+                    stat = "error";
+                    Object.assign(obj, {
+                        type: "error",
+                        id: i,
+                        descript: e
+                    });
+                    hasError.push(obj);
+                });
 
                 // 设置数据
                 reValue[i] = d;
@@ -323,18 +409,23 @@
                     // 总数
                     sum,
                     ready: sum - length + 1,
-                    stat: 1
+                    stat
                 });
 
                 // 计时减少
                 length--;
 
                 if (!length) {
-                    // 单个的话直接返回单个的数据
-                    if (sum == 1) {
-                        res(d);
+                    if (!hasError.length) {
+                        // 单个的话直接返回单个的数据
+                        if (sum == 1) {
+                            res(d);
+                        } else {
+                            res(reValue);
+                        }
                     } else {
-                        res(reValue);
+                        // 出错了
+                        rej(hasError);
                     }
                     reValue = null;
                 }
@@ -445,7 +536,11 @@
         // 根据资源地址计算资源目录
         let dir = getDir(path);
 
+        // 写入最终请求资源地址
+        let link = search ? (path + "?" + search) : path;
+
         Object.assign(urlObj, {
+            link,
             search,
             ori,
             fileType,
@@ -476,7 +571,20 @@
             return load(toUrlObjs(args));
         },
         remove(url) {
-            debugger
+            let {
+                path
+            } = fixUrlObj({
+                str: url
+            });
+
+            if (bag.has(path)) {
+                bag.delete(path);
+
+                //告示删除成功
+                return !0;
+            } else {
+                console.warn(`pack %c${url}`, "color:red", `does not exist`);
+            }
         },
         config(options) {
             options.baseUrl && (base.baseUrl = options.baseUrl);
@@ -515,7 +623,8 @@
         cacheInfo: {
             k: "",
             v: ""
-        }
+        },
+        errInfo
     };
 
     // init 

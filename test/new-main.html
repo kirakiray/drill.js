@@ -18,7 +18,7 @@
         baseUrl: "js/"
     });
 
-    load('define/d1', 'file/file01').then((data) => {
+    load('define/d1', 'file/file01?aa=1').then((data) => {
         console.log("data1 => ", data);
     });
 
@@ -37,6 +37,14 @@
         })
         .then((data) => {
             console.log('task =>', data);
+        });
+
+    load('task/t122')
+        .then((e) => {
+            debugger
+        })
+        .catch(e => {
+            console.log("error=>", e);
         });
 </script>
 
