@@ -7,8 +7,6 @@
     // 地址寄存器
     const bag = new Map();
 
-    window.bag = bag;
-
     // 映射资源
     const paths = new Map();
 
@@ -33,6 +31,7 @@
         bag,
         paths,
         dirpaths,
+        errInfo,
         // 根目录
         baseUrl: "",
         // 临时挂起的模块对象
@@ -427,7 +426,6 @@
                     stat = "error";
                     Object.assign(obj, {
                         type: "error",
-                        id: i,
                         descript: e
                     });
                     hasError.push(obj);
@@ -592,8 +590,9 @@
         let groupId = getRandomId();
 
         // 转化成urlObj
-        return args.map(url => fixUrlObj({
+        return args.map((url, id) => fixUrlObj({
             loadId: getRandomId(),
+            id,
             str: url,
             groupId,
             relative
@@ -661,8 +660,35 @@
                 moduleId
             };
         },
+        // 扩展开发入口
+        ext(f_name, func) {
+            if (isFunction(f_name)) {
+                f_name(base);
+            } else {
+                // 旧的方法
+                let oldFunc;
+
+                // 中间件方法
+                let middlewareFunc = (...args) => func(args, oldFunc, base);
+
+                switch (f_name) {
+                    case "fixUrlObj":
+                        oldFunc = fixUrlObj;
+                        fixUrlObj = middlewareFunc;
+                        break;
+                    case "load":
+                        oldFunc = load;
+                        load = middlewareFunc;
+                        break;
+                    case "agent":
+                        oldFunc = agent;
+                        agent = middlewareFunc;
+                        break;
+                }
+            }
+        },
         cacheInfo: {
-            k: "",
+            k: "d_ver",
             v: ""
         }
     };
