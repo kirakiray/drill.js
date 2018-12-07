@@ -1,4 +1,4 @@
-define((require, exports, module, {
+define((load, exports, module, {
     FILE
 }) => {
      once(1, 'load define02 ok');

@@ -1,4 +1,4 @@
-task(async(require, data) => {
+task(async(load, data) => {
     let d = await new Promise(res => {
         setTimeout(() => {
             res({

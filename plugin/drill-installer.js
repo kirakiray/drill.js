@@ -1,40 +1,139 @@
-// 离线存储插件
-(() => {
-    // base64数据库（内存数据库） ------
-    let b64Databases = {};
+((drill) => {
+    // 内存文件数据库
+    let b64Databases = new Map();
     drill.setModule = (pathname, b64) => {
-        b64Databases[pathname] = b64;
+        b64Databases.set(pathname, b64);
     }
 
-    // 是否离线安装
-    // 默认安装选择是false
-    let isInstall = true;
+    // 存在indexDB的情况，添加离线缓存功能
+    const DBNAME = 'drill_installer_database';
+    const FILESTABLENAME = 'files';
 
-    // 间接扩展
-    drill.ext('loadSource', async ([...args], next) => {
-        let [urlObj] = args;
+    // 承接agent
+    drill.ext('agent', async (args, next) => {
+        let urlObj = args[0];
 
-        // 判断是否在base64库里面
-        if (b64Databases[urlObj.path]) {
-            urlObj.link = b64Databases[urlObj.path];
-        } else if (isInstall && loadStall) {
-            await loadStall(urlObj);
-        }
+        // 读取source
+        let sourceTemplink = await loadSource(urlObj);
 
-        // 继承返回
-        return next(...args);
+        // 修正link
+        urlObj.link = sourceTemplink;
+
+        let reObj = next(...args);
+
+        return reObj;
     });
 
-    // 从安装器读取数据
-    var loadStall;
 
-    let indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+    // 主体Database对象
+    let mainDB;
+    // 未处理的队列
+    let initDBResolve;
+    let isInitDB = new Promise((res, rej) => {
+        initDBResolve = res;
+    });
+
+    // 文件目录存档
+    let fileLinkMap = new Map();
+
+    // 加载离线或者数据库文件数据
+    const loadSource = async (urlObj) => {
+        // 等待数据库初始化完成
+        await isInitDB;
+
+        // 要返回的数据
+        let reData;
+
+        // 获取文件读取状态
+        let tarPromise = fileLinkMap.get(urlObj.path);
+
+        if (tarPromise) {
+            reData = await tarPromise;
+        } else {
+            // 设置Promise
+            fileLinkMap.set(urlObj.path, tarPromise = (async () => {
+                // 先从数据库获取数据
+                let file = await loadData(urlObj.path);
+
+                if (!file) {
+                    // 没有的话就在线下载
+                    // 请求链接内容
+                    let p = await fetch(urlObj.link);
+
+                    // 生成file前的两个重要数据
+                    let type = p.headers.get('Content-Type').replace(/;.+/, "");
+                    let fileName = urlObj.path.replace(/.+\//, "");
+
+                    // 生成file格式
+                    let blob = await p.blob();
+
+                    // 生成file
+                    file = new File([blob], fileName, {
+                        type
+                    })
+
+                    // 存储到数据库中
+                    saveData(urlObj.path, file);
+                }
+
+                // 生成url
+                let tempUrl = URL.createObjectURL(file);
+
+                return tempUrl;
+            })());
+
+            // 获取数据
+            reData = await tarPromise;
+        }
+
+        return reData;
+    }
+
+
+    // 获取数据方法
+    const loadData = path => new Promise((res, rej) => {
+        // 新建事务
+        var t = mainDB.transaction([FILESTABLENAME], "readonly");
+        let store = t.objectStore(FILESTABLENAME);
+        let req = store.get(path);
+        req.onsuccess = () => {
+            res(req.result && req.result.data);
+            console.log(`load ${path} succeed ,  hasdata => ${!!req.result}`);
+        }
+        req.onerror = (e) => {
+            rej();
+            console.error(`error load ${path}`, e);
+        }
+    });
+
+    // 保存数据
+    const saveData = (path, b64) => new Promise((res, rej) => {
+        // 新建事务
+        var t = mainDB.transaction([FILESTABLENAME], "readwrite");
+        let store = t.objectStore(FILESTABLENAME);
+        let req = store.put({
+            path,
+            data: b64
+        });
+        req.onsuccess = () => {
+            res({
+                stat: 1
+            });
+            console.log(`save ${path} succeed`);
+        };
+        req.onerror = (e) => {
+            res({
+                stat: 0
+            })
+            console.error(`save (${path}) error`, e);
+        };
+    });
+
+
+    let isInstall = true;
 
     // 初始化是否 install
     let cScript = document.currentScript;
-    if (!cScript) {
-        cScript = document.querySelector(['drill-install']);
-    }
     if (cScript) {
         let isInstall_str = cScript.getAttribute('drill-install');
         if (isInstall_str == 'false' || isInstall_str == '0') {
@@ -42,28 +141,14 @@
         }
     }
 
-    Object.defineProperty(drill, 'installer', {
-        set(val) {
-            isInstall = val;
-        },
-        get() {
-            return isInstall;
-        }
-    });
+    const indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB;
 
-    // 初始化IndexDB逻辑
+    // 初始化数据库
     if (indexedDB && isInstall) {
-        // 存在indexDB的情况，添加离线缓存功能
-        const DBNAME = 'drill_installer_database';
-        const FILESTABLENAME = 'files';
-
-        // indexDB寄存对象
-        let db;
-
         // 初始打开
         let openRequest = indexedDB.open(DBNAME, drill.cacheInfo.v || 1);
         openRequest.onupgradeneeded = (e) => {
-            // 升级中的db，不暴露出去的
+            // 升级中（初始化中）的db触发事件，db不暴露出去的
             let db = e.target.result;
 
             // 判断是否存在表
@@ -84,145 +169,14 @@
             }
         };
 
-        // 初始成功
+        // 初始成功触发的callback
         openRequest.onsuccess = (e) => {
             // 挂载主体db
-            db = e.target.result;
+            mainDB = e.target.result;
 
-            // 处理队列
-            loadQueue.forEach(async e => {
-                // 读取数据
-                let data = await loadData(e.url);
-
-                // 返回数据
-                e.res(data);
-            });
-
-            // 清空
-            loadQueue = null;
+            // 确认初始化
+            initDBResolve();
         }
-
-        // 队列数组
-        let loadQueue = [];
-
-        // 获取数据方法
-        let loadData = url => new Promise((res, rej) => {
-            if (db) {
-                // 新建事务
-                var t = db.transaction([FILESTABLENAME], "readonly");
-                let store = t.objectStore(FILESTABLENAME);
-                let req = store.get(url);
-                req.onsuccess = () => {
-                    res(req.result && req.result.d);
-                    console.log(`load ${url} succeed ,  hasdata => ${!!req.result}`);
-                }
-                req.onerror = (e) => {
-                    rej();
-                    console.error(`error load ${url}`, e);
-                }
-            } else {
-                // 判断是否存在db，不存在先加入队列
-                loadQueue.push({
-                    url,
-                    res
-                });
-            }
-        });
-
-        // 保存数据
-        let saveData = (url, b64) => new Promise((res, rej) => {
-            if (db) {
-                // 新建事务
-                var t = db.transaction([FILESTABLENAME], "readwrite");
-                let store = t.objectStore(FILESTABLENAME);
-                let req = store.put({
-                    path: url,
-                    d: b64
-                });
-                req.onsuccess = () => {
-                    res({
-                        stat: 1
-                    });
-                    console.log(`save ${url} succeed`);
-                };
-                req.onerror = (e) => {
-                    res({
-                        stat: 0
-                    })
-                    console.error(`save (${url}) error`, e);
-                };
-            } else {
-                // 判断是否存在db，不存在先加入队列
-                loadQueue.push({
-                    url,
-                    b64,
-                    res
-                });
-            }
-        });
-
-        // 内存寄存对象
-        let memoryData = {};
-
-        loadStall = async (urlObj) => {
-            let { path } = urlObj;
-
-            // 文件资源地址
-            let filelink;
-
-            // 查看是否在内存数据内
-            if (memoryData[path]) {
-                filelink = memoryData[path];
-            } else {
-                // 先读取目录，看存不存在
-                let fileObject = await loadData(path);
-
-                // 没有数据请求线上数据
-                if (!fileObject) {
-                    // let f = await fetch(path);
-
-                    // // 转换成file
-                    // fileObject = await f.blob();
-
-                    // 直接获取file
-                    fileObject = await new Promise(res => {
-                        var xhr = new XMLHttpRequest();
-                        xhr.open('GET', path, true);
-                        xhr.responseType = 'blob';
-                        xhr.onload = function (e) {
-                            if (this.status == 200) {
-                                var blob = this.response;
-                                res(blob);
-                            }
-                        };
-                        xhr.send();
-                    });
-
-                    // 存储数据
-                    await saveData(path, fileObject);
-                }
-
-                switch (isInstall) {
-                    case "base64":
-                        filelink = await new Promise(res => {
-                            let fs = new FileReader();
-                            fs.onload = () => {
-                                res(fs.result);
-                            }
-                            fs.readAsDataURL(fileObject);
-                        });
-                        break;
-                    default:
-                        // 生成内存地址
-                        filelink = URL.createObjectURL(fileObject);
-                }
-
-                // 写入映射
-                memoryData[path] = filelink;
-            }
-
-            // 替换link
-            urlObj.link = filelink;
-        };
     }
-})();
+
+})(window.drill);

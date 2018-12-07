@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
+    <title>test2</title>
     <script src="../src/drill.js" drill-cache="22"></script>
 </head>
 
@@ -25,26 +25,32 @@
             // }
 
             // 模拟扩展
-            drill.ext('analyzeUrl', ([...arg], next) => {
+            drill.ext('fixUrlObj', ([...arg], next) => {
                 let reobj = next(...arg);
+                console.log(reobj);
                 return reobj;
             });
-
 
             // 模拟扩展
-            drill.ext('loadAgent', ([...arg], next) => {
+            drill.ext('load', ([...arg], next) => {
                 let reobj = next(...arg);
                 return reobj;
             });
 
-            require('a?a=a1&b=b1', 'b.js', 'c', 'd')
+            // 模拟扩展
+            drill.ext('agent', ([...arg], next) => {
+                let reobj = next(...arg);
+                return reobj;
+            });
+
+            load('a?a=a1&b=b1', 'b.js', 'c', 'd')
                 .pend(data => {
                     console.log('pend => ', data);
                 })
                 .then(([a, b, c, d]) => {
-                    console.log('结束', a, b, c, d);
+                    console.log('end', a, b, c, d);
                 });
-            // require('c')
+            // load('c')
             //     .pend(data => {
             //         console.log('pend2 => ', data);
             //     })
@@ -54,8 +60,8 @@
 
 
             // setTimeout(async () => {
-            //     let data = await require('d').post({
-            //         // let data = await require('js/d -r').post({
+            //     let data = await load('d').post({
+            //         // let data = await load('js/d -r').post({
             //         pp: "I am post data"
             //     });
 
@@ -80,11 +86,11 @@
             // };
 
 
-            // let [d1, jsondata] = await require('dir1/d1', 'test.json');
+            // let [d1, jsondata] = await load('dir1/d1', 'test.json');
             // console.log('d1 => ', d1, '  test.json => ', jsondata);
-            
-            // let d1 = await require('aa');
-            // let d1 = await require('a/d1');
+
+            // let d1 = await load('aa');
+            // let d1 = await load('a/d1');
         }
     </script>
 </body>

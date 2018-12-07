@@ -1,44 +1,56 @@
 ((glo) => {
-    "use strict";
     // common
+    // 处理器（针对js类型）
+    const processors = new Map();
+    // 加载器（针对文件类型）
+    const loaders = new Map();
+    // 地址寄存器
+    const bag = new Map();
+
     // 映射资源
-    let paths = {};
+    const paths = new Map();
 
     // 映射目录
-    let dirpaths = {};
-
-    // 载入状态路径映射对象
-    let bag = {};
-
-    // 处理器（针对js类型）
-    let processor = {};
+    const dirpaths = {};
 
     // 错误处理数据
     let errInfo = {
         // 每个错误资源的最大错误请求次数
-        // 默认错误的时候回再请求2次
-        loadNum: 2,
+        // 默认错误的时候回再请求3次
+        loadNum: 3,
         // 加载错误之后，再次加载的间隔时间(毫秒)
-        time: 2000
+        time: 1000,
+        // baseUrl后备仓
+        backups: new Set()
     };
 
-    //基础数据对象
-    let baseResources = {
+    // 基础数据对象
+    let base = {
+        processors,
+        loaders,
+        bag,
         paths,
         dirpaths,
-        //  js模块相对路径
+        errInfo,
+        // 根目录
         baseUrl: "",
-        bag,
         // 临时挂起的模块对象
         tempM: {}
     };
 
     // function
+    // 获取随机id
+    const getRandomId = () => Math.random().toString(32).substr(2);
+    var objectToString = Object.prototype.toString;
+    var getType = value => objectToString.call(value).toLowerCase().replace(/(\[object )|(])/g, '');
+    const isFunction = d => getType(d).search('function') > -1;
+    var isEmptyObj = obj => !(0 in Object.keys(obj));
+
     //改良异步方法
     const nextTick = (() => {
         let isTick = false;
         let nextTickArr = [];
-        return fun => {
+        return (fun) => {
             if (!isTick) {
                 isTick = true;
                 setTimeout(() => {
@@ -50,14 +62,9 @@
                 }, 0);
             }
             nextTickArr.push(fun);
-            return fun;
         };
     })();
-    //获取目录名
-    const getDir = url => {
-        let urlArr = url.match(/(.+\/).+/);
-        return urlArr && urlArr[1];
-    };
+
     // 获取文件类型
     const getFileType = url => {
         let lastOri = url.split('/').pop();
@@ -69,11 +76,18 @@
         }
         return fileType;
     };
+
+    // 获取目录名
+    const getDir = url => {
+        let urlArr = url.match(/(.+\/).+/);
+        return urlArr && urlArr[1];
+    };
+
     //修正字符串路径
-    var removeParentPath = (url) => {
+    const removeParentPath = (url) => {
         let urlArr = url.split(/\//g);
         let newArr = [];
-        each(urlArr, (e) => {
+        urlArr.forEach((e) => {
             if (e == '..' && newArr.length && (newArr.slice(-1)[0] != "..")) {
                 newArr.pop();
                 return;
@@ -83,607 +97,57 @@
         return newArr.join('/');
     };
 
-    // 返回Promise实例
-    const promise = func => new Promise(func);
-    // 数组each
-    const each = (arr, func) => arr.forEach(func);
-    const {
-        assign,
-        defineProperty,
-        keys
-    } = Object;
-    //获取类型
-    var objectToString = Object.prototype.toString;
-    var getType = value => objectToString.call(value).toLowerCase().replace(/(\[object )|(])/g, '');
-    var isFunction = d => getType(d).search('function') > -1;
-    // 获取随机id
-    var getRandomId = () => Math.random().toString(32).substr(2);
-    var isEmptyObj = obj => !(0 in keys(obj));
-
-    // 加载器（针对文件类型）
-    let loaders = {
-        // 样式文件
-        css: urlData => promise(res => {
-            // 给主体添加css
-            let linkEle = document.createElement('link');
-            linkEle.rel = "stylesheet";
-            linkEle.href = urlData.link;
-
-            linkEle.onload = () => {
-                res({
-                    stat: 1
-                })
-            }
-
-            linkEle.onerror = () => {
-                res({
-                    stat: 0
-                })
-            }
-
-            // 设置状态
-            bag[urlData.path].stat = 3;
-
-            // 添加到head
-            document.head.appendChild(linkEle);
-        }),
-        json: async urlData => {
-            // 设置状态
-            bag[urlData.path].stat = 3;
-
-            // 请求数据
-            let data = await fetch(urlData.link);
-
-            // 转换json格式
-            data = await data.json();
-
-            return {
-                stat: 1,
-                o: {
-                    async get() {
-                        return data;
-                    }
-                }
-            };
-        }
-    };
-
-    // Class
-    // 状态记录器类
-    class DrillStat {
-        constructor(fileType) {
-            assign(this, {
-                // 待办列表
-                tobe: [],
-                fileType,
-                // 默认是空的获取函数
-                get: async () => { },
-                // stat监听函数存放列表
-                _sl: []
-            });
-
-            // 默认状态是2（加载中）
-            let stat = 2;
-            defineProperty(this, 'stat', {
-                set(val) {
-                    // 触发_sl
-                    each(this._sl, e => e(val, this._stat));
-                    stat = val;
-                },
-                get: () => stat
-            });
-        }
-        statChange(func) {
-            this._sl.push(func);
-        }
-    }
-
     // main
-    /**
-     * 初步简单拆分url数据，将url字符串转换为object
-     * 按空格拆分数组，第二个数开始是附加参数
-     */
-    let analyzeUrl = str => {
-        // 拆分空格数据
-        let ndata = str.split(/\s/).filter(e => e && e);
+    // loaders添加css
+    loaders.set("css", (packData) => {
+        // 给主体添加css
+        let linkEle = document.createElement('link');
+        linkEle.rel = "stylesheet";
+        linkEle.href = packData.link;
 
-        // 第一个参数是路径名
-        let ori = ndata[0];
-
-        // 拆分问号(?)后面的 url param
-        let search = ori.match(/(.+)\?(\S+)$/) || "";
-        if (search) {
-            ori = search[1];
-            search = search[2];
+        linkEle.onload = () => {
+            // 设置完成
+            packData.stat = 3;
         }
 
-        // 判断是否要加版本号
-        let {
-            k,
-            v
-        } = drill.cacheInfo;
-        if (k && v) {
-            search && (search += "&");
-            search += k + '=' + v;
+        linkEle.onerror = () => {
+            packData.stat = 2;
         }
 
-        // 加载错误时间和间隔时间
-        let {
-            loadNum
-        } = errInfo;
-        let errLoadTime = errInfo.time;
-
-        let reobj = {
-            // 最初的字符串
-            str,
-            // 资源地址
-            ori,
-            // url参数
-            search,
-            // 空格组参数
-            param: ndata.slice(1),
-            // 加载次数
-            loadNum,
-            // 加载时间
-            errLoadTime,
-            // 握手数据
-            // 框架内没有使用握手数据，主要方便外部插件使用
-            hand: {
-                rid: getRandomId()
-            }
-        }
-
-        // 返回数据
-        return reobj;
-    };
-
-    /**
-     * 修正地址，得出path
-     * analyzeUrl负责拆分数据，这个负责重新整理映射map地址
-     * 修正当前目录是否相对根目录
-     * 修正paths映射地址
-     * 根据path得出fileType
-     */
-    let fixPath = urlData => {
-        let {
-            ori
-        } = urlData;
-
-        // 查看是否有映射路径
-        let tarpath = paths[ori];
-        if (tarpath) {
-            ori = tarpath;
-        } else {
-            // 查看是否有映射目录
-            // 判断是否注册目录
-            for (let i in dirpaths) {
-                let tar = dirpaths[i];
-                let tarreg = tar.r;
-                if (tarreg.test(ori)) {
-                    ori = ori.replace(tarreg, tar.v);
-                    break
-                }
-            }
-        }
-
-        // 得出fileType
-        let fileType = getFileType(ori);
-
-        // 查看loader内是否存在这个类型
-        if (!fileType || !loaders[fileType]) {
-            fileType = 'js';
-        }
-
-        urlData.fileType = fileType;
-
-        // ori去掉后缀
-        ori = ori.replace(new RegExp('\\.' + fileType + "$"), "")
-
-        // 主体path
-        let path = ori;
-
-        // 判断是否包
-        if (urlData.param.indexOf('-pack') > -1) {
-            let pathArr = path.match(/(.+)\/(.+)/);
-            if (2 in pathArr) {
-                ori = path = pathArr[1] + "/" + pathArr[2] + "/" + pathArr[2];
-            }
-        }
-
-        // 判断是否有基于根目录参数
-        if (urlData.param.indexOf('-r') > -1 || /^.+:\/\//.test(ori)) {
-            path = ori;
-        } else if (/^\./.test(ori)) {
-            if (urlData.rel) {
-                // 添加相对路径
-                path = urlData.rel + ori;
-            } else {
-                path = ori.replace(/^\.\//, "");
-            }
-        } else {
-            // 添加相对目录，得出资源地址
-            path = baseResources.baseUrl + ori;
-        }
-
-        // 修正单点
-        path = path.replace(/\/\.\//, "/");
-
-        // 修正两点（上级目录）
-        if (/\.\.\//.test(path)) {
-            path = removeParentPath(path);
-        }
-
-        // 添加后缀
-        path += "." + urlData.fileType;
-        urlData.path = path;
-
-        // 根据资源地址计算资源目录
-        urlData.dir = getDir(path);
-
-        // 写入最终请求资源地址
-        urlData.link = path + "?" + urlData.search;
-
-        return urlData;
-    };
-
-    /**
-     * 主体require方法
-     * 负责组装基础业务
-     */
-    let require = urlObjs => {
-        // pend函数寄存
-        let pendFunc;
-
-        let p = promise((res, rej) => {
-            nextTick(() => {
-                let len = urlObjs.length;
-                let sum = len;
-                switch (len) {
-                    case 0:
-                        // 空的你还引用干嘛
-                        throw ('no resource path');
-                    case 1:
-                        // 单个直接返回
-                        loadAgent(urlObjs[0]).then(d => {
-                            pendFunc && pendFunc({
-                                id: 0,
-                                sum,
-                                ready: 1,
-                                // 成功
-                                stat: 1
-                            });
-                            res(d);
-                        }).catch(e => {
-                            rej();
-                        });
-                        break;
-                    default:
-                        // 多个情况下返回数组
-                        let reDatas = [];
-
-                        // 是否有错误
-                        let errors = [];
-
-                        // 遍历加载
-                        each(urlObjs, async (urlData, i) => {
-                            let stat = 1;
-                            // 获取数据
-                            let sdata = await loadAgent(urlData).catch(() => {
-                                errors.push(i);
-                                stat = 0;
-                            });
-
-                            // 设置数据
-                            reDatas[i] = sdata;
-
-                            // 触发pending
-                            pendFunc && pendFunc({
-                                // 当前所处id
-                                id: i,
-                                // 总数
-                                sum,
-                                ready: sum - len + 1,
-                                stat
-                            });
-
-                            // 递减数目
-                            len--;
-
-                            // 当达到数目，返回数据
-                            if (!len) {
-                                if (0 in errors) {
-                                    rej({
-                                        // 总共错误的id
-                                        errors,
-                                        // 返回总结果
-                                        result: reDatas
-                                    });
-
-                                    // 全局错误
-                                    drill.onerror && drill.onerror({
-                                        // 总共错误的id
-                                        errors,
-                                        // 返回总结果
-                                        result: reDatas,
-                                        args: urlObjs.map(e => e.str)
-                                    });
-
-                                } else {
-                                    res(reDatas);
-                                }
-                            }
-                        });
-                }
-            });
-        });
-
-        // 传送数据的方法
-        p.post = d => {
-            // 将数据设置到urlObject上
-            each(urlObjs, e => {
-                e.data = d;
-            });
-            return p;
-        };
-
-        // pending记录
-        p.pend = func => {
-            pendFunc = func;
-            return p;
-        }
-
-        // 放回promise
-        return p;
-    }
-
-    /**
-     * 加载资源前的代理操作
-     * 如果加载过就直接返回内存里的数据
-     */
-    let loadAgent = urlData => promise((res, rej) => {
-        let {
-            path
-        } = urlData;
-        let tar = bag[path];
-
-        if (!tar) {
-            tar = bag[path] = new DrillStat(urlData.fileType);
-
-            // 错误加载次数
-            let {
-                loadNum
-            } = urlData;
-
-            // 加载资源
-            let loadfun = () => {
-                loadSource(urlData).then(statData => {
-                    // 合并模块数据
-                    assign(tar, statData.o);
-
-                    if (statData.stat == 1) {
-                        // 确认加载完成
-                        tar.stat = 1;
-
-                        // 运行历史函数
-                        each(tar.tobe, e => {
-                            e.res();
-                        });
-                    } else {
-                        // 还有加载次数
-                        if (loadNum) {
-                            // 设置错误状态
-                            tar.stat = 4;
-
-                            // 递减
-                            loadNum--;
-
-                            setTimeout(() => {
-                                loadfun();
-                            }, urlData.errLoadTime);
-                            return;
-                        }
-
-                        // 加载出错
-                        tar.stat = statData.stat;
-                        each(tar.tobe, e => {
-                            // 返回错误信息
-                            console.error(statData.stat + " " + statData.msg);
-                            e.rej();
-                        });
-
-                        // 清空
-                        delete bag[path];
-                    }
-
-                    // 清空
-                    delete tar.tobe;
-                    loadfun = null;
-                })
-            }
-            loadfun();
-        }
-
-        // 要返回的数据
-        let reData;
-
-        /**
-         * 状态说明
-         * 1 加载完成
-         * 2 加载中（资源未加载完毕）
-         * 3 加载中（资源已加载完毕，正在等候确认）
-         * 4 加载中（资源加载错误，正在重新加载）
-         */
-        switch (tar.stat) {
-            case 1:
-                // 加载完成
-                tar.get(urlData).then(res);
-                break;
-            case 2:
-            case 3:
-            case 4:
-                // 等待数据
-                tar.tobe.push({
-                    res() {
-                        tar.get(urlData).then(res)
-                    },
-                    rej
-                });
-                break;
-        }
-    })
-
-    /**
-     * 加载资源
-     * 资源判断，js文件就进行loadjs
-     */
-    let loadSource = async urlData => {
-        let statData;
-        let {
-            fileType
-        } = urlData;
-        // 主体加载js类型
-        if (fileType === "js") {
-            statData = await loadJS(urlData);
-        } else if (loaders[fileType]) {
-            // 加载其他文件类型
-            statData = await loaders[fileType](urlData);
-        } else {
-            // 不能加载这种文件类型
-            statData = {
-                stat: 100,
-                msg: `no this fileType => .` + urlData.fileType
-            };
-        }
-        return statData;
-    }
-
-    /**
-     * 加载js资源
-     * 默认包含 file define task 三种类型
-     * file 普通文件类型
-     * define 模块类型
-     * task 进程类型
-     */
-    let loadJS = async urlData => {
-        // 获取状态信息
-        let statData = await loadScript(urlData);
-
-        // 获取临时数据
-        let {
-            tempM
-        } = baseResources;
-        let {
-            type,
-            moduleId
-        } = tempM;
-
-        // 清空tempM
-        baseResources.tempM = {};
-
-        // 判断是否有自定义id
-        if (moduleId) {
-            bag[moduleId] || (bag[moduleId] = bag[urlData.path]);
-        }
-
-        if (type) {
-            // 设置类型
-            statData.o.jsType = type;
-
-            // 设置状态
-            bag[urlData.path].stat = 3;
-
-            let sData;
-            switch (type) {
-                case "define":
-                    sData = await setDefine(urlData, tempM);
-                    break;
-                case "task":
-                    sData = await setTask(urlData, tempM);
-                    break;
-                default:
-                    let tarProcessor = processor[type];
-                    if (tarProcessor) {
-                        sData = await tarProcessor(urlData, tempM);
-                    }
-            }
-
-            // 设置get函数
-            assign(statData.o, sData);
-
-        } else {
-            // 默认都会当成file类型
-            statData.o.jsType = "file";
-        }
-
-        // 返回状态信息
-        return statData;
-    };
-
-    /**
-     * 加载 script
-     */
-    let loadScript = urlData => promise(res => {
-        let {
-            link,
-            path,
-        } = urlData;
-
-        // 主体script
-        let script = document.createElement('script');
-
-        //填充相应数据
-        script.type = 'text/javascript';
-        script.async = true;
-        path && (script.src = link);
-
-        // 添加事件
-        script.addEventListener('load', () => {
-            res({
-                stat: 1,
-                // 最终合并到bag
-                o: {
-                    script
-                }
-            });
-        });
-
-        script.addEventListener('error', (e) => {
-            // 加载错误就删掉script
-            document.head.removeChild(script);
-
-            res({
-                stat: 404,
-                msg: "load js file error => " + urlData.path,
-                o: {}
-            });
-        });
-
-        // 载入主体
-        // polyfill后 ie10 bug
-        nextTick(() => {
-            document.head.appendChild(script);
-        });
+        // 添加到head
+        document.head.appendChild(linkEle);
     });
 
-    // 生成内部用的require
-    let getInRequire = (dir, hand) => (...args) => require(args.map(e => {
-        e = analyzeUrl(e)
+    // loaders添加json支持
+    loaders.set("json", async (packData) => {
+        try {
+            // 请求数据
+            let data = await fetch(packData.link);
+        } catch (e) {
+            packData.stat = 2;
+            return;
+        }
+        // 转换json格式
+        data = await data.json();
 
-        // 添加相对目录
-        e.rel = dir;
+        // 重置getPack
+        packData.getPack = async () => {
+            return data;
+        }
 
-        // 握手数据
-        e.parHand = hand;
+        // 设置完成
+        packData.stat = 3;
+    });
 
-        return fixPath(e);
-    }));
+    // processors添加普通文件加载方式
+    processors.set("file", (packData) => {
+        // 直接修改完成状态
+        packData.stat = 3;
+    });
 
-    // 设置define模块
-    let setDefine = async (urlData, tempM) => {
-        // 获取临时数据
-        let {
-            d
-        } = tempM;
+    // 添加define模块支持
+    processors.set("define", async (packData) => {
+        let d = base.tempM.d;
 
         let exports = {},
             module = {
@@ -693,15 +157,14 @@
         // 根据内容填充函数
         if (isFunction(d)) {
             let {
-                dir,
-                hand,
                 path
-            } = urlData;
+            } = packData;
 
             // 函数类型
-            d = d(getInRequire(dir, hand), exports, module, {
+            d = d((...args) => {
+                return load(toUrlObjs(args, packData.dir));
+            }, exports, module, {
                 FILE: path,
-                DIR: dir
             });
         }
 
@@ -716,162 +179,538 @@
             d = module.exports;
         }
 
-        // 返回 get函数
-        return {
-            get: async () => d
-        };
-    }
+        // 修正getPack方法
+        packData.getPack = async () => {
+            return d;
+        }
 
-    // 设置task模块
-    let setTask = async (urlData, tempM) => {
-        let {
-            d
-        } = tempM;
+        // 修正状态
+        packData.stat = 3;
+    });
+
+    // 添加task模块支持
+    processors.set("task", (packData) => {
+        let d = base.tempM.d;
 
         // 判断d是否函数
         if (!isFunction(d)) {
-            throw 'drill\'s task must be a function';
+            throw 'task must be a function';
         }
 
-        // 直接设置函数
-        return {
-            get: async (urlData) => {
-                let {
-                    dir,
-                    hand,
-                    path,
-                    data
-                } = urlData;
+        // 修正getPack方法
+        packData.getPack = async (urlData) => {
+            let reData = await d((...args) => {
+                return load(toUrlObjs(args, urlData.dir));
+            }, urlData.data, {
+                FILE: urlData.path,
+            });
 
-                let p = d(getInRequire(dir, hand), data, {
-                    FILE: path,
-                    DIR: dir
-                });
+            return reData;
+        }
 
-                return await p;
+        // 修正状态
+        packData.stat = 3;
+    });
+
+    // loaders添加js加载方式
+    loaders.set("js", (packData) => {
+        // 主体script
+        let script = document.createElement('script');
+
+
+        //填充相应数据
+        script.type = 'text/javascript';
+        script.async = true;
+        script.src = packData.link;
+
+        // 添加事件
+        script.addEventListener('load', () => {
+            // 根据tempM数据设置type
+            let {
+                tempM
+            } = base;
+
+            // type:
+            // file 普通文件类型
+            // define 模块类型
+            // task 进程类型
+            let {
+                type,
+                moduleId
+            } = tempM;
+
+            // 判断是否有自定义id
+            if (moduleId) {
+                bag.get(moduleId) || bag.set(moduleId, packData);
             }
-        };
+
+            // 进行processors断定
+            // 默认是file类型
+            let process = processors.get(type || "file");
+
+            if (process) {
+                process(packData);
+            } else {
+                throw "no such this processor => " + type;
+            }
+
+            // 清空tempM
+            base.tempM = {};
+        });
+        script.addEventListener('error', () => {
+            // 加载错误
+            packData.stat = 2;
+        });
+
+        // 添加进主体
+        document.head.appendChild(script);
+    });
+
+    // 代理加载
+    // 根据不同加载状态进行组装
+    let agent = (urlObj) => {
+        // 根据url获取资源状态
+        let packData = bag.get(urlObj.path);
+
+        if (!packData) {
+            // 加载状态
+            // 1加载中
+            // 2加载错误，重新装载中
+            // 3加载完成
+            // 4彻底加载错误，别瞎折腾了
+            let stat = 1;
+
+            packData = {
+                get stat() {
+                    return stat;
+                },
+                set stat(d) {
+                    // 记录旧状态
+                    let oldStat = stat;
+
+                    // set
+                    stat = d;
+
+                    // 改动stat的时候触发changes内的函数
+                    this.changes.forEach(callback => callback({
+                        change: "stat",
+                        oldStat,
+                        stat
+                    }));
+                },
+                path: urlObj.path,
+                link: urlObj.link,
+                dir: urlObj.dir,
+                // 改动事件记录器
+                changes: new Set(),
+                // 记录装载状态
+                fileType: urlObj.fileType,
+                // 包的getter函数
+                // 包加载完成时候，有特殊功能的，请替换掉async getPack函数
+                async getPack(urlObj) {}
+            };
+
+            // 设置包数据
+            bag.set(urlObj.path, packData);
+
+            // 立即请求包处理
+            let loader = loaders.get(urlObj.fileType);
+
+            if (loader) {
+                // 存在Loader的话，进行加载
+                loader(packData);
+            } else {
+                throw "no such this loader => " + packData.fileType;
+            }
+        }
+
+        return new Promise((res, rej) => {
+            // 根据状态进行处理
+            switch (packData.stat) {
+                case 2:
+                    // 加载错误的重新装载，也加入队列
+                case 1:
+                    // 添加状态改动callback，确认加载完成的状态后，进行callback
+                    let statChangeCallback;
+                    packData.changes.add(statChangeCallback = (d) => {
+                        // 获取改动状态
+                        let {
+                            stat
+                        } = d;
+
+                        switch (stat) {
+                            case 3:
+                                // 加载完成，运行getPack函数
+                                packData.getPack(urlObj).then(res);
+
+                                // 清除自身callback
+                                packData.changes.delete(statChangeCallback);
+                                packData = null;
+                                break;
+                            case 2:
+                                // 重新装载
+                                // 获取计数器
+                                let loadCount = (packData.loadCount != undefined) ? packData.loadCount : (packData.loadCount = 0);
+
+                                // 存在次数
+                                if (loadCount < errInfo.loadNum) {
+                                    // 递增
+                                    packData.loadCount++;
+
+                                    // 重新装载
+                                    let loader = loaders.get(packData.fileType);
+                                    setTimeout(() => loader(packData), errInfo.time);
+                                } else {
+                                    // 查看有没有后备仓
+                                    let {
+                                        backups
+                                    } = errInfo;
+
+                                    // 确认后备仓
+                                    if (backups.size) {
+                                        // 查看当前用了几个后备仓
+                                        let backupId = (packData.backupId != undefined) ? packData.backupId : (packData.backupId = -1);
+                                        if (backupId < backups.size) {
+                                            // 转换数组
+                                            let barr = Array.from(backups);
+                                            let oldBaseUrl = barr[backupId] || packData.dir;
+
+                                            // 递增backupId
+                                            backupId = ++packData.backupId;
+                                            let newBaseUrl = barr[backupId];
+
+                                            // 修正数据重新载入
+                                            packData.loadCount = 1;
+                                            packData.link = packData.link.replace(new RegExp("^" + oldBaseUrl), newBaseUrl);
+
+                                            // 重新装载
+                                            let loader = loaders.get(packData.fileType);
+                                            setTimeout(() => loader(packData), errInfo.time);
+                                            return;
+                                        }
+                                    }
+                                    // 载入不进去啊大佬，别费劲了
+                                    packData.stat = 4;
+                                }
+
+                                break;
+                            case 4:
+                                rej("source error");
+                                break;
+                        }
+                    });
+                    break;
+                case 3:
+                    nextTick(() => {
+                        // 已经加载完成的，直接获取
+                        packData.getPack(urlObj).then(res);
+                    });
+                    break;
+                case 4:
+                    // 彻底加载错误的资源，就别瞎折腾了
+                    rej("source error");
+                    break;
+            }
+        });
+
     }
 
-    // init
-    // 暴露给外部用的主体对象
-    let drill = {
-        // 内部基础数据对象
-        baseResources,
-        // 外部用require
-        require: (...args) => require(args.map(e => fixPath(analyzeUrl(e)))),
-        // 加载器
-        loaders,
-        // 处理器
-        processor,
-        // 错误处理信息
-        errInfo,
-        // 配置方法
+    // 主体加载函数
+    let load = (urlObjs) => {
+        let pendFunc;
+        let p = new Promise((res, rej) => {
+            // 要返回的数据
+            let reValue = [];
+
+            // 获取原来的长度
+            let {
+                length
+            } = urlObjs;
+            let sum = length;
+
+            // 是否有出错
+            let hasError = [];
+
+            urlObjs.forEach(async (obj, i) => {
+                // 载入的状态
+                let stat = "succeed";
+
+                // 中转加载资源
+                let d = await agent(obj).catch(e => {
+                    stat = "error";
+                    Object.assign(obj, {
+                        type: "error",
+                        descript: e
+                    });
+                    hasError.push(obj);
+                });
+
+                // 设置数据
+                reValue[i] = d;
+
+                // 触发pending
+                pendFunc && pendFunc({
+                    // 当前所处id
+                    id: i,
+                    // 总数
+                    sum,
+                    ready: sum - length + 1,
+                    stat
+                });
+
+                // 计时减少
+                length--;
+
+                if (!length) {
+                    if (!hasError.length) {
+                        // 单个的话直接返回单个的数据
+                        if (sum == 1) {
+                            res(d);
+                        } else {
+                            res(reValue);
+                        }
+                    } else {
+                        // 出错了
+                        rej(hasError);
+                    }
+                    reValue = null;
+                }
+            });
+        });
+
+        // 挂载两个方法
+        p.post = function (data) {
+            urlObjs.forEach(e => e.data = data);
+            return this;
+        };
+        p.pend = function (func) {
+            pendFunc = func;
+            return this;
+        };
+
+        return p;
+    }
+
+    // 转换出url字符串对象
+    let fixUrlObj = (urlObj) => {
+        let {
+            str
+        } = urlObj;
+
+        // 拆分空格数据
+        let ndata = str.split(/\s/).filter(e => e && e);
+
+        let param = ndata.slice(1);
+
+        // 第一个参数是路径名
+        let ori = ndata[0];
+
+        // 拆分问号(?)后面的 url param
+        let search = ori.match(/(.+)\?(\S+)$/) || "";
+        if (search) {
+            ori = search[1];
+            search = search[2];
+        }
+        // 判断是否要加版本号
+        let {
+            k,
+            v
+        } = drill.cacheInfo;
+        if (k && v) {
+            search && (search += "&");
+            search += k + '=' + v;
+        }
+
+        // 查看是否有映射路径
+        let tarpath = paths.get(ori);
+        if (tarpath) {
+            ori = tarpath;
+        } else {
+            // 查看是否有映射目录
+            // 判断是否注册目录
+            for (let i in dirpaths) {
+                let tar = dirpaths[i];
+                if (tar.reg.test(ori)) {
+                    ori = ori.replace(tar.reg, tar.value);
+                    break
+                }
+            }
+        }
+
+        // 得出fileType
+        let fileType = getFileType(ori) || "js";
+
+        // ori去掉后缀
+        ori = ori.replace(new RegExp('\\.' + fileType + "$"), "");
+
+        // 主体path
+        let path;
+
+        if (param.includes('-pack')) {
+            let pathArr = path.match(/(.+)\/(.+)/);
+            if (2 in pathArr) {
+                ori = path = pathArr[1] + "/" + pathArr[2] + "/" + pathArr[2];
+            }
+        }
+
+        // 判断是否有基于根目录参数
+        if (param.indexOf('-r') > -1 || /^.+:\/\//.test(ori)) {
+            path = ori;
+        } else if (/^\./.test(ori)) {
+            if (urlObj.relative) {
+                // 添加相对路径
+                path = urlObj.relative + ori;
+            } else {
+                path = ori.replace(/^\.\//, "");
+            }
+        } else {
+            // 添加相对目录，得出资源地址
+            path = base.baseUrl + ori;
+        }
+
+        // 修正单点
+        path = path.replace(/\/\.\//, "/");
+
+        // 修正两点（上级目录）
+        if (/\.\.\//.test(path)) {
+            path = removeParentPath(path);
+        }
+
+        // 添加后缀
+        path += "." + fileType;
+
+        // 根据资源地址计算资源目录
+        let dir = getDir(path);
+
+        // 写入最终请求资源地址
+        let link = search ? (path + "?" + search) : path;
+
+        Object.assign(urlObj, {
+            link,
+            search,
+            ori,
+            fileType,
+            path,
+            dir,
+            param
+        });
+
+        return urlObj;
+    }
+
+    // 轻转换函数
+    const toUrlObjs = (args, relative) => {
+        // 生成组id
+        let groupId = getRandomId();
+
+        // 转化成urlObj
+        return args.map((url, id) => fixUrlObj({
+            loadId: getRandomId(),
+            id,
+            str: url,
+            groupId,
+            relative
+        }));
+    }
+
+    const drill = {
+        load(...args) {
+            return load(toUrlObjs(args));
+        },
+        remove(url) {
+            let {
+                path
+            } = fixUrlObj({
+                str: url
+            });
+
+            if (bag.has(path)) {
+                bag.delete(path);
+
+                //告示删除成功
+                return !0;
+            } else {
+                console.warn(`pack %c${url}`, "color:red", `does not exist`);
+            }
+        },
         config(options) {
-            // 根目录
-            baseResources.baseUrl = options.baseUrl || baseResources.baseUrl;
+            options.baseUrl && (base.baseUrl = options.baseUrl);
 
             //配置paths
             let oPaths = options.paths;
-            for (let i in oPaths) {
+            oPaths && Object.keys(oPaths).forEach(i => {
                 if (/\/$/.test(i)) {
                     //属于目录类型
                     dirpaths[i] = {
                         // 正则
-                        r: new RegExp('^' + i),
+                        reg: new RegExp('^' + i),
                         // 值
-                        v: oPaths[i]
+                        value: oPaths[i]
                     };
                 } else {
                     //属于资源类型
-                    paths[i] = oPaths[i];
+                    paths.set(i, oPaths[i]);
+                }
+            });
+
+            // 后备仓
+            if (base.baseUrl && options.backups) {
+                options.backups.forEach(url => {
+                    errInfo.backups.add(url);
+                });
+            }
+        },
+        define(d, moduleId) {
+            base.tempM = {
+                type: "define",
+                d,
+                moduleId
+            };
+        },
+        task(d, moduleId) {
+            base.tempM = {
+                type: "task",
+                d,
+                moduleId
+            };
+        },
+        // 扩展开发入口
+        ext(f_name, func) {
+            if (isFunction(f_name)) {
+                f_name(base);
+            } else {
+                // 旧的方法
+                let oldFunc;
+
+                // 中间件方法
+                let middlewareFunc = (...args) => func(args, oldFunc, base);
+
+                switch (f_name) {
+                    case "fixUrlObj":
+                        oldFunc = fixUrlObj;
+                        fixUrlObj = middlewareFunc;
+                        break;
+                    case "load":
+                        oldFunc = load;
+                        load = middlewareFunc;
+                        break;
+                    case "agent":
+                        oldFunc = agent;
+                        agent = middlewareFunc;
+                        break;
                 }
             }
         },
         cacheInfo: {
-            // keyName
             k: "d_ver",
-            // // value
-            // v: ""
-        },
-        remove(url) {
-            //获取路径
-            let {
-                path
-            } = fixPath(analyzeUrl(url));
-
-            if (bag[path]) {
-                delete bag[path];
-
-                //告示删除成功
-                return !0;
-            }
-        },
-        // 中间件扩展方法
-        ext(f_name, func) {
-            // 旧的方法
-            let oldFunc;
-
-            // 中间件方法
-            let middlewareFunc = (...args) => func(args, oldFunc, {
-                baseResources
-            });
-
-            // 替换中间方法
-            switch (f_name) {
-                case "analyzeUrl":
-                    oldFunc = analyzeUrl;
-                    analyzeUrl = middlewareFunc;
-                    break;
-                case "fixPath":
-                    oldFunc = fixPath;
-                    fixPath = middlewareFunc;
-                    break;
-                case "require":
-                    oldFunc = require;
-                    require = middlewareFunc;
-                    break;
-                case "loadAgent":
-                    oldFunc = loadAgent;
-                    loadAgent = middlewareFunc;
-                    break;
-                case "loadSource":
-                    oldFunc = loadSource;
-                    loadSource = middlewareFunc;
-                    break;
-                case "loadJS":
-                    oldFunc = loadJS;
-                    loadJS = middlewareFunc;
-                    break;
-                case "loadScript":
-                    oldFunc = loadScript;
-                    loadScript = middlewareFunc;
-                    break;
-                case "setDefine":
-                    oldFunc = setDefine;
-                    setDefine = middlewareFunc;
-                    break;
-                case "setTask":
-                    oldFunc = setTask;
-                    setTask = middlewareFunc;
-                    break;
-            }
+            v: ""
         }
     };
 
-    // 模块初始化类型
-    each(['define', 'task'], fType => {
-        let func = drill[fType] = (d, moduleId) => {
-            baseResources.tempM = {
-                type: fType,
-                d,
-                moduleId
-            };
-        }
-
-        // 暴露global
-        glo[fType] || (glo[fType] = func);
-    });
+    // init 
+    glo.load || (glo.load = drill.load);
+    glo.define || (glo.define = drill.define);
+    glo.task || (glo.task = drill.task);
 
     // 初始化版本号
     let cScript = document.currentScript;
@@ -882,13 +721,11 @@
         cacheVersion && (drill.cacheInfo.v = cacheVersion);
     }
 
-    glo.require || (glo.require = drill.require);
-
     // 判断全局是否存在变量 drill
     let gloDrill = glo.drill;
 
     // 定义全局drill
-    defineProperty(glo, 'drill', {
+    Object.defineProperty(glo, 'drill', {
         get: () => drill,
         set(func) {
             if (isFunction(func)) {
