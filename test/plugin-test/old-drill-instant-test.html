@@ -5,10 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>drill-installer</title>
+    <title>old-drill-installer</title>
     <script src="../ok.js"></script>
-    <script src="../../src/drill.js" drill-cache="1"></script>
-    <script src="../../plugin/drill-installer.js"></script>
+    <script src="../../src/drill-old.js" drill-cache="14"></script>
+    <script src="../../plugin/old-drill-installer.js"></script>
 </head>
 
 <body>
@@ -20,11 +20,11 @@
 
         (async () => {
             drill.config({
-                baseUrl: "../js2/"
+                baseUrl: "../js/"
             });
 
-            let d1 = await load('define/define01');
-            let d1_2 = await load('define/define01');
+            let d1 = await require('define/define01');
+            let d1_2 = await require('define/define01');
         })();
     </script>
 </body>

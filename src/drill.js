@@ -83,6 +83,20 @@
         return urlArr && urlArr[1];
     };
 
+    //修正字符串路径
+    const removeParentPath = (url) => {
+        let urlArr = url.split(/\//g);
+        let newArr = [];
+        urlArr.forEach((e) => {
+            if (e == '..' && newArr.length && (newArr.slice(-1)[0] != "..")) {
+                newArr.pop();
+                return;
+            }
+            newArr.push(e);
+        });
+        return newArr.join('/');
+    };
+
     // main
     // loaders添加css
     loaders.set("css", (packData) => {
