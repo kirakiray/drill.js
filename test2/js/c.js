@@ -1,3 +1,3 @@
-define((require) => {
+define((load) => {
     return 'hahahahahahahahahaha';
 },'file_c');

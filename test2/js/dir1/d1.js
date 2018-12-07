@@ -1,8 +1,8 @@
 // 相对路径测试
-define(async (require) => {
-    let d2 = await require('./d2');
-    let c = await require('c');
-    let d = await require('../d').post('d1 post data');
+define(async (load) => {
+    let d2 = await load('./d2');
+    let c = await load('c');
+    let d = await load('../d').post('d1 post data');
     return {
         d2,
         d,
