@@ -15,7 +15,9 @@
 </body>
 <script>
     drill.config({
-        baseUrl: "js/"
+        baseUrl: "js/",
+        // 添加后备仓
+        backups: ['js2/', 'js3/']
     });
 
     load('define/d1', 'file/file01?aa=1').then((data) => {
@@ -39,12 +41,12 @@
             console.log('task =>', data);
         });
 
-    load('task/t122')
+    load('t133')
         .then((e) => {
-            debugger
+            console.log('succeed => ', e);
         })
         .catch(e => {
-            console.log("error=>", e);
+            debugger
         });
 </script>
 

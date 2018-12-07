@@ -157,7 +157,7 @@
                 tobe: [],
                 fileType,
                 // 默认是空的获取函数
-                get: async () => { },
+                get: async () => {},
                 // stat监听函数存放列表
                 _sl: []
             });

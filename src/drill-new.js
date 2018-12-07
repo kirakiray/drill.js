@@ -21,7 +21,9 @@
         // 默认错误的时候回再请求3次
         loadNum: 3,
         // 加载错误之后，再次加载的间隔时间(毫秒)
-        time: 2000
+        time: 1000,
+        // baseUrl后备仓
+        backups: new Set()
     };
 
     // 基础数据对象
@@ -105,9 +107,13 @@
 
     // loaders添加json支持
     loaders.set("json", async (packData) => {
-        // 请求数据
-        let data = await fetch(packData.link);
-
+        try {
+            // 请求数据
+            let data = await fetch(packData.link);
+        } catch (e) {
+            packData.stat = 2;
+            return;
+        }
         // 转换json格式
         data = await data.json();
 
@@ -342,6 +348,34 @@
                                     let loader = loaders.get(packData.fileType);
                                     setTimeout(() => loader(packData), errInfo.time);
                                 } else {
+                                    // 查看有没有后备仓
+                                    let {
+                                        backups
+                                    } = errInfo;
+
+                                    // 确认后备仓
+                                    if (backups.size) {
+                                        // 查看当前用了几个后备仓
+                                        let backupId = (packData.backupId != undefined) ? packData.backupId : (packData.backupId = -1);
+                                        if (backupId < backups.size) {
+                                            // 转换数组
+                                            let barr = Array.from(backups);
+                                            let oldBaseUrl = barr[backupId] || packData.dir;
+
+                                            // 递增backupId
+                                            backupId = ++packData.backupId;
+                                            let newBaseUrl = barr[backupId];
+
+                                            // 修正数据重新载入
+                                            packData.loadCount = 1;
+                                            packData.link = packData.link.replace(new RegExp("^" + oldBaseUrl), newBaseUrl);
+
+                                            // 重新装载
+                                            let loader = loaders.get(packData.fileType);
+                                            setTimeout(() => loader(packData), errInfo.time);
+                                            return;
+                                        }
+                                    }
                                     // 载入不进去啊大佬，别费劲了
                                     packData.stat = 4;
                                 }
@@ -553,7 +587,7 @@
     }
 
     // 轻转换函数
-    let toUrlObjs = (args, relative) => {
+    const toUrlObjs = (args, relative) => {
         // 生成组id
         let groupId = getRandomId();
 
@@ -605,6 +639,13 @@
                     paths.set(i, oPaths[i]);
                 }
             });
+
+            // 后备仓
+            if (base.baseUrl && options.backups) {
+                options.backups.forEach(url => {
+                    errInfo.backups.add(url);
+                });
+            }
         },
         define(d, moduleId) {
             base.tempM = {
@@ -623,8 +664,7 @@
         cacheInfo: {
             k: "",
             v: ""
-        },
-        errInfo
+        }
     };
 
     // init 
