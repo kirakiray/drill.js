@@ -7,6 +7,8 @@
     // 地址寄存器
     const bag = new Map();
 
+    window.bag = bag;
+
     // 映射资源
     const paths = new Map();
 
@@ -97,6 +99,9 @@
         return newArr.join('/');
     };
 
+    // 获取根目录地址
+    const rootHref = getDir(document.location.href);
+
     // main
     // loaders添加css
     loaders.set("css", (packData) => {
@@ -157,14 +162,16 @@
         // 根据内容填充函数
         if (isFunction(d)) {
             let {
-                path
+                path,
+                dir
             } = packData;
 
             // 函数类型
             d = d((...args) => {
-                return load(toUrlObjs(args, packData.dir));
+                return load(toUrlObjs(args, dir));
             }, exports, module, {
                 FILE: path,
+                DIR: dir
             });
         }
 
@@ -197,12 +204,18 @@
             throw 'task must be a function';
         }
 
+        let {
+            path,
+            dir
+        } = packData;
+
         // 修正getPack方法
         packData.getPack = async (urlData) => {
             let reData = await d((...args) => {
-                return load(toUrlObjs(args, urlData.dir));
+                return load(toUrlObjs(args, dir));
             }, urlData.data, {
-                FILE: urlData.path,
+                FILE: path,
+                DIR: dir
             });
 
             return reData;
@@ -298,6 +311,7 @@
                         stat
                     }));
                 },
+                dir: urlObj.dir,
                 path: urlObj.path,
                 link: urlObj.link,
                 dir: urlObj.dir,
@@ -566,6 +580,11 @@
         } else {
             // 添加相对目录，得出资源地址
             path = base.baseUrl + ori;
+        }
+
+        // 判断不是协议开头的，加上当前的根目录
+        if (!/^.+:\/\//.test(path)) {
+            path = rootHref + path;
         }
 
         // 修正单点
