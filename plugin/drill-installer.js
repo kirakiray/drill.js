@@ -1,10 +1,4 @@
 ((drill) => {
-    // 内存文件数据库
-    let b64Databases = new Map();
-    drill.setModule = (pathname, b64) => {
-        b64Databases.set(pathname, b64);
-    }
-
     // 存在indexDB的情况，添加离线缓存功能
     const DBNAME = 'drill_installer_database';
     const FILESTABLENAME = 'files';
@@ -15,9 +9,10 @@
 
         // 读取source
         let sourceTemplink = await loadSource(urlObj);
-
-        // 修正link
-        urlObj.link = sourceTemplink;
+        if (sourceTemplink) {
+            // 修正link
+            urlObj.link = sourceTemplink;
+        }
 
         let reObj = next(...args);
 
@@ -47,9 +42,7 @@
         // 获取文件读取状态
         let tarPromise = fileLinkMap.get(urlObj.path);
 
-        if (tarPromise) {
-            reData = await tarPromise;
-        } else {
+        if (!tarPromise) {
             // 设置Promise
             fileLinkMap.set(urlObj.path, tarPromise = (async () => {
                 // 先从数据库获取数据
@@ -81,10 +74,10 @@
 
                 return tempUrl;
             })());
-
-            // 获取数据
-            reData = await tarPromise;
         }
+
+        // 获取数据
+        reData = await tarPromise;
 
         return reData;
     }
