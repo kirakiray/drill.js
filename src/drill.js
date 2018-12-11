@@ -125,9 +125,10 @@
 
     // loaders添加json支持
     loaders.set("json", async (packData) => {
+        let data;
         try {
             // 请求数据
-            let data = await fetch(packData.link);
+            data = await fetch(packData.link);
         } catch (e) {
             packData.stat = 2;
             return;
@@ -138,6 +139,32 @@
         // 重置getPack
         packData.getPack = async () => {
             return data;
+        }
+
+        // 设置完成
+        packData.stat = 3;
+    });
+
+    // loaders添加json支持
+    loaders.set("wasm", async (packData) => {
+        let data;
+        try {
+            // 请求数据
+            data = await fetch(packData.link);
+        } catch (e) {
+            packData.stat = 2;
+            return;
+        }
+        // 转换arrayBuffer格式
+        data = await data.arrayBuffer();
+
+        // 转换wasm模块
+        let module = await WebAssembly.compile(data);
+        const instance = new WebAssembly.Instance(module);
+
+        // 重置getPack
+        packData.getPack = async () => {
+            return instance.exports;
         }
 
         // 设置完成
