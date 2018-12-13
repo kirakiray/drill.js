@@ -587,13 +587,6 @@
         // 主体path
         let path;
 
-        if (param.includes('-pack')) {
-            let pathArr = path.match(/(.+)\/(.+)/);
-            if (2 in pathArr) {
-                ori = path = pathArr[1] + "/" + pathArr[2] + "/" + pathArr[2];
-            }
-        }
-
         // 判断是否有基于根目录参数
         if (param.indexOf('-r') > -1 || /^.+:\/\//.test(ori)) {
             path = ori;
@@ -607,6 +600,14 @@
         } else {
             // 添加相对目录，得出资源地址
             path = base.baseUrl + ori;
+        }
+
+        // 判断是否带有 -pack 参数
+        if (param.includes('-pack')) {
+            let pathArr = path.match(/(.+)\/(.+)/);
+            if (2 in pathArr) {
+                ori = path = pathArr[1] + "/" + pathArr[2] + "/" + pathArr[2];
+            }
         }
 
         // 判断不是协议开头的，加上当前的根目录
