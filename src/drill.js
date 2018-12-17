@@ -680,6 +680,17 @@
                 console.warn(`pack %c${url}`, "color:red", `does not exist`);
             }
         },
+        has(url) {
+            let {
+                path
+            } = fixUrlObj({
+                str: url
+            });
+
+            let packData = bag.get(path);
+
+            return packData && packData.stat;
+        },
         config(options) {
             options.baseUrl && (base.baseUrl = options.baseUrl);
 
