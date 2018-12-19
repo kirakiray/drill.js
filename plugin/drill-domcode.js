@@ -1,15 +1,25 @@
 // 用于xhear库载入html并获取temp的html代码用插件
-drill.ext((base) => {
+drill.ext("fixUrlObj", (args, next, base) => {
+    // 将dcode的相关数据修正
+    let reData = next(...args);
+
+    if (reData.fileType == "dcode") {
+        let link = reData.link.replace(/\.dcode(\??.*)/, '.html$1');
+        link && (reData.link = link);
+    }
+
+    return reData;
+});
+
+drill.ext(base => {
     let {
         loaders
     } = base;
 
     // 设置类型
     loaders.set('dcode', async (packData) => {
-        // 获取相应html内容
-        let link = packData.link.replace(/\.dcode(\??.*)/, '.html$1');
         try {
-            let p = await fetch(link);
+            let p = await fetch(packData.link);
             let text = await p.text();
 
             // 正则匹配body的内容
