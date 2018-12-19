@@ -18,38 +18,40 @@ drill.ext(base => {
 
     // 设置类型
     loaders.set('dcode', async (packData) => {
+        let p;
         try {
-            let p = await fetch(packData.link);
-            let text = await p.text();
-
-            // 正则匹配body的内容
-            let bodyCode = text.match(/<body>([\d\D]*)<\/body>/);
-            bodyCode && (bodyCode = bodyCode[1]);
-
-            // 获取相应的dcode的数据
-            let tempDiv = document.createElement('div');
-            tempDiv.innerHTML = bodyCode;
-            let domcodes = tempDiv.querySelectorAll('[domcode]');
-
-            // 放入对象中
-            let dataObj = {};
-            domcodes && Array.from(domcodes).forEach(e => {
-                let key = e.getAttribute('domcode');
-                if (key) {
-                    dataObj[key] = e.outerHTML;
-                }
-            });
-
-            // 重置getPack
-            packData.getPack = async () => {
-                return dataObj;
-            }
-
-            // 设置完成
-            packData.stat = 3;
+            p = await fetch(packData.link);
         } catch (e) {
             packData.stat = 2;
             return;
         }
+        let text = await p.text();
+
+        // 正则匹配body的内容
+        let bodyCode = text.match(/<body>([\d\D]*)<\/body>/);
+        bodyCode && (bodyCode = bodyCode[1]);
+
+        // 获取相应的dcode的数据
+        let tempDiv = document.createElement('div');
+        tempDiv.innerHTML = bodyCode;
+        let domcodes = tempDiv.querySelectorAll('[domcode]');
+
+        // 放入对象中
+        let dataObj = {};
+        domcodes && Array.from(domcodes).forEach(e => {
+            let key = e.getAttribute('domcode');
+            e.removeAttribute('domcode');
+            if (key) {
+                dataObj[key] = e.outerHTML;
+            }
+        });
+
+        // 重置getPack
+        packData.getPack = async () => {
+            return dataObj;
+        }
+
+        // 设置完成
+        packData.stat = 3;
     });
 });
