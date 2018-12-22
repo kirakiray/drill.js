@@ -41,6 +41,10 @@ drill.ext(base => {
         domcodes && Array.from(domcodes).forEach(e => {
             let key = e.getAttribute('domcode');
             e.removeAttribute('domcode');
+            // 去掉display:none;
+            if (e.style.display == 'none') {
+                e.style.display = "";
+            }
             if (key) {
                 dataObj[key] = e.outerHTML;
             }
