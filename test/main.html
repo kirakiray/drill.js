@@ -13,7 +13,7 @@
 <body>
 </body>
 <script>
-    var g1 = expect(11, '主进程');
+    var g1 = expect(12, '主进程');
 
     var g2 = expect(3, 'pend函数');
 
@@ -87,9 +87,14 @@
 
         // 映射文件测试
         let fileL2 = await load('fileL2');
+
         if (fileL2 == 'long file02') {
             g3.ok(1, 'fileL2文件读取成功');
         }
+
+        // 加载defineId后的模块
+        var newD4 = await load('d4');
+        g1.ok(newD4 === d4, "load define ID ok");
     };
 </script>
 

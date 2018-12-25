@@ -1,4 +1,4 @@
-define(async(load, exports) => {
+define(async (load, exports) => {
     var [d2, d1] = await load('./define02', './define01');
 
     exports.d1 = d1;
@@ -10,4 +10,4 @@ define(async(load, exports) => {
     exports.val = "I am define04";
 
     once(1, 'load define04 ok');
-});
+}, "d4");

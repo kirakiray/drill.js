@@ -7,8 +7,6 @@
     // 地址寄存器
     const bag = new Map();
 
-    window.bag = bag;
-
     // 映射资源
     const paths = new Map();
 
@@ -538,6 +536,17 @@
             str
         } = urlObj;
 
+        // 判断是否注册在bag上的直接的id
+        if (bag.has(str)) {
+            let tarBag = bag.get(str);
+            Object.assign(urlObj, {
+                path: tarBag.path,
+                link: tarBag.link,
+                dir: tarBag.dir
+            });
+            return urlObj;
+        }
+
         // 拆分空格数据
         let ndata = str.split(/\s/).filter(e => e && e);
 
@@ -762,6 +771,9 @@
         cacheInfo: {
             k: "d_ver",
             v: ""
+        },
+        debug: {
+            bag
         }
     };
 
