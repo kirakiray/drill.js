@@ -97,6 +97,9 @@
         return newArr.join('/');
     };
 
+    // 获取根目录地址
+    const rootHref = getDir(document.location.href);
+
     // main
     // loaders添加css
     loaders.set("css", (packData) => {
@@ -120,9 +123,10 @@
 
     // loaders添加json支持
     loaders.set("json", async (packData) => {
+        let data;
         try {
             // 请求数据
-            let data = await fetch(packData.link);
+            data = await fetch(packData.link);
         } catch (e) {
             packData.stat = 2;
             return;
@@ -133,6 +137,32 @@
         // 重置getPack
         packData.getPack = async () => {
             return data;
+        }
+
+        // 设置完成
+        packData.stat = 3;
+    });
+
+    // loaders添加json支持
+    loaders.set("wasm", async (packData) => {
+        let data;
+        try {
+            // 请求数据
+            data = await fetch(packData.link);
+        } catch (e) {
+            packData.stat = 2;
+            return;
+        }
+        // 转换arrayBuffer格式
+        data = await data.arrayBuffer();
+
+        // 转换wasm模块
+        let module = await WebAssembly.compile(data);
+        const instance = new WebAssembly.Instance(module);
+
+        // 重置getPack
+        packData.getPack = async () => {
+            return instance.exports;
         }
 
         // 设置完成
@@ -157,14 +187,16 @@
         // 根据内容填充函数
         if (isFunction(d)) {
             let {
-                path
+                path,
+                dir
             } = packData;
 
             // 函数类型
             d = d((...args) => {
-                return load(toUrlObjs(args, packData.dir));
+                return load(toUrlObjs(args, dir));
             }, exports, module, {
                 FILE: path,
+                DIR: dir
             });
         }
 
@@ -197,12 +229,18 @@
             throw 'task must be a function';
         }
 
+        let {
+            path,
+            dir
+        } = packData;
+
         // 修正getPack方法
         packData.getPack = async (urlData) => {
             let reData = await d((...args) => {
-                return load(toUrlObjs(args, urlData.dir));
+                return load(toUrlObjs(args, dir));
             }, urlData.data, {
-                FILE: urlData.path,
+                FILE: path,
+                DIR: dir
             });
 
             return reData;
@@ -298,6 +336,7 @@
                         stat
                     }));
                 },
+                dir: urlObj.dir,
                 path: urlObj.path,
                 link: urlObj.link,
                 dir: urlObj.dir,
@@ -497,6 +536,17 @@
             str
         } = urlObj;
 
+        // 判断是否注册在bag上的直接的id
+        if (bag.has(str)) {
+            let tarBag = bag.get(str);
+            Object.assign(urlObj, {
+                path: tarBag.path,
+                link: tarBag.link,
+                dir: tarBag.dir
+            });
+            return urlObj;
+        }
+
         // 拆分空格数据
         let ndata = str.split(/\s/).filter(e => e && e);
 
@@ -546,13 +596,6 @@
         // 主体path
         let path;
 
-        if (param.includes('-pack')) {
-            let pathArr = path.match(/(.+)\/(.+)/);
-            if (2 in pathArr) {
-                ori = path = pathArr[1] + "/" + pathArr[2] + "/" + pathArr[2];
-            }
-        }
-
         // 判断是否有基于根目录参数
         if (param.indexOf('-r') > -1 || /^.+:\/\//.test(ori)) {
             path = ori;
@@ -566,6 +609,19 @@
         } else {
             // 添加相对目录，得出资源地址
             path = base.baseUrl + ori;
+        }
+
+        // 判断是否带有 -pack 参数
+        if (param.includes('-pack')) {
+            let pathArr = path.match(/(.+)\/(.+)/);
+            if (2 in pathArr) {
+                ori = path = pathArr[1] + "/" + pathArr[2] + "/" + pathArr[2];
+            }
+        }
+
+        // 判断不是协议开头的，加上当前的根目录
+        if (!/^.+:\/\//.test(path)) {
+            path = rootHref + path;
         }
 
         // 修正单点
@@ -632,6 +688,17 @@
             } else {
                 console.warn(`pack %c${url}`, "color:red", `does not exist`);
             }
+        },
+        has(url) {
+            let {
+                path
+            } = fixUrlObj({
+                str: url
+            });
+
+            let packData = bag.get(path);
+
+            return packData && packData.stat;
         },
         config(options) {
             options.baseUrl && (base.baseUrl = options.baseUrl);
@@ -704,6 +771,9 @@
         cacheInfo: {
             k: "d_ver",
             v: ""
+        },
+        debug: {
+            bag
         }
     };
 
