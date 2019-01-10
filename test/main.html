@@ -19,6 +19,8 @@
 
     var g3 = expect(2, '映射目录测试');
 
+    var g4 = expect(3, 'init模块');
+
     drill = async (drill) => {
         drill.config({
             baseUrl: "js/",
@@ -95,6 +97,13 @@
         // 加载defineId后的模块
         var newD4 = await load('d4');
         g1.ok(newD4 === d4, "load define ID ok");
+
+        let i1 = await load('init01').post("are you init01?");
+        // 下面这个会无效，因为初始化过了
+        let i2 = await load('init01').post("no, you not init01");
+
+        g4.ok(i1.first == "are you init01?", "init redata ok");
+        g4.ok(i1 === i2, "init redata ok");
     };
 </script>
 

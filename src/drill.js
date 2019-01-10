@@ -250,6 +250,47 @@
         packData.stat = 3;
     });
 
+    // 添加init模块支持
+    processors.set("init", (packData) => {
+        let d = base.tempM.d;
+
+        // 判断d是否函数
+        if (!isFunction(d)) {
+            throw 'init must be a function';
+        }
+
+        let {
+            path,
+            dir
+        } = packData;
+
+        let isRun = 0;
+        let redata;
+
+        // 修正getPack方法
+        packData.getPack = async (urlData) => {
+            if (isRun) {
+                return redata;
+            }
+
+            // 等待返回数据
+            redata = await d((...args) => {
+                return load(toUrlObjs(args, dir));
+            }, urlData.data, {
+                FILE: path,
+                DIR: dir
+            });
+
+            // 设置已运行
+            isRun = 1;
+
+            return redata;
+        }
+
+        // 修正状态
+        packData.stat = 3;
+    });
+
     // loaders添加js加载方式
     loaders.set("js", (packData) => {
         // 主体script
@@ -741,6 +782,13 @@
                 moduleId
             };
         },
+        init(d, moduleId) {
+            base.tempM = {
+                type: "init",
+                d,
+                moduleId
+            };
+        },
         // 扩展开发入口
         ext(f_name, func) {
             if (isFunction(f_name)) {
@@ -781,6 +829,7 @@
     glo.load || (glo.load = drill.load);
     glo.define || (glo.define = drill.define);
     glo.task || (glo.task = drill.task);
+    glo.init || (glo.init = drill.init);
 
     // 初始化版本号
     let cScript = document.currentScript;
