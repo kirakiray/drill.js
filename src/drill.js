@@ -179,11 +179,12 @@
         // 设置不可见样式
         Object.assign(iframeEle.style, {
             position: "absolute",
+            "z-index": "-1",
             border: "none",
             outline: "none",
-            opacity: "1",
-            width: "100px",
-            height: "100px"
+            opacity: "0",
+            width: "0",
+            height: "0"
         });
 
         // 转换并获取真实链接
