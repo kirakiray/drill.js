@@ -1,0 +1,13 @@
+window.addEventListener('message', e => {
+    let {
+        data,
+        taskId,
+        type
+    } = e.data;
+
+    // 返回数据
+    parent.postMessage({
+        taskId,
+        data: data.v1 * data.v2 * data.v3
+    }, "*");
+});
