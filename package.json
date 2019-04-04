@@ -1,0 +1,6 @@
+{
+    "name": "drill.js",
+    "scripts": {
+        "test": "node scripts/test.js"
+    }
+}

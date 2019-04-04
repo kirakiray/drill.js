@@ -7,8 +7,6 @@
     // 地址寄存器
     const bag = new Map();
 
-    window.bag = bag;
-
     // 映射资源
     const paths = new Map();
 
