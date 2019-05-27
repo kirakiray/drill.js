@@ -39,3 +39,7 @@
 
 * 按需加载模块，为项目提供 `过渡中` 的状态，方便做用户体验优化；
 * 能根据浏览器的支持状态，动态判断载入Babel编译的es5或原生的es7文件；
+
+## 案例
+
+采用 [Xhear](https://github.com/kirakiray/Xhear/) +  [drill.js](https://github.com/kirakiray/drill.js/)开发的 [PageCreator](https://kirakiray.com/pageCreator/)。
