@@ -143,7 +143,7 @@
         packData.stat = 3;
     });
 
-    // loaders添加json支持
+    // loaders添加wasm支持
     loaders.set("wasm", async (packData) => {
         let data;
         try {
