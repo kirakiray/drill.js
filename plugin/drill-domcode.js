@@ -50,8 +50,20 @@ drill.ext(base => {
             }
         });
 
+        let innerObj = Object.assign({}, dataObj)
+        Object.keys(innerObj).forEach(k => {
+            let val = innerObj[k];
+            let tdiv = document.createElement('div');
+            tdiv.innerHTML = val;
+            innerObj[k] = tdiv.children[0].innerHTML;
+        });
+
+
         // 重置getPack
-        packData.getPack = async () => {
+        packData.getPack = async (e) => {
+            if (e.param.includes("-inner")) {
+                return innerObj;
+            }
             return dataObj;
         }
 

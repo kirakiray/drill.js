@@ -1,4 +1,5 @@
 ((glo) => {
+    "use strict";
     // common
     // 处理器（针对js类型）
     const processors = new Map();
@@ -143,7 +144,7 @@
         packData.stat = 3;
     });
 
-    // loaders添加json支持
+    // loaders添加wasm支持
     loaders.set("wasm", async (packData) => {
         let data;
         try {
@@ -934,7 +935,8 @@
         },
         debug: {
             bag
-        }
+        },
+        version: 30100
     };
 
     // init 
