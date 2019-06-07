@@ -934,7 +934,8 @@
         },
         debug: {
             bag
-        }
+        },
+        version: 30100
     };
 
     // init 
