@@ -4,7 +4,7 @@
     //<!--loaders-->
     //<!--processors-->
     //<!--main-->
-    //<!--drill-->
+    //<!--drillObj-->
 
     // init 
     glo.load || (glo.load = drill.load);

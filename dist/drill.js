@@ -1,6 +1,5 @@
 ((glo) => {
     "use strict";
-
     // common
     // 处理器（针对js类型）
     const processors = new Map();
@@ -101,7 +100,6 @@
 
     // 获取根目录地址
     const rootHref = getDir(document.location.href);
-
 
     // loaders添加css
     loaders.set("css", (packData) => {
@@ -336,7 +334,6 @@
         // 添加进主体
         document.head.appendChild(script);
     });
-
     // processors添加普通文件加载方式
     processors.set("file", (packData) => {
         // 直接修改完成状态
@@ -459,6 +456,39 @@
         packData.stat = 3;
     });
 
+    const getLoader = (fileType) => {
+        // 立即请求包处理
+        let loader = loaders.get(fileType);
+
+        if (!loader) {
+            console.log("no such this loader => " + fileType);
+            loader = getByUtf8;
+        }
+
+        return loader;
+    }
+
+    // 获取并通过utf8返回数据
+    const getByUtf8 = async packData => {
+        let data;
+        try {
+            // 请求数据
+            data = await fetch(packData.link);
+        } catch (e) {
+            packData.stat = 2;
+            return;
+        }
+        // 转换json格式
+        data = await data.text();
+
+        // 重置getPack
+        packData.getPack = async () => {
+            return data;
+        }
+
+        // 设置完成
+        packData.stat = 3;
+    }
 
     // 代理加载
     // 根据不同加载状态进行组装
@@ -509,14 +539,7 @@
             bag.set(urlObj.path, packData);
 
             // 立即请求包处理
-            let loader = loaders.get(urlObj.fileType);
-
-            if (loader) {
-                // 存在Loader的话，进行加载
-                loader(packData);
-            } else {
-                throw "no such this loader => " + packData.fileType;
-            }
+            getLoader(urlObj.fileType)(packData);
         }
 
         return new Promise((res, rej) => {
@@ -553,8 +576,7 @@
                                     packData.loadCount++;
 
                                     // 重新装载
-                                    let loader = loaders.get(packData.fileType);
-                                    setTimeout(() => loader(packData), errInfo.time);
+                                    setTimeout(() => getLoader(packData.fileType)(packData), errInfo.time);
                                 } else {
                                     // 查看有没有后备仓
                                     let {
@@ -579,8 +601,7 @@
                                             packData.link = packData.link.replace(new RegExp("^" + oldBaseUrl), newBaseUrl);
 
                                             // 重新装载
-                                            let loader = loaders.get(packData.fileType);
-                                            setTimeout(() => loader(packData), errInfo.time);
+                                            setTimeout(() => getLoader(packData.fileType)(packData), errInfo.time);
                                             return;
                                         }
                                     }
@@ -824,8 +845,6 @@
             relative
         }));
     }
-
-
     const drill = {
         load(...args) {
             return load(toUrlObjs(args));
