@@ -101,7 +101,6 @@
     // 获取根目录地址
     const rootHref = getDir(document.location.href);
 
-    // main
     // loaders添加css
     loaders.set("css", (packData) => {
         // 给主体添加css
@@ -282,6 +281,59 @@
         document.body.appendChild(iframeEle);
     });
 
+    // loaders添加js加载方式
+    loaders.set("js", (packData) => {
+        // 主体script
+        let script = document.createElement('script');
+
+
+        //填充相应数据
+        script.type = 'text/javascript';
+        script.async = true;
+        script.src = packData.link;
+
+        // 添加事件
+        script.addEventListener('load', () => {
+            // 根据tempM数据设置type
+            let {
+                tempM
+            } = base;
+
+            // type:
+            // file 普通文件类型
+            // define 模块类型
+            // task 进程类型
+            let {
+                type,
+                moduleId
+            } = tempM;
+
+            // 判断是否有自定义id
+            if (moduleId) {
+                bag.get(moduleId) || bag.set(moduleId, packData);
+            }
+
+            // 进行processors断定
+            // 默认是file类型
+            let process = processors.get(type || "file");
+
+            if (process) {
+                process(packData);
+            } else {
+                throw "no such this processor => " + type;
+            }
+
+            // 清空tempM
+            base.tempM = {};
+        });
+        script.addEventListener('error', () => {
+            // 加载错误
+            packData.stat = 2;
+        });
+
+        // 添加进主体
+        document.head.appendChild(script);
+    });
     // processors添加普通文件加载方式
     processors.set("file", (packData) => {
         // 直接修改完成状态
@@ -404,59 +456,39 @@
         packData.stat = 3;
     });
 
-    // loaders添加js加载方式
-    loaders.set("js", (packData) => {
-        // 主体script
-        let script = document.createElement('script');
+    const getLoader = (fileType) => {
+        // 立即请求包处理
+        let loader = loaders.get(fileType);
 
+        if (!loader) {
+            console.log("no such this loader => " + fileType);
+            loader = getByUtf8;
+        }
 
-        //填充相应数据
-        script.type = 'text/javascript';
-        script.async = true;
-        script.src = packData.link;
+        return loader;
+    }
 
-        // 添加事件
-        script.addEventListener('load', () => {
-            // 根据tempM数据设置type
-            let {
-                tempM
-            } = base;
-
-            // type:
-            // file 普通文件类型
-            // define 模块类型
-            // task 进程类型
-            let {
-                type,
-                moduleId
-            } = tempM;
-
-            // 判断是否有自定义id
-            if (moduleId) {
-                bag.get(moduleId) || bag.set(moduleId, packData);
-            }
-
-            // 进行processors断定
-            // 默认是file类型
-            let process = processors.get(type || "file");
-
-            if (process) {
-                process(packData);
-            } else {
-                throw "no such this processor => " + type;
-            }
-
-            // 清空tempM
-            base.tempM = {};
-        });
-        script.addEventListener('error', () => {
-            // 加载错误
+    // 获取并通过utf8返回数据
+    const getByUtf8 = async packData => {
+        let data;
+        try {
+            // 请求数据
+            data = await fetch(packData.link);
+        } catch (e) {
             packData.stat = 2;
-        });
+            return;
+        }
+        // 转换json格式
+        data = await data.text();
 
-        // 添加进主体
-        document.head.appendChild(script);
-    });
+        // 重置getPack
+        packData.getPack = async () => {
+            return data;
+        }
+
+        // 设置完成
+        packData.stat = 3;
+    }
 
     // 代理加载
     // 根据不同加载状态进行组装
@@ -507,14 +539,7 @@
             bag.set(urlObj.path, packData);
 
             // 立即请求包处理
-            let loader = loaders.get(urlObj.fileType);
-
-            if (loader) {
-                // 存在Loader的话，进行加载
-                loader(packData);
-            } else {
-                throw "no such this loader => " + packData.fileType;
-            }
+            getLoader(urlObj.fileType)(packData);
         }
 
         return new Promise((res, rej) => {
@@ -551,8 +576,7 @@
                                     packData.loadCount++;
 
                                     // 重新装载
-                                    let loader = loaders.get(packData.fileType);
-                                    setTimeout(() => loader(packData), errInfo.time);
+                                    setTimeout(() => getLoader(packData.fileType)(packData), errInfo.time);
                                 } else {
                                     // 查看有没有后备仓
                                     let {
@@ -577,8 +601,7 @@
                                             packData.link = packData.link.replace(new RegExp("^" + oldBaseUrl), newBaseUrl);
 
                                             // 重新装载
-                                            let loader = loaders.get(packData.fileType);
-                                            setTimeout(() => loader(packData), errInfo.time);
+                                            setTimeout(() => getLoader(packData.fileType)(packData), errInfo.time);
                                             return;
                                         }
                                     }
@@ -672,11 +695,11 @@
         });
 
         // 挂载两个方法
-        p.post = function (data) {
+        p.post = function(data) {
             urlObjs.forEach(e => e.data = data);
             return this;
         };
-        p.pend = function (func) {
+        p.pend = function(func) {
             pendFunc = func;
             return this;
         };
@@ -822,7 +845,6 @@
             relative
         }));
     }
-
     const drill = {
         load(...args) {
             return load(toUrlObjs(args));
@@ -936,7 +958,7 @@
         debug: {
             bag
         },
-        version: 30100
+        version: 3002000
     };
 
     // init 
@@ -955,7 +977,7 @@
     }
 
     // 判断全局是否存在变量 drill
-    let gloDrill = glo.drill;
+    let oldDrill = glo.drill;
 
     // 定义全局drill
     Object.defineProperty(glo, 'drill', {
@@ -970,5 +992,5 @@
     });
 
     // 执行全局的 drill函数
-    gloDrill && gloDrill(drill);
+    oldDrill && oldDrill(drill);
 })(window);
