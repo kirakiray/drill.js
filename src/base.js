@@ -29,7 +29,7 @@
         get: () => drill,
         set(func) {
             if (isFunction(func)) {
-                func(drill);
+                nextTick(() => func(drill));
             } else {
                 console.error('drill type error =>', func);
             }
@@ -37,5 +37,5 @@
     });
 
     // 执行全局的 drill函数
-    oldDrill && oldDrill(drill);
+    oldDrill && nextTick(() => oldDrill(drill));
 })(window);
