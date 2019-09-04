@@ -333,8 +333,10 @@ let fixUrlObj = (urlObj) => {
     // 判断是否带有 -pack 参数
     if (param.includes('-pack')) {
         let pathArr = path.match(/(.+)\/(.+)/);
-        if (2 in pathArr) {
+        if (pathArr && (2 in pathArr)) {
             ori = path = pathArr[1] + "/" + pathArr[2] + "/" + pathArr[2];
+        } else {
+            ori = path = `${path}/${path}`
         }
     }
 
