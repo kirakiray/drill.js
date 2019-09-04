@@ -791,8 +791,10 @@
         // 判断是否带有 -pack 参数
         if (param.includes('-pack')) {
             let pathArr = path.match(/(.+)\/(.+)/);
-            if (2 in pathArr) {
+            if (pathArr && (2 in pathArr)) {
                 ori = path = pathArr[1] + "/" + pathArr[2] + "/" + pathArr[2];
+            } else {
+                ori = path = `${path}/${path}`
             }
         }
 
@@ -984,7 +986,7 @@
         get: () => drill,
         set(func) {
             if (isFunction(func)) {
-                func(drill);
+                nextTick(() => func(drill));
             } else {
                 console.error('drill type error =>', func);
             }
@@ -992,5 +994,5 @@
     });
 
     // 执行全局的 drill函数
-    oldDrill && oldDrill(drill);
+    oldDrill && nextTick(() => oldDrill(drill));
 })(window);
