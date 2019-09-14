@@ -967,8 +967,27 @@
         debug: {
             bag
         },
-        version: 3002001
+        version: 3002002
     };
+
+    // 挂载主体方法
+    let mainFunObj = {
+        get agent() {
+            return agent;
+        },
+        get load() {
+            return load;
+        },
+        get fixUrlObj() {
+            return fixUrlObj;
+        },
+        get toUrlObjs() {
+            return toUrlObjs;
+        }
+    };
+    Object.defineProperty(base, "main", {
+        value: mainFunObj
+    });
 
     // init 
     glo.load || (glo.load = drill.load);
