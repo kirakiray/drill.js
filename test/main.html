@@ -23,6 +23,8 @@
 
     var g5 = expect(3, 'wasm and json');
 
+    var g6 = expect(1, 'getPath test');
+
     drill = async (drill) => {
         drill.config({
             baseUrl: "js/",
@@ -117,6 +119,9 @@
 
         let j1 = await load("j1.json");
         g5.ok(j1.name === "testJSONFile", "json data ok");
+
+        let l1path = await load("long/l1 -getPath");
+        g6.ok(/\/test\/js\/long1\/long2\/long3\/l1.js\?d_ver=1$/.test(l1path), "get path ok");
 
     };
 </script>

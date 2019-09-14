@@ -194,14 +194,21 @@ let load = (urlObjs) => {
             let stat = "succeed";
 
             // 中转加载资源
-            let d = await agent(obj).catch(e => {
-                stat = "error";
-                Object.assign(obj, {
-                    type: "error",
-                    descript: e
+            let d;
+
+            // 判断是否有getPath参数
+            if (obj.param && obj.param.includes("-getPath")) {
+                d = obj.link;
+            } else {
+                d = await agent(obj).catch(e => {
+                    stat = "error";
+                    Object.assign(obj, {
+                        type: "error",
+                        descript: e
+                    });
+                    hasError.push(obj);
                 });
-                hasError.push(obj);
-            });
+            }
 
             // 设置数据
             reValue[i] = d;

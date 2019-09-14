@@ -4,8 +4,8 @@
         "test": "node scripts/test.js",
         "watch": "node scripts/watch.js"
     },
-    "version": "3.2.0",
-    "versionCode": 3002000,
+    "version": "3.2.1",
+    "versionCode": 3002001,
     "devDependencies": {
         "js-beautify": "^1.10.0"
     }
