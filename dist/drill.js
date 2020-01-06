@@ -786,7 +786,8 @@
         } else if (/^\./.test(ori)) {
             if (urlObj.relative) {
                 // 添加相对路径
-                path = urlObj.relative + ori;
+                path = ori = urlObj.relative + ori
+                // path = urlObj.relative + ori;
             } else {
                 path = ori.replace(/^\.\//, "");
             }
@@ -812,10 +813,12 @@
 
         // 修正单点
         path = path.replace(/\/\.\//, "/");
+        ori = ori.replace(/\/\.\//, "/");
 
         // 修正两点（上级目录）
         if (/\.\.\//.test(path)) {
             path = removeParentPath(path);
+            ori = removeParentPath(ori);
         }
 
         // 添加后缀
