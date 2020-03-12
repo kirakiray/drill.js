@@ -78,7 +78,7 @@ const getFileType = url => {
 
 // 获取目录名
 const getDir = url => {
-    let urlArr = url.match(/(.+\/).+/);
+    let urlArr = url.match(/(.+\/).*/);
     return urlArr && urlArr[1];
 };
 

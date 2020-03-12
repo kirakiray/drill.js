@@ -80,7 +80,7 @@
 
     // 获取目录名
     const getDir = url => {
-        let urlArr = url.match(/(.+\/).+/);
+        let urlArr = url.match(/(.+\/).*/);
         return urlArr && urlArr[1];
     };
 
@@ -970,7 +970,7 @@
         debug: {
             bag
         },
-        version: 3002002
+        version: 3002003
     };
 
     // 挂载主体方法
