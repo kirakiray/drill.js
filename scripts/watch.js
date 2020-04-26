@@ -98,7 +98,7 @@ let mainFun = async () => {
 
     // 是否有其他文件输出
     let otherFiles = basefile.match(/<o:start--.+-->/g);
-    otherFiles && otherFiles.match(/<o:start--.+-->/g).forEach(str => {
+    otherFiles && otherFiles.forEach(str => {
         // 获取输出文件名
         let match_arr = str.match(/<o:start--(.+)-->/);
         if (match_arr && match_arr.length == 2) {
