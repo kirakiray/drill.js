@@ -22,14 +22,14 @@
   },
   "author": {
     "name": "YAO",
-    "email": "pikay@foxmail.com",
+    "email": "kirayao@hotmail.com",
     "url": "https://kirakiray.com/"
   },
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/kirakiray/drill.js/issues"
   },
-  "homepage": "https://github.com/kirakiray/drill.js#readme",
+  "homepage": "https://github.com/kirakiray/drill.js",
   "watchjs": {
     "startyear": "2018"
   }
