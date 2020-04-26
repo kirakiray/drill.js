@@ -1,3 +1,10 @@
+/*!
+ * drill.js v3.2.3
+ * https://github.com/kirakiray/drill.js#readme
+ * 
+ * (c) 2018-2020 YAO
+ * Released under the MIT License.
+ */
 ((glo) => {
     "use strict";
     // common
@@ -970,7 +977,8 @@
         debug: {
             bag
         },
-        version: 3002003
+        version: "3.2.3",
+        v: 3002003
     };
 
     // 挂载主体方法

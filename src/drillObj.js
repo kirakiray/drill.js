@@ -111,5 +111,6 @@ const drill = {
     debug: {
         bag
     },
-    version: 3002003
+    version: "{{version}}",
+    v: "{{versionCode}}"
 };
