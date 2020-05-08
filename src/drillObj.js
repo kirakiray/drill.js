@@ -56,27 +56,6 @@ const drill = {
             });
         }
     },
-    define(d, moduleId) {
-        base.tempM = {
-            type: "define",
-            d,
-            moduleId
-        };
-    },
-    task(d, moduleId) {
-        base.tempM = {
-            type: "task",
-            d,
-            moduleId
-        };
-    },
-    init(d, moduleId) {
-        base.tempM = {
-            type: "init",
-            d,
-            moduleId
-        };
-    },
     // 扩展开发入口
     ext(f_name, func) {
         if (isFunction(f_name)) {

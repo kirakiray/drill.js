@@ -2,9 +2,10 @@
     "use strict";
     //<!--public-->
     //<!--loaders-->
-    //<!--processors-->
-    //<!--main-->
+    //<!--agent-->
     //<!--drillObj-->
+    //<!--main-->
+    //<!--processors-->
 
     // 挂载主体方法
     let mainFunObj = {
@@ -19,6 +20,9 @@
         },
         get toUrlObjs() {
             return toUrlObjs;
+        },
+        get setProcessor() {
+            return setProcessor;
         }
     };
     Object.defineProperty(base, "main", {
@@ -27,9 +31,6 @@
 
     // init 
     glo.load || (glo.load = drill.load);
-    glo.define || (glo.define = drill.define);
-    glo.task || (glo.task = drill.task);
-    glo.init || (glo.init = drill.init);
 
     // 初始化版本号
     let cScript = document.currentScript;

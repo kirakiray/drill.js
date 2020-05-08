@@ -1,55 +1,41 @@
 // loaders添加css
 loaders.set("css", (packData) => {
-    // 给主体添加css
-    let linkEle = document.createElement('link');
-    linkEle.rel = "stylesheet";
-    linkEle.href = packData.link;
+    return new Promise((res, rej) => {
+        // 给主体添加css
+        let linkEle = document.createElement('link');
+        linkEle.rel = "stylesheet";
+        linkEle.href = packData.link;
 
-    linkEle.onload = () => {
-        // 设置完成
-        packData.stat = 3;
-    }
+        linkEle.onload = () => {
+            res();
+        }
 
-    linkEle.onerror = () => {
-        packData.stat = 2;
-    }
+        linkEle.onerror = () => {
+            rej();
+        }
 
-    // 添加到head
-    document.head.appendChild(linkEle);
+        // 添加到head
+        document.head.appendChild(linkEle);
+    });
 });
 
 // loaders添加json支持
 loaders.set("json", async (packData) => {
-    let data;
-    try {
-        // 请求数据
-        data = await fetch(packData.link);
-    } catch (e) {
-        packData.stat = 2;
-        return;
-    }
+    let data = await fetch(packData.link);;
+
     // 转换json格式
     data = await data.json();
 
     // 重置getPack
-    packData.getPack = async () => {
+    return async () => {
         return data;
     }
-
-    // 设置完成
-    packData.stat = 3;
 });
 
 // loaders添加wasm支持
 loaders.set("wasm", async (packData) => {
-    let data;
-    try {
-        // 请求数据
-        data = await fetch(packData.link);
-    } catch (e) {
-        packData.stat = 2;
-        return;
-    }
+    let data = await fetch(packData.link);
+
     // 转换arrayBuffer格式
     data = await data.arrayBuffer();
 
@@ -58,12 +44,9 @@ loaders.set("wasm", async (packData) => {
     const instance = new WebAssembly.Instance(module);
 
     // 重置getPack
-    packData.getPack = async () => {
+    return async () => {
         return instance.exports;
     }
-
-    // 设置完成
-    packData.stat = 3;
 });
 
 // loaders添加iframe辅助线程支持
@@ -117,7 +100,7 @@ loaders.set("frame", async (packData) => {
     packData.timer = setTimeout(clearer, 10000);
 
     // 设置getPack函数
-    packData.getPack = (urlData) => new Promise(res => {
+    let getPack = (urlData) => new Promise(res => {
         // 计算taskId
         let taskId = getRandomId();
 
@@ -163,71 +146,78 @@ loaders.set("frame", async (packData) => {
         }
     });
 
-    // 加载完成函数
-    iframeEle.addEventListener('load', e => {
-        // 设置完成
-        packData.stat = 3;
-    });
+    return new Promise((res, rej) => {
+        // 加载完成函数
+        iframeEle.addEventListener('load', e => {
+            res(getPack);
+        });
 
-    // 错误函数
-    iframeEle.addEventListener('error', e => {
-        packData.stat = 2;
-    });
+        // 错误函数
+        iframeEle.addEventListener('error', e => {
+            clearer();
+            rej();
+        });
 
-    // 添加到body
-    document.body.appendChild(iframeEle);
+        // 添加到body
+        document.body.appendChild(iframeEle);
+    });
 });
 
 // loaders添加js加载方式
 loaders.set("js", (packData) => {
-    // 主体script
-    let script = document.createElement('script');
+    return new Promise((resolve, reject) => {
+        // 主体script
+        let script = document.createElement('script');
 
+        //填充相应数据
+        script.type = 'text/javascript';
+        script.async = true;
+        script.src = packData.link;
 
-    //填充相应数据
-    script.type = 'text/javascript';
-    script.async = true;
-    script.src = packData.link;
+        // 添加事件
+        script.addEventListener('load', async () => {
+            // 根据tempM数据设置type
+            let {
+                tempM
+            } = base;
 
-    // 添加事件
-    script.addEventListener('load', () => {
-        // 根据tempM数据设置type
-        let {
-            tempM
-        } = base;
+            let getPack;
 
-        // type:
-        // file 普通文件类型
-        // define 模块类型
-        // task 进程类型
-        let {
-            type,
-            moduleId
-        } = tempM;
+            // type:
+            // file 普通文件类型
+            // define 模块类型
+            // task 进程类型
+            let {
+                type,
+                moduleId
+            } = tempM;
 
-        // 判断是否有自定义id
-        if (moduleId) {
-            bag.get(moduleId) || bag.set(moduleId, packData);
-        }
+            // 判断是否有自定义id
+            if (moduleId) {
+                bag.get(moduleId) || bag.set(moduleId, packData);
+            }
 
-        // 进行processors断定
-        // 默认是file类型
-        let process = processors.get(type || "file");
+            // 进行processors断定
+            // 默认是file类型
+            let process = processors.get(type || "file");
 
-        if (process) {
-            process(packData);
-        } else {
-            throw "no such this processor => " + type;
-        }
+            if (process) {
+                getPack = await process(packData);
+            } else {
+                throw "no such this processor => " + type;
+            }
 
-        // 清空tempM
-        base.tempM = {};
+            // 清空tempM
+            base.tempM = {};
+
+            resolve(getPack);
+        });
+        script.addEventListener('error', () => {
+            // 加载错误
+            reject();
+        });
+
+        // 添加进主体
+        document.head.appendChild(script);
     });
-    script.addEventListener('error', () => {
-        // 加载错误
-        packData.stat = 2;
-    });
-
-    // 添加进主体
-    document.head.appendChild(script);
 });

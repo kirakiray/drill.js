@@ -1,13 +1,11 @@
 // processors添加普通文件加载方式
 processors.set("file", (packData) => {
-    // 直接修改完成状态
-    packData.stat = 3;
+    // 直接修改完成状态，什么都不用做
+    // packData.stat = 3;
 });
 
 // 添加define模块支持
-processors.set("define", async (packData) => {
-    let d = base.tempM.d;
-
+setProcessor("define", async (packData, d) => {
     let exports = {},
         module = {
             exports
@@ -24,9 +22,9 @@ processors.set("define", async (packData) => {
         d = d((...args) => {
             return load(toUrlObjs(args, dir));
         }, exports, module, {
-                FILE: path,
-                DIR: dir
-            });
+            FILE: path,
+            DIR: dir
+        });
     }
 
     // Promise函数
@@ -40,19 +38,21 @@ processors.set("define", async (packData) => {
         d = module.exports;
     }
 
-    // 修正getPack方法
-    packData.getPack = async () => {
+    return async () => {
         return d;
-    }
+    };
+
+    // 修正getPack方法
+    // packData.getPack = async () => {
+    //     return d;
+    // }
 
     // 修正状态
-    packData.stat = 3;
+    // packData.stat = 3;
 });
 
 // 添加task模块支持
-processors.set("task", (packData) => {
-    let d = base.tempM.d;
-
+setProcessor("task", (packData, d) => {
     // 判断d是否函数
     if (!isFunction(d)) {
         throw 'task must be a function';
@@ -64,25 +64,23 @@ processors.set("task", (packData) => {
     } = packData;
 
     // 修正getPack方法
-    packData.getPack = async (urlData) => {
+    return async (urlData) => {
         let reData = await d((...args) => {
             return load(toUrlObjs(args, dir));
         }, urlData.data, {
-                FILE: path,
-                DIR: dir
-            });
+            FILE: path,
+            DIR: dir
+        });
 
         return reData;
     }
 
     // 修正状态
-    packData.stat = 3;
+    // packData.stat = 3;
 });
 
 // 添加init模块支持
-processors.set("init", (packData) => {
-    let d = base.tempM.d;
-
+setProcessor("init", (packData, d) => {
     // 判断d是否函数
     if (!isFunction(d)) {
         throw 'init must be a function';
@@ -97,7 +95,7 @@ processors.set("init", (packData) => {
     let redata;
 
     // 修正getPack方法
-    packData.getPack = async (urlData) => {
+    return async (urlData) => {
         if (isRun) {
             return redata;
         }
@@ -106,9 +104,9 @@ processors.set("init", (packData) => {
         redata = await d((...args) => {
             return load(toUrlObjs(args, dir));
         }, urlData.data, {
-                FILE: path,
-                DIR: dir
-            });
+            FILE: path,
+            DIR: dir
+        });
 
         // 设置已运行
         isRun = 1;
@@ -117,5 +115,5 @@ processors.set("init", (packData) => {
     }
 
     // 修正状态
-    packData.stat = 3;
+    // packData.stat = 3;
 });
