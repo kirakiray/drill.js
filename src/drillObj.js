@@ -51,9 +51,7 @@ const drill = {
 
         // 后备仓
         if (base.baseUrl && options.backups) {
-            options.backups.forEach(url => {
-                errInfo.backups.add(url);
-            });
+            options.backups.forEach(url => errInfo.backups.push(url));
         }
     },
     // 扩展开发入口

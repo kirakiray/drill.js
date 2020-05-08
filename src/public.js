@@ -14,13 +14,10 @@ const dirpaths = {};
 
 // 错误处理数据
 let errInfo = {
-    // 每个错误资源的最大错误请求次数
-    // 默认错误的时候回再请求3次
-    loadNum: 3,
     // 加载错误之后，再次加载的间隔时间(毫秒)
-    time: 1000,
+    time: 100,
     // baseUrl后备仓
-    backups: new Set()
+    backups: []
 };
 
 // 基础数据对象

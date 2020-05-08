@@ -14,6 +14,8 @@
 
 </body>
 <script>
+    var g1 = expect(1, '是否载入成功');
+
     drill.config({
         baseUrl: "js/",
         // 添加后备仓
@@ -44,9 +46,10 @@
     load('t133')
         .then((e) => {
             console.log('succeed => ', e);
+            g1.ok(true, "载入成功");
         })
         .catch(e => {
-            debugger
+            g1.ok(false, "载入失败");
         });
 </script>
 

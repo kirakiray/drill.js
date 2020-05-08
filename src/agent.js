@@ -32,6 +32,8 @@ const getByUtf8 = async packData => {
     packData.stat = 3;
 }
 
+const isHttpFront = str => /^http/.test(str);
+
 let agent = async (urlObj) => {
     // 根据url获取资源状态
     let packData = bag.get(urlObj.path);
@@ -58,14 +60,58 @@ let agent = async (urlObj) => {
         // 设置包数据
         bag.set(urlObj.path, packData);
 
-        // let canBreak = false;
-        // while (!canBreak) { }
-        try {
-            // 立即请求包处理
-            packData.getPack = (await getLoader(urlObj.fileType)(packData)) || (async () => { });
-        } catch (e) {
-            // 重新加载包
-            debugger
+        while (true) {
+            try {
+                // 立即请求包处理
+                packData.getPack = (await getLoader(urlObj.fileType)(packData)) || (async () => { });
+
+                break;
+            } catch (e) {
+                if (isHttpFront(urlObj.str)) {
+                    // http引用的就别折腾
+                    break;
+                }
+                // 查看后备仓
+                let { backups } = errInfo;
+                if (backups.length) {
+                    // 查看当前用了几个后备仓
+                    let backupId = (packData.backupId != undefined) ? packData.backupId : (packData.backupId = -1);
+
+                    // 重新加载包
+                    if (backupId < backups.length) {
+                        // 获取旧的地址
+                        let oldBaseUrl = backups[backupId] || base.baseUrl;
+                        let frontUrl = location.href.replace(/(.+\/).+/, "$1")
+
+                        if (!isHttpFront(oldBaseUrl)) {
+                            // 补充地址
+                            oldBaseUrl = frontUrl + oldBaseUrl;
+                        }
+
+                        // 下一个地址
+                        backupId = ++packData.backupId;
+
+                        // 补充下一个地址
+                        let nextBaseUrl = backups[backupId];
+
+                        if (!nextBaseUrl) {
+                            // 没有下一个就跳出
+                            break;
+                        }
+
+                        if (!isHttpFront(nextBaseUrl)) {
+                            nextBaseUrl = frontUrl + nextBaseUrl;
+                        }
+
+                        // 替换packData
+                        packData.link = packData.link.replace(new RegExp("^" + oldBaseUrl), nextBaseUrl);
+
+                        await new Promise(res => setTimeout(res, errInfo.time));
+                    } else {
+                        break;
+                    }
+                }
+            }
         }
     }
 
