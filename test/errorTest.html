@@ -24,6 +24,7 @@
 
     load('define/d1', 'file/file01?aa=1').then((data) => {
         console.log("data1 => ", data);
+    }).catch(e => {
     });
 
     load('define/d1', 'file/file01').then((data) => {

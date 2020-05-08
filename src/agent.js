@@ -57,6 +57,12 @@ let agent = async (urlObj) => {
             // async getPack(urlObj) { }
         };
 
+        // 等待通行的令牌
+        packData.passPromise = new Promise((res, rej) => {
+            packData._passResolve = res;
+            packData._passReject = rej;
+        });
+
         // 设置包数据
         bag.set(urlObj.path, packData);
 
@@ -65,8 +71,12 @@ let agent = async (urlObj) => {
                 // 立即请求包处理
                 packData.getPack = (await getLoader(urlObj.fileType)(packData)) || (async () => { });
 
+                packData.stat = 3;
+
+                packData._passResolve();
                 break;
             } catch (e) {
+                packData.stat = 2;
                 if (isHttpFront(urlObj.str)) {
                     // http引用的就别折腾
                     break;
@@ -96,6 +106,8 @@ let agent = async (urlObj) => {
 
                         if (!nextBaseUrl) {
                             // 没有下一个就跳出
+                            packData.stat = 4;
+                            packData._passReject();
                             break;
                         }
 
@@ -115,7 +127,9 @@ let agent = async (urlObj) => {
         }
     }
 
-    // 获取数据并返回
+    // 等待通行证
+    await packData.passPromise;
+
     return await packData.getPack(urlObj);
 }
 
