@@ -4,7 +4,7 @@ processors.set("file", (packData) => {
 });
 
 // 添加define模块支持
-setProcessor("define", async (packData, d) => {
+setProcessor("define", async (packData, d, { relativeLoad }) => {
     let exports = {},
         module = {
             exports
@@ -18,9 +18,7 @@ setProcessor("define", async (packData, d) => {
         } = packData;
 
         // 函数类型
-        d = d((...args) => {
-            return load(toUrlObjs(args, dir));
-        }, exports, module, {
+        d = d(relativeLoad, exports, module, {
             FILE: path,
             DIR: dir
         });
@@ -43,7 +41,7 @@ setProcessor("define", async (packData, d) => {
 });
 
 // 添加task模块支持
-setProcessor("task", (packData, d) => {
+setProcessor("task", (packData, d, { relativeLoad }) => {
     // 判断d是否函数
     if (!isFunction(d)) {
         throw 'task must be a function';
@@ -56,9 +54,7 @@ setProcessor("task", (packData, d) => {
 
     // 修正getPack方法
     return async (urlData) => {
-        let reData = await d((...args) => {
-            return load(toUrlObjs(args, dir));
-        }, urlData.data, {
+        let reData = await d(relativeLoad, urlData.data, {
             FILE: path,
             DIR: dir
         });
@@ -68,7 +64,7 @@ setProcessor("task", (packData, d) => {
 });
 
 // 添加init模块支持
-setProcessor("init", (packData, d) => {
+setProcessor("init", (packData, d, { relativeLoad }) => {
     // 判断d是否函数
     if (!isFunction(d)) {
         throw 'init must be a function';
@@ -89,9 +85,7 @@ setProcessor("init", (packData, d) => {
         }
 
         // 等待返回数据
-        redata = await d((...args) => {
-            return load(toUrlObjs(args, dir));
-        }, urlData.data, {
+        redata = await d(relativeLoad, urlData.data, {
             FILE: path,
             DIR: dir
         });

@@ -1,7 +1,12 @@
 // 设置加载器
 let setProcessor = (processName, processRunner) => {
     processors.set(processName, async (packData) => {
-        return await processRunner(packData, base.tempM.d);
+        return await processRunner(packData, base.tempM.d, {
+            // 相对的加载函数
+            relativeLoad(...args) {
+                return load(toUrlObjs(args, packData.dir));
+            }
+        });
     });
 
     // 特定类型记录器

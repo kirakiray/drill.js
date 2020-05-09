@@ -83,7 +83,9 @@ const drill = {
     },
     cacheInfo: {
         k: "d_ver",
-        v: ""
+        v: "",
+        // 默认不缓存到本地
+        offline: false
     },
     debug: {
         bag

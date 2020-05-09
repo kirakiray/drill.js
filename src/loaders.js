@@ -21,12 +21,11 @@ loaders.set("css", (packData) => {
 
 // loaders添加json支持
 loaders.set("json", async (packData) => {
-    let data = await fetch(packData.link);;
+    let data = await fetch(packData.link);
 
     // 转换json格式
     data = await data.json();
 
-    // 重置getPack
     return async () => {
         return data;
     }
@@ -43,7 +42,6 @@ loaders.set("wasm", async (packData) => {
     let module = await WebAssembly.compile(data);
     const instance = new WebAssembly.Instance(module);
 
-    // 重置getPack
     return async () => {
         return instance.exports;
     }

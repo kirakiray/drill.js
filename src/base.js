@@ -6,6 +6,7 @@
     //<!--drillObj-->
     //<!--main-->
     //<!--processors-->
+    //<!--offline-->
 
     // 挂载主体方法
     let mainFunObj = {

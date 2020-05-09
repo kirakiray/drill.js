@@ -1,5 +1,5 @@
 /*!
- * drill.js v3.3.2
+ * drill.js v3.4.0
  * https://github.com/kirakiray/drill.js
  * 
  * (c) 2018-2020 YAO
@@ -128,12 +128,11 @@
 
     // loaders添加json支持
     loaders.set("json", async (packData) => {
-        let data = await fetch(packData.link);;
+        let data = await fetch(packData.link);
 
         // 转换json格式
         data = await data.json();
 
-        // 重置getPack
         return async () => {
             return data;
         }
@@ -150,7 +149,6 @@
         let module = await WebAssembly.compile(data);
         const instance = new WebAssembly.Instance(module);
 
-        // 重置getPack
         return async () => {
             return instance.exports;
         }
@@ -342,24 +340,15 @@
 
     // 获取并通过utf8返回数据
     const getByUtf8 = async packData => {
-        let data;
-        try {
-            // 请求数据
-            data = await fetch(packData.link);
-        } catch (e) {
-            packData.stat = 2;
-            return;
-        }
-        // 转换json格式
+        let data = await fetch(packData.link);
+
+        // 转换text格式
         data = await data.text();
 
         // 重置getPack
-        packData.getPack = async () => {
+        return async () => {
             return data;
         }
-
-        // 设置完成
-        packData.stat = 3;
     }
 
     const isHttpFront = str => /^http/.test(str);
@@ -398,6 +387,11 @@
 
             while (true) {
                 try {
+                    // 离线处理
+                    if (drill.cacheInfo.offline) {
+                        packData.fileUrl = packData.link = await cacheSource(packData);
+                    }
+
                     // 立即请求包处理
                     packData.getPack = (await getLoader(urlObj.fileType)(packData)) || (async () => {});
 
@@ -406,6 +400,8 @@
                     packData._passResolve();
                     break;
                 } catch (e) {
+                    console.error("load error =>", e);
+
                     packData.stat = 2;
                     if (isHttpFront(urlObj.str)) {
                         // http引用的就别折腾
@@ -464,146 +460,6 @@
 
         return await packData.getPack(urlObj);
     }
-
-    // 代理加载
-    // 根据不同加载状态进行组装
-    // let agent_backup = (urlObj) => {
-    //     // 根据url获取资源状态
-    //     let packData = bag.get(urlObj.path);
-
-    //     if (!packData) {
-    //         // 加载状态
-    //         // 1加载中
-    //         // 2加载错误，重新装载中
-    //         // 3加载完成
-    //         // 4彻底加载错误，别瞎折腾了
-    //         let stat = 1;
-
-    //         packData = {
-    //             get stat() {
-    //                 return stat;
-    //             },
-    //             set stat(d) {
-    //                 // 记录旧状态
-    //                 let oldStat = stat;
-
-    //                 // set
-    //                 stat = d;
-
-    //                 // 改动stat的时候触发changes内的函数
-    //                 this.changes.forEach(callback => callback({
-    //                     change: "stat",
-    //                     oldStat,
-    //                     stat
-    //                 }));
-    //             },
-    //             dir: urlObj.dir,
-    //             path: urlObj.path,
-    //             link: urlObj.link,
-    //             dir: urlObj.dir,
-    //             // 改动事件记录器
-    //             changes: new Set(),
-    //             // 记录装载状态
-    //             fileType: urlObj.fileType,
-    //             // 包的getter函数
-    //             // 包加载完成时候，有特殊功能的，请替换掉async getPack函数
-    //             async getPack(urlObj) { }
-    //         };
-
-    //         // 设置包数据
-    //         bag.set(urlObj.path, packData);
-
-    //         // 立即请求包处理
-    //         getLoader(urlObj.fileType)(packData);
-    //     }
-
-    //     return new Promise((res, rej) => {
-    //         // 根据状态进行处理
-    //         switch (packData.stat) {
-    //             case 2:
-    //             // 加载错误的重新装载，也加入队列
-    //             case 1:
-    //                 // 添加状态改动callback，确认加载完成的状态后，进行callback
-    //                 let statChangeCallback;
-    //                 packData.changes.add(statChangeCallback = (d) => {
-    //                     // 获取改动状态
-    //                     let {
-    //                         stat
-    //                     } = d;
-
-    //                     switch (stat) {
-    //                         case 3:
-    //                             // 加载完成，运行getPack函数
-    //                             packData.getPack(urlObj).then(res);
-
-    //                             // 清除自身callback
-    //                             packData.changes.delete(statChangeCallback);
-    //                             packData = null;
-    //                             break;
-    //                         case 2:
-    //                             // 重新装载
-    //                             // 获取计数器
-    //                             let loadCount = (packData.loadCount != undefined) ? packData.loadCount : (packData.loadCount = 0);
-
-    //                             // 存在次数
-    //                             if (loadCount < errInfo.loadNum) {
-    //                                 // 递增
-    //                                 packData.loadCount++;
-
-    //                                 // 重新装载
-    //                                 setTimeout(() => getLoader(packData.fileType)(packData), errInfo.time);
-    //                             } else {
-    //                                 // 查看有没有后备仓
-    //                                 let {
-    //                                     backups
-    //                                 } = errInfo;
-
-    //                                 // 确认后备仓
-    //                                 if (backups.size) {
-    //                                     // 查看当前用了几个后备仓
-    //                                     let backupId = (packData.backupId != undefined) ? packData.backupId : (packData.backupId = -1);
-    //                                     if (backupId < backups.size) {
-    //                                         // 转换数组
-    //                                         let barr = Array.from(backups);
-    //                                         let oldBaseUrl = barr[backupId] || packData.dir;
-
-    //                                         // 递增backupId
-    //                                         backupId = ++packData.backupId;
-    //                                         let newBaseUrl = barr[backupId];
-
-    //                                         // 修正数据重新载入
-    //                                         packData.loadCount = 1;
-    //                                         packData.link = packData.link.replace(new RegExp("^" + oldBaseUrl), newBaseUrl);
-
-    //                                         // 重新装载
-    //                                         setTimeout(() => getLoader(packData.fileType)(packData), errInfo.time);
-    //                                         return;
-    //                                     }
-    //                                 }
-    //                                 // 载入不进去啊大佬，别费劲了
-    //                                 packData.stat = 4;
-    //                             }
-
-    //                             break;
-    //                         case 4:
-    //                             rej("source error");
-    //                             break;
-    //                     }
-    //                 });
-    //                 break;
-    //             case 3:
-    //                 nextTick(() => {
-    //                     // 已经加载完成的，直接获取
-    //                     packData.getPack(urlObj).then(res);
-    //                 });
-    //                 break;
-    //             case 4:
-    //                 // 彻底加载错误的资源，就别瞎折腾了
-    //                 rej("source error");
-    //                 break;
-    //         }
-    //     });
-    // }
     const drill = {
         load(...args) {
             return load(toUrlObjs(args));
@@ -689,18 +545,25 @@
         },
         cacheInfo: {
             k: "d_ver",
-            v: ""
+            v: "",
+            // 默认不缓存到本地
+            offline: false
         },
         debug: {
             bag
         },
-        version: "3.3.2",
-        v: 3003002
+        version: "3.4.0",
+        v: 3004000
     };
     // 设置加载器
     let setProcessor = (processName, processRunner) => {
         processors.set(processName, async (packData) => {
-            return await processRunner(packData, base.tempM.d);
+            return await processRunner(packData, base.tempM.d, {
+                // 相对的加载函数
+                relativeLoad(...args) {
+                    return load(toUrlObjs(args, packData.dir));
+                }
+            });
         });
 
         // 特定类型记录器
@@ -951,7 +814,9 @@
     });
 
     // 添加define模块支持
-    setProcessor("define", async (packData, d) => {
+    setProcessor("define", async (packData, d, {
+        relativeLoad
+    }) => {
         let exports = {},
             module = {
                 exports
@@ -965,9 +830,7 @@
             } = packData;
 
             // 函数类型
-            d = d((...args) => {
-                return load(toUrlObjs(args, dir));
-            }, exports, module, {
+            d = d(relativeLoad, exports, module, {
                 FILE: path,
                 DIR: dir
             });
@@ -990,7 +853,9 @@
     });
 
     // 添加task模块支持
-    setProcessor("task", (packData, d) => {
+    setProcessor("task", (packData, d, {
+        relativeLoad
+    }) => {
         // 判断d是否函数
         if (!isFunction(d)) {
             throw 'task must be a function';
@@ -1003,9 +868,7 @@
 
         // 修正getPack方法
         return async (urlData) => {
-            let reData = await d((...args) => {
-                return load(toUrlObjs(args, dir));
-            }, urlData.data, {
+            let reData = await d(relativeLoad, urlData.data, {
                 FILE: path,
                 DIR: dir
             });
@@ -1015,7 +878,9 @@
     });
 
     // 添加init模块支持
-    setProcessor("init", (packData, d) => {
+    setProcessor("init", (packData, d, {
+        relativeLoad
+    }) => {
         // 判断d是否函数
         if (!isFunction(d)) {
             throw 'init must be a function';
@@ -1036,9 +901,7 @@
             }
 
             // 等待返回数据
-            redata = await d((...args) => {
-                return load(toUrlObjs(args, dir));
-            }, urlData.data, {
+            redata = await d(relativeLoad, urlData.data, {
                 FILE: path,
                 DIR: dir
             });
@@ -1050,6 +913,139 @@
         }
     });
 
+    const DBNAME = "drill-cache-db";
+    const FILESTABLENAME = 'files';
+
+    // 主体Database对象
+    let mainDB;
+    // 未处理的队列
+    let isInitDB = new Promise((initDBResolve, reject) => {
+        const indexedDB = glo.indexedDB || glo.webkitIndexedDB || glo.mozIndexedDB || glo.msIndexedDB;
+
+        // 初始化数据库
+        if (indexedDB) {
+            // 初始打开
+            let openRequest = indexedDB.open(DBNAME, drill.cacheInfo.v || 1);
+            openRequest.onupgradeneeded = (e) => {
+                // 升级中（初始化中）的db触发事件，db不暴露出去的
+                let db = e.target.result;
+
+                // 判断是否存在表
+                // 判断是否存在
+                if (!db.objectStoreNames.contains(FILESTABLENAME)) {
+                    // 建立存储对象空间
+                    db.createObjectStore(FILESTABLENAME, {
+                        keyPath: "path"
+                    });
+                } else {
+                    // 存在的话先删除
+                    db.deleteObjectStore(FILESTABLENAME);
+
+                    // 重新创建
+                    db.createObjectStore(FILESTABLENAME, {
+                        keyPath: "path"
+                    });
+                }
+            };
+
+            // 初始成功触发的callback
+            openRequest.onsuccess = (e) => {
+                // 挂载主体db
+                mainDB = e.target.result;
+
+                // 确认初始化
+                initDBResolve();
+            }
+        } else {
+            reject("rubish browser no indexDB");
+        }
+    });
+
+    // 加载离线或者数据库文件数据
+    // 每个路径文件，要确保只加载一次
+    const cacheSource = async (packData) => {
+        // 等待数据库初始化完成
+        await isInitDB;
+
+        // 先从数据库获取数据
+        let file = await getFile(packData.path);
+
+        if (!file) {
+            // 没有的话就在线下载
+            // 请求链接内容
+            let p = await fetch(packData.link);
+
+            if (p.status != 200) {
+                // 清空状态
+                // 加载失败，抛出错误
+                throw {
+                    type: "cacheSource",
+                    desc: "statusError",
+                    status: p.status
+                };
+            }
+
+            // 生成file前的两个重要数据
+            let type = p.headers.get('Content-Type').replace(/;.+/, "");
+            let fileName = packData.path.replace(/.+\//, "");
+
+            // 生成file格式
+            let blob = await p.blob();
+
+            // 生成file
+            file = new File([blob], fileName, {
+                type
+            })
+
+            // 存储到数据库中
+            await saveFile(packData.path, file);
+        }
+
+        // 生成url
+        let tempUrl = URL.createObjectURL(file);
+
+        return tempUrl;
+    }
+
+
+    // 获取数据方法
+    const getFile = path => new Promise((res, rej) => {
+        // 新建事务
+        var t = mainDB.transaction([FILESTABLENAME], "readonly");
+        let store = t.objectStore(FILESTABLENAME);
+        let req = store.get(path);
+        req.onsuccess = () => {
+            res(req.result && req.result.data);
+            console.log(`load ${path} succeed ,  hasdata => ${!!req.result}`);
+        }
+        req.onerror = (e) => {
+            rej();
+            console.error(`error load ${path}`, e);
+        }
+    });
+
+    // 保存数据
+    const saveFile = (path, file) => new Promise((res, rej) => {
+        // 新建事务
+        var t = mainDB.transaction([FILESTABLENAME], "readwrite");
+        let store = t.objectStore(FILESTABLENAME);
+        let req = store.put({
+            path,
+            data: file
+        });
+        req.onsuccess = () => {
+            res({
+                stat: 1
+            });
+            console.log(`save ${path} succeed`);
+        };
+        req.onerror = (e) => {
+            res({
+                stat: 0
+            })
+            console.error(`save (${path}) error`, e);
+        };
+    });
 
     // 挂载主体方法
     let mainFunObj = {

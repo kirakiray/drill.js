@@ -46,11 +46,15 @@
 
     load('t133')
         .then((e) => {
-            console.log('succeed => ', e);
-            g1.ok(true, "载入成功");
+            if (e === "I am t133") {
+                console.log('succeed => ', e);
+                g1.ok(true, "载入成功");
+            } else {
+                g1.ok(false, "载入失败1");
+            }
         })
         .catch(e => {
-            g1.ok(false, "载入失败");
+            g1.ok(false, "载入失败2");
         });
 </script>
 
