@@ -411,7 +411,9 @@
                     let {
                         backups
                     } = errInfo;
-                    if (backups.length) {
+                    if (!backups.length) {
+                        break;
+                    } else {
                         // 查看当前用了几个后备仓
                         let backupId = (packData.backupId != undefined) ? packData.backupId : (packData.backupId = -1);
 
