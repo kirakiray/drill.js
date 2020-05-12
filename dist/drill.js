@@ -1,5 +1,5 @@
 /*!
- * drill.js v3.4.0
+ * drill.js v3.4.1
  * https://github.com/kirakiray/drill.js
  * 
  * (c) 2018-2020 YAO
@@ -313,7 +313,7 @@
                 }
 
                 // 清空tempM
-                base.tempM = {};
+                // base.tempM = {};
 
                 resolve(getPack);
             });
@@ -554,13 +554,16 @@
         debug: {
             bag
         },
-        version: "3.4.0",
-        v: 3004000
+        version: "3.4.1",
+        v: 3004001
     };
     // 设置加载器
     let setProcessor = (processName, processRunner) => {
         processors.set(processName, async (packData) => {
-            return await processRunner(packData, base.tempM.d, {
+            let tempData = base.tempM.d;
+            // 提前清空
+            base.tempM = {};
+            return await processRunner(packData, tempData, {
                 // 相对的加载函数
                 relativeLoad(...args) {
                     return load(toUrlObjs(args, packData.dir));

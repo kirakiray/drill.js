@@ -206,7 +206,7 @@ loaders.set("js", (packData) => {
             }
 
             // 清空tempM
-            base.tempM = {};
+            // base.tempM = {};
 
             resolve(getPack);
         });

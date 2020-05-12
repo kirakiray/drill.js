@@ -1,7 +1,10 @@
 // 设置加载器
 let setProcessor = (processName, processRunner) => {
     processors.set(processName, async (packData) => {
-        return await processRunner(packData, base.tempM.d, {
+        let tempData = base.tempM.d;
+        // 提前清空
+        base.tempM = {};
+        return await processRunner(packData, tempData, {
             // 相对的加载函数
             relativeLoad(...args) {
                 return load(toUrlObjs(args, packData.dir));
