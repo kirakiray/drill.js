@@ -1,5 +1,5 @@
 /*!
- * drill.js v3.4.1
+ * drill.js v3.4.4
  * https://github.com/kirakiray/drill.js
  * 
  * (c) 2018-2020 YAO
@@ -312,9 +312,6 @@
                     throw "no such this processor => " + type;
                 }
 
-                // 清空tempM
-                // base.tempM = {};
-
                 resolve(getPack);
             });
             script.addEventListener('error', () => {
@@ -326,6 +323,18 @@
             document.head.appendChild(script);
         });
     });
+
+    // 对es6 module 支持
+    loaders.set("mjs", async packData => {
+        let d = await import(packData.link);
+
+        return async () => {
+            return d;
+        }
+    });
+    // 直接返回缓存地址的类型
+    const returnUrlSets = new Set(["png", "jpg", "jpeg", "bmp", "gif", "webp"]);
+
     const getLoader = (fileType) => {
         // 立即请求包处理
         let loader = loaders.get(fileType);
@@ -333,6 +342,11 @@
         if (!loader) {
             console.log("no such this loader => " + fileType);
             loader = getByUtf8;
+        }
+
+        // 判断是否图片
+        if (returnUrlSets.has(fileType)) {
+            loader = getByUrl;
         }
 
         return loader;
@@ -348,6 +362,26 @@
         // 重置getPack
         return async () => {
             return data;
+        }
+    }
+
+    // 返回内存的地址
+    const getByUrl = async packData => {
+        // 判断是否已经在缓存内
+        if (packData.offlineUrl) {
+            return async () => {
+                return packData.offlineUrl;
+            }
+        }
+
+        let data = await fetch(packData.link);
+
+        let fileBlob = await data.blob();
+
+        let url = URL.createObjectURL(fileBlob);
+
+        return async () => {
+            return url;
         }
     }
 
@@ -389,7 +423,7 @@
                 try {
                     // 离线处理
                     if (drill.cacheInfo.offline) {
-                        packData.fileUrl = packData.link = await cacheSource(packData);
+                        packData.link = await cacheSource(packData);
                     }
 
                     // 立即请求包处理
@@ -554,8 +588,8 @@
         debug: {
             bag
         },
-        version: "3.4.1",
-        v: 3004001
+        version: "3.4.4",
+        v: 3004004
     };
     // 设置加载器
     let setProcessor = (processName, processRunner) => {
@@ -607,8 +641,8 @@
                 // 中转加载资源
                 let d;
 
-                // 判断是否有getPath参数
-                if (obj.param && obj.param.includes("-getPath")) {
+                // 判断是否有getLink参数
+                if (obj.param && obj.param.includes("-getLink")) {
                     d = obj.link;
                 } else {
                     // 等待一次异步操作，确保post数据完整
@@ -737,7 +771,7 @@
         let path;
 
         // 判断是否有基于根目录参数
-        if (param.indexOf('-r') > -1 || /^.+:\/\//.test(ori)) {
+        if (param.includes('-r') || /^.+:\/\//.test(ori)) {
             path = ori;
         } else if (/^\./.test(ori)) {
             if (urlObj.relative) {
@@ -785,6 +819,11 @@
 
         // 写入最终请求资源地址
         let link = search ? (path + "?" + search) : path;
+
+        // 对 -mjs 参数修正
+        if (param.includes("-mjs")) {
+            fileType = "mjs";
+        }
 
         Object.assign(urlObj, {
             link,
@@ -1006,8 +1045,11 @@
             await saveFile(packData.path, file);
         }
 
+        // 挂载file文件
+        packData.offlineFile = file;
+
         // 生成url
-        let tempUrl = URL.createObjectURL(file);
+        let tempUrl = packData.offlineUrl = URL.createObjectURL(file);
 
         return tempUrl;
     }
@@ -1053,25 +1095,24 @@
     });
 
     // 挂载主体方法
-    let mainFunObj = {
-        get agent() {
-            return agent;
-        },
-        get load() {
-            return load;
-        },
-        get fixUrlObj() {
-            return fixUrlObj;
-        },
-        get toUrlObjs() {
-            return toUrlObjs;
-        },
-        get setProcessor() {
-            return setProcessor;
-        }
-    };
     Object.defineProperty(base, "main", {
-        value: mainFunObj
+        value: {
+            get agent() {
+                return agent;
+            },
+            get load() {
+                return load;
+            },
+            get fixUrlObj() {
+                return fixUrlObj;
+            },
+            get toUrlObjs() {
+                return toUrlObjs;
+            },
+            get setProcessor() {
+                return setProcessor;
+            }
+        }
     });
 
     // init 

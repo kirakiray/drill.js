@@ -9,25 +9,24 @@
     //<!--offline-->
 
     // 挂载主体方法
-    let mainFunObj = {
-        get agent() {
-            return agent;
-        },
-        get load() {
-            return load;
-        },
-        get fixUrlObj() {
-            return fixUrlObj;
-        },
-        get toUrlObjs() {
-            return toUrlObjs;
-        },
-        get setProcessor() {
-            return setProcessor;
-        }
-    };
     Object.defineProperty(base, "main", {
-        value: mainFunObj
+        value: {
+            get agent() {
+                return agent;
+            },
+            get load() {
+                return load;
+            },
+            get fixUrlObj() {
+                return fixUrlObj;
+            },
+            get toUrlObjs() {
+                return toUrlObjs;
+            },
+            get setProcessor() {
+                return setProcessor;
+            }
+        }
     });
 
     // init 

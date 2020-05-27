@@ -86,8 +86,11 @@ const cacheSource = async (packData) => {
         await saveFile(packData.path, file);
     }
 
+    // 挂载file文件
+    packData.offlineFile = file;
+
     // 生成url
-    let tempUrl = URL.createObjectURL(file);
+    let tempUrl = packData.offlineUrl = URL.createObjectURL(file);
 
     return tempUrl;
 }

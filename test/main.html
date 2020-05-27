@@ -13,17 +13,20 @@
 <body>
 </body>
 <script>
-    var g1 = expect(12, '主进程');
+    const g1 = expect(12, '主进程');
 
-    var g2 = expect(3, 'pend函数');
+    const g2 = expect(3, 'pend函数');
 
-    var g3 = expect(2, '映射目录测试');
+    const g3 = expect(2, '映射目录测试');
 
-    var g4 = expect(3, 'init模块');
+    const g4 = expect(3, 'init模块');
 
-    var g5 = expect(3, 'wasm and json');
+    const g5 = expect(3, 'wasm and json');
 
-    var g6 = expect(1, 'getPath test');
+    const g6 = expect(1, 'getLink test');
+
+    const esModuleTest = expect(2, 'es module test');
+
 
     drill = async (drill) => {
         drill.config({
@@ -35,6 +38,12 @@
                 fileL2: "long1/long2/long3/l2"
             }
         });
+
+        // 加载tester
+        load("testjs/es-module-test -r");
+
+        // 开启缓存
+        // drill.cacheInfo.offline = true;
 
         g1.ok(1, 'run file01 start');
         await load('file/file01');
@@ -120,7 +129,7 @@
         let j1 = await load("j1.json");
         g5.ok(j1.name === "testJSONFile", "json data ok");
 
-        let l1path = await load("long/l1 -getPath");
+        let l1path = await load("long/l1 -getLink");
         g6.ok(/\/test\/js\/long1\/long2\/long3\/l1.js\?d_ver=1$/.test(l1path), "get path ok");
 
     };

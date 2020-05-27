@@ -1,3 +1,6 @@
+// 直接返回缓存地址的类型
+const returnUrlSets = new Set(["png", "jpg", "jpeg", "bmp", "gif", "webp"]);
+
 const getLoader = (fileType) => {
     // 立即请求包处理
     let loader = loaders.get(fileType);
@@ -5,6 +8,11 @@ const getLoader = (fileType) => {
     if (!loader) {
         console.log("no such this loader => " + fileType);
         loader = getByUtf8;
+    }
+
+    // 判断是否图片
+    if (returnUrlSets.has(fileType)) {
+        loader = getByUrl;
     }
 
     return loader;
@@ -20,6 +28,26 @@ const getByUtf8 = async packData => {
     // 重置getPack
     return async () => {
         return data;
+    }
+}
+
+// 返回内存的地址
+const getByUrl = async packData => {
+    // 判断是否已经在缓存内
+    if (packData.offlineUrl) {
+        return async () => {
+            return packData.offlineUrl;
+        }
+    }
+
+    let data = await fetch(packData.link);
+
+    let fileBlob = await data.blob();
+
+    let url = URL.createObjectURL(fileBlob);
+
+    return async () => {
+        return url;
     }
 }
 
@@ -61,7 +89,7 @@ let agent = async (urlObj) => {
             try {
                 // 离线处理
                 if (drill.cacheInfo.offline) {
-                    packData.fileUrl = packData.link = await cacheSource(packData);
+                    packData.link = await cacheSource(packData);
                 }
 
                 // 立即请求包处理

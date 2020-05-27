@@ -48,8 +48,8 @@ let load = (urlObjs) => {
             // 中转加载资源
             let d;
 
-            // 判断是否有getPath参数
-            if (obj.param && obj.param.includes("-getPath")) {
+            // 判断是否有getLink参数
+            if (obj.param && obj.param.includes("-getLink")) {
                 d = obj.link;
             } else {
                 // 等待一次异步操作，确保post数据完整
@@ -178,7 +178,7 @@ let fixUrlObj = (urlObj) => {
     let path;
 
     // 判断是否有基于根目录参数
-    if (param.indexOf('-r') > -1 || /^.+:\/\//.test(ori)) {
+    if (param.includes('-r') || /^.+:\/\//.test(ori)) {
         path = ori;
     } else if (/^\./.test(ori)) {
         if (urlObj.relative) {
@@ -226,6 +226,11 @@ let fixUrlObj = (urlObj) => {
 
     // 写入最终请求资源地址
     let link = search ? (path + "?" + search) : path;
+
+    // 对 -mjs 参数修正
+    if (param.includes("-mjs")) {
+        fileType = "mjs";
+    }
 
     Object.assign(urlObj, {
         link,

@@ -205,9 +205,6 @@ loaders.set("js", (packData) => {
                 throw "no such this processor => " + type;
             }
 
-            // 清空tempM
-            // base.tempM = {};
-
             resolve(getPack);
         });
         script.addEventListener('error', () => {
@@ -218,4 +215,13 @@ loaders.set("js", (packData) => {
         // 添加进主体
         document.head.appendChild(script);
     });
+});
+
+// 对es6 module 支持
+loaders.set("mjs", async packData => {
+    let d = await import(packData.link);
+
+    return async () => {
+        return d;
+    }
 });
