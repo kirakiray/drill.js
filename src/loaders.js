@@ -7,11 +7,17 @@ loaders.set("css", (packData) => {
         linkEle.href = packData.link;
 
         linkEle.onload = () => {
-            res();
+            res(async (e) => {
+                return linkEle
+            });
         }
 
-        linkEle.onerror = () => {
-            rej();
+        linkEle.onerror = (e) => {
+            rej({
+                desc: "load link error",
+                target: linkEle,
+                event: e
+            });
         }
 
         // 添加到head

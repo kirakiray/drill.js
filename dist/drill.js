@@ -1,5 +1,5 @@
 /*!
- * drill.js v3.4.4
+ * drill.js v3.4.5
  * https://github.com/kirakiray/drill.js
  * 
  * (c) 2018-2020 YAO
@@ -114,11 +114,17 @@
             linkEle.href = packData.link;
 
             linkEle.onload = () => {
-                res();
+                res(async (e) => {
+                    return linkEle
+                });
             }
 
-            linkEle.onerror = () => {
-                rej();
+            linkEle.onerror = (e) => {
+                rej({
+                    desc: "load link error",
+                    target: linkEle,
+                    event: e
+                });
             }
 
             // 添加到head
@@ -388,6 +394,11 @@
     const isHttpFront = str => /^http/.test(str);
 
     let agent = async (urlObj) => {
+        // getLink直接返回
+        if (urlObj.param && (urlObj.param.includes("-getLink")) && !drill.cacheInfo.offline) {
+            return Promise.resolve(urlObj.link);
+        }
+
         // 根据url获取资源状态
         let packData = bag.get(urlObj.path);
 
@@ -423,7 +434,9 @@
                 try {
                     // 离线处理
                     if (drill.cacheInfo.offline) {
-                        packData.link = await cacheSource(packData);
+                        packData.link = await cacheSource({
+                            packData
+                        });
                     }
 
                     // 立即请求包处理
@@ -493,6 +506,11 @@
 
         // 等待通行证
         await packData.passPromise;
+
+        // 在offline情况下，返回link
+        if (urlObj.param && (urlObj.param.includes("-getLink")) && drill.cacheInfo.offline) {
+            return Promise.resolve(packData.link);
+        }
 
         return await packData.getPack(urlObj);
     }
@@ -588,8 +606,8 @@
         debug: {
             bag
         },
-        version: "3.4.4",
-        v: 3004004
+        version: "3.4.5",
+        v: 3004005
     };
     // 设置加载器
     let setProcessor = (processName, processRunner) => {
@@ -641,22 +659,17 @@
                 // 中转加载资源
                 let d;
 
-                // 判断是否有getLink参数
-                if (obj.param && obj.param.includes("-getLink")) {
-                    d = obj.link;
-                } else {
-                    // 等待一次异步操作，确保post数据完整
-                    await new Promise(res => nextTick(res))
+                // 等待一次异步操作，确保post数据完整
+                await new Promise(res => nextTick(res))
 
-                    d = await agent(obj).catch(e => {
-                        stat = "error";
-                        Object.assign(obj, {
-                            type: "error",
-                            descript: e
-                        });
-                        hasError.push(obj);
+                d = await agent(obj).catch(e => {
+                    stat = "error";
+                    Object.assign(obj, {
+                        type: "error",
+                        descript: e
                     });
-                }
+                    hasError.push(obj);
+                });
 
                 // 设置数据
                 reValue[i] = d;
@@ -1007,7 +1020,11 @@
 
     // 加载离线或者数据库文件数据
     // 每个路径文件，要确保只加载一次
-    const cacheSource = async (packData) => {
+    // blobCall 用于扩展程序二次更改使用
+    let cacheSource = async ({
+        packData,
+        blobCall
+    }) => {
         // 等待数据库初始化完成
         await isInitDB;
 
@@ -1036,6 +1053,10 @@
             // 生成file格式
             let blob = await p.blob();
 
+            if (blobCall) {
+                blob = await blobCall(blob);
+            }
+
             // 生成file
             file = new File([blob], fileName, {
                 type
@@ -1063,7 +1084,6 @@
         let req = store.get(path);
         req.onsuccess = () => {
             res(req.result && req.result.data);
-            console.log(`load ${path} succeed ,  hasdata => ${!!req.result}`);
         }
         req.onerror = (e) => {
             rej();

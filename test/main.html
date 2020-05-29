@@ -39,11 +39,11 @@
             }
         });
 
-        // 加载tester
-        load("testjs/es-module-test -r");
-
         // 开启缓存
         // drill.cacheInfo.offline = true;
+
+        // 加载tester
+        load("testjs/es-module-test -r");
 
         g1.ok(1, 'run file01 start');
         await load('file/file01');
@@ -133,6 +133,7 @@
         g6.ok(/\/test\/js\/long1\/long2\/long3\/l1.js\?d_ver=1$/.test(l1path), "get path ok");
 
     };
+
 </script>
 
 </html>

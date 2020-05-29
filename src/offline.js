@@ -48,7 +48,8 @@ let isInitDB = new Promise((initDBResolve, reject) => {
 
 // 加载离线或者数据库文件数据
 // 每个路径文件，要确保只加载一次
-const cacheSource = async (packData) => {
+// blobCall 用于扩展程序二次更改使用
+let cacheSource = async ({ packData, blobCall }) => {
     // 等待数据库初始化完成
     await isInitDB;
 
@@ -77,6 +78,10 @@ const cacheSource = async (packData) => {
         // 生成file格式
         let blob = await p.blob();
 
+        if (blobCall) {
+            blob = await blobCall(blob);
+        }
+
         // 生成file
         file = new File([blob], fileName, {
             type
@@ -104,7 +109,6 @@ const getFile = path => new Promise((res, rej) => {
     let req = store.get(path);
     req.onsuccess = () => {
         res(req.result && req.result.data);
-        console.log(`load ${path} succeed ,  hasdata => ${!!req.result}`);
     }
     req.onerror = (e) => {
         rej();

@@ -48,22 +48,17 @@ let load = (urlObjs) => {
             // 中转加载资源
             let d;
 
-            // 判断是否有getLink参数
-            if (obj.param && obj.param.includes("-getLink")) {
-                d = obj.link;
-            } else {
-                // 等待一次异步操作，确保post数据完整
-                await new Promise(res => nextTick(res))
+            // 等待一次异步操作，确保post数据完整
+            await new Promise(res => nextTick(res))
 
-                d = await agent(obj).catch(e => {
-                    stat = "error";
-                    Object.assign(obj, {
-                        type: "error",
-                        descript: e
-                    });
-                    hasError.push(obj);
+            d = await agent(obj).catch(e => {
+                stat = "error";
+                Object.assign(obj, {
+                    type: "error",
+                    descript: e
                 });
-            }
+                hasError.push(obj);
+            });
 
             // 设置数据
             reValue[i] = d;

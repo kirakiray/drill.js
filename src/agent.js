@@ -54,6 +54,11 @@ const getByUrl = async packData => {
 const isHttpFront = str => /^http/.test(str);
 
 let agent = async (urlObj) => {
+    // getLink直接返回
+    if (urlObj.param && (urlObj.param.includes("-getLink")) && !drill.cacheInfo.offline) {
+        return Promise.resolve(urlObj.link);
+    }
+
     // 根据url获取资源状态
     let packData = bag.get(urlObj.path);
 
@@ -89,7 +94,7 @@ let agent = async (urlObj) => {
             try {
                 // 离线处理
                 if (drill.cacheInfo.offline) {
-                    packData.link = await cacheSource(packData);
+                    packData.link = await cacheSource({ packData });
                 }
 
                 // 立即请求包处理
@@ -157,6 +162,11 @@ let agent = async (urlObj) => {
 
     // 等待通行证
     await packData.passPromise;
+
+    // 在offline情况下，返回link
+    if (urlObj.param && (urlObj.param.includes("-getLink")) && drill.cacheInfo.offline) {
+        return Promise.resolve(packData.link);
+    }
 
     return await packData.getPack(urlObj);
 }
