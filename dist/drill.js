@@ -84,6 +84,7 @@
 
     // 获取目录名
     const getDir = url => {
+        url = url.replace(/(.+)\?.+/, "$1");
         let urlArr = url.match(/(.+\/).*/);
         return urlArr && urlArr[1];
     };
