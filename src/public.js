@@ -44,6 +44,14 @@ var isEmptyObj = obj => !(0 in Object.keys(obj));
 
 //改良异步方法
 const nextTick = (() => {
+    if (document.currentScript.getAttribute("debug") !== null) {
+        return setTimeout;
+    }
+
+    if (typeof process === "object" && process.nextTick) {
+        return process.nextTick;
+    }
+
     let isTick = false;
     let nextTickArr = [];
     return (fun) => {
@@ -75,6 +83,7 @@ const getFileType = url => {
 
 // 获取目录名
 const getDir = url => {
+    url = url.replace(/(.+)#.+/, "$1");
     url = url.replace(/(.+)\?.+/, "$1");
     let urlArr = url.match(/(.+\/).*/);
     return urlArr && urlArr[1];

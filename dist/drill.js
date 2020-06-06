@@ -1,5 +1,5 @@
 /*!
- * drill.js v3.4.5
+ * drill.js v3.4.6
  * https://github.com/kirakiray/drill.js
  * 
  * (c) 2018-2020 YAO
@@ -53,6 +53,14 @@
 
     //改良异步方法
     const nextTick = (() => {
+        if (document.currentScript.getAttribute("debug") !== null) {
+            return setTimeout;
+        }
+
+        if (typeof process === "object" && process.nextTick) {
+            return process.nextTick;
+        }
+
         let isTick = false;
         let nextTickArr = [];
         return (fun) => {
@@ -84,6 +92,7 @@
 
     // 获取目录名
     const getDir = url => {
+        url = url.replace(/(.+)#.+/, "$1");
         url = url.replace(/(.+)\?.+/, "$1");
         let urlArr = url.match(/(.+\/).*/);
         return urlArr && urlArr[1];
@@ -114,8 +123,16 @@
             linkEle.rel = "stylesheet";
             linkEle.href = packData.link;
 
+            let isAddLink = false;
+
             linkEle.onload = () => {
+                document.head.removeChild(linkEle);
                 res(async (e) => {
+                    // 在有获取内容的情况下，才重新加入link
+                    if (!isAddLink && !e.param.includes("-getPath")) {
+                        isAddLink = true;
+                        document.head.appendChild(linkEle);
+                    }
                     return linkEle
                 });
             }
@@ -431,14 +448,24 @@
             // 设置包数据
             bag.set(urlObj.path, packData);
 
+            // 存储错误资源地址
+            let errPaths = [packData.link];
+
+            const errCall = () => {
+                packData.stat = 4;
+                packData._passReject({
+                    desc: `load source error`,
+                    link: errPaths,
+                    packData
+                });
+            }
+
             while (true) {
                 try {
-                    // 离线处理
-                    if (drill.cacheInfo.offline) {
-                        packData.link = await cacheSource({
-                            packData
-                        });
-                    }
+                    // 文件link中转
+                    packData.link = await cacheSource({
+                        packData
+                    });
 
                     // 立即请求包处理
                     packData.getPack = (await getLoader(urlObj.fileType)(packData)) || (async () => {});
@@ -448,7 +475,7 @@
                     packData._passResolve();
                     break;
                 } catch (e) {
-                    console.error("load error =>", e);
+                    // console.error("load error =>", e);
 
                     packData.stat = 2;
                     if (isHttpFront(urlObj.str)) {
@@ -460,6 +487,7 @@
                         backups
                     } = errInfo;
                     if (!backups.length) {
+                        errCall();
                         break;
                     } else {
                         // 查看当前用了几个后备仓
@@ -484,8 +512,7 @@
 
                             if (!nextBaseUrl) {
                                 // 没有下一个就跳出
-                                packData.stat = 4;
-                                packData._passReject();
+                                errCall();
                                 break;
                             }
 
@@ -495,9 +522,12 @@
 
                             // 替换packData
                             packData.link = packData.link.replace(new RegExp("^" + oldBaseUrl), nextBaseUrl);
+                            errPaths.push(packData.link);
 
                             await new Promise(res => setTimeout(res, errInfo.time));
                         } else {
+                            packData.stat = 4;
+                            errCall();
                             break;
                         }
                     }
@@ -595,6 +625,10 @@
                         oldFunc = agent;
                         agent = middlewareFunc;
                         break;
+                    case "cacheSource":
+                        oldFunc = cacheSource;
+                        cacheSource = middlewareFunc;
+                        break;
                 }
             }
         },
@@ -607,8 +641,8 @@
         debug: {
             bag
         },
-        version: "3.4.5",
-        v: 3004005
+        version: "3.4.6",
+        v: 3004006
     };
     // 设置加载器
     let setProcessor = (processName, processRunner) => {
@@ -1023,9 +1057,13 @@
     // 每个路径文件，要确保只加载一次
     // blobCall 用于扩展程序二次更改使用
     let cacheSource = async ({
-        packData,
-        blobCall
+        packData
     }) => {
+        // 离线处理
+        if (!drill.cacheInfo.offline) {
+            return packData.link;
+        }
+
         // 等待数据库初始化完成
         await isInitDB;
 
@@ -1053,10 +1091,6 @@
 
             // 生成file格式
             let blob = await p.blob();
-
-            if (blobCall) {
-                blob = await blobCall(blob);
-            }
 
             // 生成file
             file = new File([blob], fileName, {

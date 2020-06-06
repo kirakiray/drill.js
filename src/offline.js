@@ -49,7 +49,12 @@ let isInitDB = new Promise((initDBResolve, reject) => {
 // 加载离线或者数据库文件数据
 // 每个路径文件，要确保只加载一次
 // blobCall 用于扩展程序二次更改使用
-let cacheSource = async ({ packData, blobCall }) => {
+let cacheSource = async ({ packData }) => {
+    // 离线处理
+    if (!drill.cacheInfo.offline) {
+        return packData.link;
+    }
+
     // 等待数据库初始化完成
     await isInitDB;
 
@@ -77,10 +82,6 @@ let cacheSource = async ({ packData, blobCall }) => {
 
         // 生成file格式
         let blob = await p.blob();
-
-        if (blobCall) {
-            blob = await blobCall(blob);
-        }
 
         // 生成file
         file = new File([blob], fileName, {

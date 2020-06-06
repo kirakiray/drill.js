@@ -6,8 +6,16 @@ loaders.set("css", (packData) => {
         linkEle.rel = "stylesheet";
         linkEle.href = packData.link;
 
+        let isAddLink = false;
+
         linkEle.onload = () => {
+            document.head.removeChild(linkEle);
             res(async (e) => {
+                // 在有获取内容的情况下，才重新加入link
+                if (!isAddLink && !e.param.includes("-getPath")) {
+                    isAddLink = true;
+                    document.head.appendChild(linkEle);
+                }
                 return linkEle
             });
         }

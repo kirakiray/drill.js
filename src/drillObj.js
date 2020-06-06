@@ -78,6 +78,10 @@ const drill = {
                     oldFunc = agent;
                     agent = middlewareFunc;
                     break;
+                case "cacheSource":
+                    oldFunc = cacheSource;
+                    cacheSource = middlewareFunc;
+                    break;
             }
         }
     },

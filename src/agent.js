@@ -90,12 +90,22 @@ let agent = async (urlObj) => {
         // 设置包数据
         bag.set(urlObj.path, packData);
 
+        // 存储错误资源地址
+        let errPaths = [packData.link];
+
+        const errCall = () => {
+            packData.stat = 4;
+            packData._passReject({
+                desc: `load source error`,
+                link: errPaths,
+                packData
+            });
+        }
+
         while (true) {
             try {
-                // 离线处理
-                if (drill.cacheInfo.offline) {
-                    packData.link = await cacheSource({ packData });
-                }
+                // 文件link中转
+                packData.link = await cacheSource({ packData });
 
                 // 立即请求包处理
                 packData.getPack = (await getLoader(urlObj.fileType)(packData)) || (async () => { });
@@ -105,7 +115,7 @@ let agent = async (urlObj) => {
                 packData._passResolve();
                 break;
             } catch (e) {
-                console.error("load error =>", e);
+                // console.error("load error =>", e);
 
                 packData.stat = 2;
                 if (isHttpFront(urlObj.str)) {
@@ -115,6 +125,7 @@ let agent = async (urlObj) => {
                 // 查看后备仓
                 let { backups } = errInfo;
                 if (!backups.length) {
+                    errCall();
                     break;
                 } else {
                     // 查看当前用了几个后备仓
@@ -139,8 +150,7 @@ let agent = async (urlObj) => {
 
                         if (!nextBaseUrl) {
                             // 没有下一个就跳出
-                            packData.stat = 4;
-                            packData._passReject();
+                            errCall();
                             break;
                         }
 
@@ -150,9 +160,12 @@ let agent = async (urlObj) => {
 
                         // 替换packData
                         packData.link = packData.link.replace(new RegExp("^" + oldBaseUrl), nextBaseUrl);
+                        errPaths.push(packData.link);
 
                         await new Promise(res => setTimeout(res, errInfo.time));
                     } else {
+                        packData.stat = 4;
+                        errCall();
                         break;
                     }
                 }
