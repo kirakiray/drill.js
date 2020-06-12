@@ -35,7 +35,7 @@ const drill = {
         //配置paths
         let oPaths = options.paths;
         oPaths && Object.keys(oPaths).forEach(i => {
-            if (/\/$/.test(i)) {
+            if (/^@.+\/$/.test(i)) {
                 //属于目录类型
                 dirpaths[i] = {
                     // 正则

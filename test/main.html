@@ -33,7 +33,7 @@
             baseUrl: "js/",
             paths: {
                 // 映射目录
-                "long/": "long1/long2/long3/",
+                "@long/": "long1/long2/long3/",
                 // 映射文件
                 fileL2: "long1/long2/long3/l2"
             }
@@ -95,7 +95,7 @@
         g1.ok(1, 'task test ok');
 
         // 映射目录测试
-        let fileL1 = await load('long/l1');
+        let fileL1 = await load('@long/l1');
         if (fileL1 == 'long file01') {
             g3.ok(1, '映射目录成功');
         }
@@ -129,7 +129,7 @@
         let j1 = await load("j1.json");
         g5.ok(j1.name === "testJSONFile", "json data ok");
 
-        let l1path = await load("long/l1 -getLink");
+        let l1path = await load("@long/l1 -getLink");
         g6.ok(/\/test\/js\/long1\/long2\/long3\/l1.js\?d_ver=1$/.test(l1path), "get path ok");
         console.log("l1path => ",l1path);
 
