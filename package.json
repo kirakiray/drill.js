@@ -1,6 +1,6 @@
 {
   "name": "drill.js",
-  "version": "3.4.6",
+  "version": "3.5.0",
   "description": "A browser-side modularity and resource management framework",
   "main": "dist/drill.js",
   "directories": {

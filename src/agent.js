@@ -55,7 +55,7 @@ const isHttpFront = str => /^http/.test(str);
 
 let agent = async (urlObj) => {
     // getLink直接返回
-    if (urlObj.param && (urlObj.param.includes("-getLink")) && !drill.cacheInfo.offline) {
+    if (urlObj.param && (urlObj.param.includes("-getLink")) && !offline) {
         return Promise.resolve(urlObj.link);
     }
 
@@ -93,7 +93,7 @@ let agent = async (urlObj) => {
         // 存储错误资源地址
         let errPaths = [packData.link];
 
-        const errCall = () => {
+        const errCall = (e) => {
             packData.stat = 4;
             packData._passReject({
                 desc: `load source error`,
@@ -177,7 +177,7 @@ let agent = async (urlObj) => {
     await packData.passPromise;
 
     // 在offline情况下，返回link
-    if (urlObj.param && (urlObj.param.includes("-getLink")) && drill.cacheInfo.offline) {
+    if (urlObj.param && (urlObj.param.includes("-getLink")) && offline) {
         return Promise.resolve(packData.link);
     }
 

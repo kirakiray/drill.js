@@ -1,6 +1,8 @@
+@import "./t2.css";
+
 body {
     background-color: #aaa;
-    color: #333;
+    color: red;
     font-size: 14px;
     transition: all ease 1s;
 }

@@ -51,7 +51,7 @@ let isInitDB = new Promise((initDBResolve, reject) => {
 // blobCall 用于扩展程序二次更改使用
 let cacheSource = async ({ packData }) => {
     // 离线处理
-    if (!drill.cacheInfo.offline) {
+    if (!offline) {
         return packData.link;
     }
 
@@ -90,6 +90,12 @@ let cacheSource = async ({ packData }) => {
 
         // 存储到数据库中
         await saveFile(packData.path, file);
+    }
+
+    // file经由cacheDress中转
+    let dresser = cacheDress.get(packData.fileType);
+    if (dresser) {
+        file = await dresser({ file, packData });
     }
 
     // 挂载file文件

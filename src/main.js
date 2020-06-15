@@ -1,5 +1,5 @@
-// 设置加载器
-let setProcessor = (processName, processRunner) => {
+// 设置类型加载器的函数
+const setProcessor = (processName, processRunner) => {
     processors.set(processName, async (packData) => {
         let tempData = base.tempM.d;
         // 提前清空
@@ -23,6 +23,33 @@ let setProcessor = (processName, processRunner) => {
 
     drill[processName] || (drill[processName] = processDefineFunc);
     glo[processName] || (glo[processName] = processDefineFunc);
+}
+
+// 设置缓存中转器的函数
+const setCacheDress = (cacheType, dressRunner) => {
+    cacheDress.set(cacheType, async ({ file, packData }) => {
+        let newFile = file;
+
+        // 解析为文本
+        let backupFileText = await file.text();
+
+        let fileText = await dressRunner({
+            fileText: backupFileText,
+            file,
+            relativeLoad: (...args) => {
+                return load(toUrlObjs(args, packData.dir));
+            }
+        });
+
+        if (backupFileText !== fileText) {
+            // 重新生成file
+            newFile = new File([fileText], file.name, {
+                type: file.type
+            });
+        }
+
+        return newFile;
+    });
 }
 
 // 主体加载函数
@@ -137,12 +164,13 @@ let fixUrlObj = (urlObj) => {
         ori = search[1];
         search = search[2];
     }
+
     // 判断是否要加版本号
     let {
         k,
         v
     } = drill.cacheInfo;
-    if (k && v) {
+    if (k && v && !param.includes("-unCacheSearch")) {
         search && (search += "&");
         search += k + '=' + v;
     }

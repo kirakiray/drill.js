@@ -12,6 +12,11 @@ const paths = new Map();
 // 映射目录
 const dirpaths = {};
 
+// 是否离线
+let offline = false;
+// offline模式下，对文件的特殊处理
+const cacheDress = new Map();
+
 // 错误处理数据
 let errInfo = {
     // 加载错误之后，再次加载的间隔时间(毫秒)

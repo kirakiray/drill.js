@@ -1,5 +1,5 @@
 /*!
- * drill.js v3.4.6
+ * drill.js v3.5.0
  * https://github.com/kirakiray/drill.js
  * 
  * (c) 2018-2020 YAO
@@ -20,6 +20,11 @@
 
     // 映射目录
     const dirpaths = {};
+
+    // 是否离线
+    let offline = false;
+    // offline模式下，对文件的特殊处理
+    const cacheDress = new Map();
 
     // 错误处理数据
     let errInfo = {
@@ -125,11 +130,37 @@
 
             let isAddLink = false;
 
-            linkEle.onload = () => {
+            linkEle.onload = async () => {
+                // import rule 的文件也要缓存起来
+                // 离线模式下不需要这个操作，因为offline模块已经会对内部修改并缓存
+                // let rules = linkEle.sheet.rules ? Array.from(linkEle.sheet.rules) : linkEle.sheet.cssRules ? Array.from(linkEle.sheet.cssRules) : [];
                 document.head.removeChild(linkEle);
+
+                // // 貌似内部import已经加载完成才会触发onLoad
+                // let relativeLoad = (...args) => {
+                //     return load(toUrlObjs(args, packData.dir));
+                // }
+
+                // if (!offline) {
+                //     let arr = [];
+                //     rules.forEach(e => {
+                //         if (e instanceof CSSImportRule) {
+                //             arr.push(e.href + ' -unAppend -unCacheSearch');
+                //         }
+                //     });
+
+                //     // 加载子样式，确保所有样式文件被缓存
+                //     if (arr.length) {
+                //         await relativeLoad(...arr);
+                //     }
+                // }
+
+                // relativeLoad = null;
+
                 res(async (e) => {
                     // 在有获取内容的情况下，才重新加入link
-                    if (!isAddLink && !e.param.includes("-getPath")) {
+                    // 有unAppend参数，代表不需要添加到body内
+                    if (!isAddLink && !e.param.includes("-unAppend")) {
                         isAddLink = true;
                         document.head.appendChild(linkEle);
                     }
@@ -413,7 +444,7 @@
 
     let agent = async (urlObj) => {
         // getLink直接返回
-        if (urlObj.param && (urlObj.param.includes("-getLink")) && !drill.cacheInfo.offline) {
+        if (urlObj.param && (urlObj.param.includes("-getLink")) && !offline) {
             return Promise.resolve(urlObj.link);
         }
 
@@ -451,7 +482,7 @@
             // 存储错误资源地址
             let errPaths = [packData.link];
 
-            const errCall = () => {
+            const errCall = (e) => {
                 packData.stat = 4;
                 packData._passReject({
                     desc: `load source error`,
@@ -539,7 +570,7 @@
         await packData.passPromise;
 
         // 在offline情况下，返回link
-        if (urlObj.param && (urlObj.param.includes("-getLink")) && drill.cacheInfo.offline) {
+        if (urlObj.param && (urlObj.param.includes("-getLink")) && offline) {
             return Promise.resolve(packData.link);
         }
 
@@ -634,18 +665,27 @@
         },
         cacheInfo: {
             k: "d_ver",
-            v: "",
-            // 默认不缓存到本地
-            offline: false
+            v: ""
+        },
+        // 是否离线
+        get offline() {
+            return offline;
+        },
+        set offline(val) {
+            if (offline) {
+                console.error("offline mode has been activated");
+                return;
+            }
+            offline = val;
         },
         debug: {
             bag
         },
-        version: "3.4.6",
-        v: 3004006
+        version: "3.5.0",
+        v: 3005000
     };
-    // 设置加载器
-    let setProcessor = (processName, processRunner) => {
+    // 设置类型加载器的函数
+    const setProcessor = (processName, processRunner) => {
         processors.set(processName, async (packData) => {
             let tempData = base.tempM.d;
             // 提前清空
@@ -669,6 +709,36 @@
 
         drill[processName] || (drill[processName] = processDefineFunc);
         glo[processName] || (glo[processName] = processDefineFunc);
+    }
+
+    // 设置缓存中转器的函数
+    const setCacheDress = (cacheType, dressRunner) => {
+        cacheDress.set(cacheType, async ({
+            file,
+            packData
+        }) => {
+            let newFile = file;
+
+            // 解析为文本
+            let backupFileText = await file.text();
+
+            let fileText = await dressRunner({
+                fileText: backupFileText,
+                file,
+                relativeLoad: (...args) => {
+                    return load(toUrlObjs(args, packData.dir));
+                }
+            });
+
+            if (backupFileText !== fileText) {
+                // 重新生成file
+                newFile = new File([fileText], file.name, {
+                    type: file.type
+                });
+            }
+
+            return newFile;
+        });
     }
 
     // 主体加载函数
@@ -783,12 +853,13 @@
             ori = search[1];
             search = search[2];
         }
+
         // 判断是否要加版本号
         let {
             k,
             v
         } = drill.cacheInfo;
-        if (k && v) {
+        if (k && v && !param.includes("-unCacheSearch")) {
             search && (search += "&");
             search += k + '=' + v;
         }
@@ -1005,6 +1076,82 @@
         }
     });
 
+    // 设置 css 缓存中转，对css引用路径进行修正
+    setCacheDress("css", async ({
+        fileText,
+        relativeLoad
+    }) => {
+        // 获取所有import字符串
+        let importArrs = fileText.match(/@import ["'](.+?)["']/g);
+        if (importArrs) {
+            // 缓存外部样式
+            await Promise.all(importArrs.map(async e => {
+                let path = e.replace(/@import ["'](.+?)["']/, "$1");
+
+                let link = await relativeLoad(`${path} -getLink`);
+
+                // 修正相应路径
+                fileText = fileText.replace(e, `@import "${link}"`);
+            }));
+        }
+
+        // 缓存外部资源
+        let urlArrs = fileText.match(/url\((.+?)\)/g);
+        if (urlArrs) {
+            await Promise.all(urlArrs.map(async e => {
+                // 获取资源路径
+                let path = e.replace(/url\((.+?)\)/, "$1").replace(/["']/g, "");
+
+                // 确定不是协议http|https的才修正
+                if (/(^http:)|(^https:)/.test(path)) {
+                    return Promise.resolve("");
+                }
+
+                let link = await relativeLoad(`${path} -getLink`);
+
+                // 修正相应路径
+                fileText = fileText.replace(e, `url("${link}")`);
+            }));
+        }
+
+        return fileText;
+    });
+
+    // 对mjs引用路径进行修正
+    setCacheDress("mjs", async ({
+        fileText,
+        relativeLoad
+    }) => {
+        // import分组获取
+        let importsArr = fileText.match(/import .+ from ['"](.+?)['"];/g)
+
+        if (importsArr) {
+            await Promise.all(importsArr.map(async e => {
+                let exArr = e.match(/(import .+ from) ['"](.+?)['"];/, "$1");
+
+                if (exArr) {
+                    let path = exArr[2];
+
+                    // 获取对应的链接地址
+                    let link = await relativeLoad(`${path} -getLink`);
+
+                    fileText = fileText.replace(e, `${exArr[1]} "${link}"`);
+                }
+            }))
+        }
+
+        let asyncImports = fileText.match(/import\(.+?\)/g);
+        if (asyncImports) {
+            await Promise.all(asyncImports.map(async e => {
+                let path = e.replace(/import\(["'](.+?)['"]\)/, "$1");
+                let link = await relativeLoad(`${path} -getLink`);
+
+                fileText = fileText.replace(e, `import("${link}")`);
+            }));
+        }
+
+        return fileText;
+    });
     const DBNAME = "drill-cache-db";
     const FILESTABLENAME = 'files';
 
@@ -1060,7 +1207,7 @@
         packData
     }) => {
         // 离线处理
-        if (!drill.cacheInfo.offline) {
+        if (!offline) {
             return packData.link;
         }
 
@@ -1099,6 +1246,15 @@
 
             // 存储到数据库中
             await saveFile(packData.path, file);
+        }
+
+        // file经由cacheDress中转
+        let dresser = cacheDress.get(packData.fileType);
+        if (dresser) {
+            file = await dresser({
+                file,
+                packData
+            });
         }
 
         // 挂载file文件

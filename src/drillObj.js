@@ -87,9 +87,18 @@ const drill = {
     },
     cacheInfo: {
         k: "d_ver",
-        v: "",
-        // 默认不缓存到本地
-        offline: false
+        v: ""
+    },
+    // 是否离线
+    get offline() {
+        return offline;
+    },
+    set offline(val) {
+        if (offline) {
+            console.error("offline mode has been activated");
+            return;
+        }
+        offline = val;
     },
     debug: {
         bag
