@@ -217,10 +217,10 @@ let fixUrlObj = (urlObj) => {
     }
 
     // 判断是否带有 -pack 参数
-    if (param.includes('-pack')) {
+    if (param.includes('-pack') || param.includes('-p')) {
         let pathArr = path.match(/(.+)\/(.+)/);
         if (pathArr && (2 in pathArr)) {
-            ori = path = pathArr[1] + "/" + pathArr[2] + "/" + pathArr[2];
+            ori = path = `${pathArr[1]}/${pathArr[2]}/${pathArr[2]}`;
         } else {
             ori = path = `${path}/${path}`
         }

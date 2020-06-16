@@ -1,5 +1,5 @@
 /*!
- * drill.js v3.5.0
+ * drill.js v3.5.1
  * https://github.com/kirakiray/drill.js
  * 
  * (c) 2018-2020 YAO
@@ -613,17 +613,34 @@
             //配置paths
             let oPaths = options.paths;
             oPaths && Object.keys(oPaths).forEach(i => {
+                let val = oPaths[i];
                 if (/^@.+\/$/.test(i)) {
+                    let regStr = "^" + i;
+
+                    // 修正单点
+                    val = val.replace(/\/\.\//, "/")
+
+                    // 如果修正相对目录 
+                    if (/^\.\./.test(val)) {
+                        val = removeParentPath(rootHref + base.baseUrl + val);
+                    } else if (/^\//.test(val)) {
+                        val = location.origin + val;
+                    }
+
+                    let reg = new RegExp(regStr);
+
                     //属于目录类型
                     dirpaths[i] = {
                         // 正则
-                        reg: new RegExp('^' + i),
+                        reg,
                         // 值
-                        value: oPaths[i]
+                        value: val
                     };
-                } else {
+                } else if (/^\w+$/.test(i)) {
                     //属于资源类型
-                    paths.set(i, oPaths[i]);
+                    paths.set(i, val);
+                } else {
+                    console.warn("this Paths settings do not meet specifications", i);
                 }
             });
 
@@ -681,8 +698,8 @@
         debug: {
             bag
         },
-        version: "3.5.0",
-        v: 3005000
+        version: "3.5.1",
+        v: 3005001
     };
     // 设置类型加载器的函数
     const setProcessor = (processName, processRunner) => {
@@ -906,10 +923,10 @@
         }
 
         // 判断是否带有 -pack 参数
-        if (param.includes('-pack')) {
+        if (param.includes('-pack') || param.includes('-p')) {
             let pathArr = path.match(/(.+)\/(.+)/);
             if (pathArr && (2 in pathArr)) {
-                ori = path = pathArr[1] + "/" + pathArr[2] + "/" + pathArr[2];
+                ori = path = `${pathArr[1]}/${pathArr[2]}/${pathArr[2]}`;
             } else {
                 ori = path = `${path}/${path}`
             }
