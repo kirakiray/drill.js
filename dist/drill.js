@@ -132,30 +132,7 @@
 
             linkEle.onload = async () => {
                 // import rule 的文件也要缓存起来
-                // 离线模式下不需要这个操作，因为offline模块已经会对内部修改并缓存
-                // let rules = linkEle.sheet.rules ? Array.from(linkEle.sheet.rules) : linkEle.sheet.cssRules ? Array.from(linkEle.sheet.cssRules) : [];
                 document.head.removeChild(linkEle);
-
-                // // 貌似内部import已经加载完成才会触发onLoad
-                // let relativeLoad = (...args) => {
-                //     return load(toUrlObjs(args, packData.dir));
-                // }
-
-                // if (!offline) {
-                //     let arr = [];
-                //     rules.forEach(e => {
-                //         if (e instanceof CSSImportRule) {
-                //             arr.push(e.href + ' -unAppend -unCacheSearch');
-                //         }
-                //     });
-
-                //     // 加载子样式，确保所有样式文件被缓存
-                //     if (arr.length) {
-                //         await relativeLoad(...arr);
-                //     }
-                // }
-
-                // relativeLoad = null;
 
                 res(async (e) => {
                     // 在有获取内容的情况下，才重新加入link
@@ -380,6 +357,9 @@
     });
 
     // 对es6 module 支持
+    // 必须只是 async import 才可以使用
+    try {
+        eval(`
     loaders.set("mjs", async packData => {
         let d = await import(packData.link);
 
@@ -387,6 +367,10 @@
             return d;
         }
     });
+    `)
+    } catch (e) {
+        console.warn(`browser does not support asynchronous es module`);
+    }
     // 直接返回缓存地址的类型
     const returnUrlSets = new Set(["png", "jpg", "jpeg", "bmp", "gif", "webp"]);
 
