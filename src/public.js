@@ -49,6 +49,9 @@ var isEmptyObj = obj => !(0 in Object.keys(obj));
 
 //改良异步方法
 const nextTick = (() => {
+    if ((typeof $ !== "undefined") && (typeof $.nextTick !== "undefined")) {
+        return $.nextTick;
+    }
     if (document.currentScript.getAttribute("debug") !== null) {
         return setTimeout;
     }
