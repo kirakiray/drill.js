@@ -6,7 +6,7 @@ const getLoader = (fileType) => {
     let loader = loaders.get(fileType);
 
     if (!loader) {
-        console.log("no such this loader => " + fileType);
+        // console.log("no such this loader => " + fileType);
         loader = getByUtf8;
     }
 
