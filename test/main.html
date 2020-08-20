@@ -26,6 +26,8 @@
 
     const g6 = expect(1, 'getLink test');
 
+    const g7 = expect(1, 'get pack ok');
+
     const esModuleTest = expect(2, 'es module test');
 
 
@@ -142,6 +144,10 @@
             g6.ok(!!l1path.match(/^blob/), "offline path ok");
         }
         console.log("l1path => ", l1path);
+
+        let pcdata = await load("pc -p");
+
+        g7.ok(pcdata.val === 'I am pack', 'load pack data ok');
     };
 
 </script>
