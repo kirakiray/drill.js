@@ -28,6 +28,8 @@
 
     const g7 = expect(1, 'get pack ok');
 
+    const g8 = expect(1, 'go catch ok');
+
     const esModuleTest = expect(2, 'es module test');
 
 
@@ -69,6 +71,13 @@
             .catch(function (err) {
                 console.error('err=>', err);
             });
+
+        try {
+            await load("asdasd");
+            throw "can not go then";
+        } catch (e) {
+            g8.ok(true, "catch ok");
+        }
 
         // root test
         var [d1, d2, d3] = await load('define/define01', 'define/define02', 'js/define/define03  -r');

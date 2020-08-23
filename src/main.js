@@ -133,35 +133,6 @@ let load = (urlObjs) => {
     return p;
 }
 
-/**
- * 将相对路径写法改为绝对路径（协议开头）
- * @param {String} path 需要修正的路径
- * @param {String} relativeDir 相对目录
- */
-const getFullPath = (path, relativeDir) => {
-    !relativeDir && (relativeDir = getDir(document.location.href));
-
-    let new_path = path;
-
-    // 如果不是协议开头，修正relativeDir
-    if (!/^.+:\/\//.test(relativeDir)) {
-        relativeDir = getDir(getFullPath(relativeDir));
-    }
-
-    // 不是绝对路径（协议+地址）的话进行修正
-    if (!/^.+:\/\//.test(path)) {
-        if (/^\/.+/.test(path)) {
-            // 基于根目录
-            new_path = location.origin + path;
-        } else {
-            // 基于相对路径
-            new_path = relativeDir + path;
-        }
-    }
-
-    return new_path;
-}
-
 // 转换出url字符串对象
 let fixUrlObj = (urlObj) => {
     let {
@@ -177,7 +148,6 @@ let fixUrlObj = (urlObj) => {
         Object.assign(urlObj, {
             path: tarBag.path,
             link: tarBag.link,
-            dir: tarBag.dir
         });
         return urlObj;
     }
@@ -282,11 +252,15 @@ let fixUrlObj = (urlObj) => {
     }
 
     Object.assign(urlObj, {
+        // 真正的访问地址
         link,
+        // 后置参数
         search,
+        // 加载类型
         fileType,
-        path,
-        dir: getDir(path),
+        // 挂载地址
+        path: path.replace(location.origin, ""),
+        // 空格参数
         param
     });
 

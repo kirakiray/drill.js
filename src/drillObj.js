@@ -44,7 +44,7 @@ const drill = {
 
                 // 如果修正相对目录 
                 if (/^\.\./.test(val)) {
-                    val = removeParentPath(rootHref + base.baseUrl + val);
+                    val = removeParentPath(getDir(document.location.href) + base.baseUrl + val);
                 } else if (/^\//.test(val)) {
                     val = location.origin + val;
                 }
