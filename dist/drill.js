@@ -163,18 +163,15 @@
             linkEle.rel = "stylesheet";
             linkEle.href = packData.link;
 
-            let isAddLink = false;
+            let isInit = false;
 
             linkEle.onload = async () => {
-                // import rule 的文件也要缓存起来
-                document.head.removeChild(linkEle);
-
                 res(async (e) => {
-                    // 在有获取内容的情况下，才重新加入link
-                    // 有unAppend参数，代表不需要添加到body内
-                    if (!isAddLink && !e.param.includes("-unAppend")) {
-                        isAddLink = true;
-                        document.head.appendChild(linkEle);
+                    if (!isInit) {
+                        isInit = true;
+                        if (e.param.includes("-unAppend")) {
+                            document.head.removeChild(linkEle);
+                        }
                     }
                     return linkEle
                 });
