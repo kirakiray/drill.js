@@ -201,13 +201,7 @@ loaders.set("js", (packData) => {
             // task 进程类型
             let {
                 type,
-                moduleId
             } = tempM;
-
-            // 判断是否有自定义id
-            if (moduleId) {
-                bag.get(moduleId) || bag.set(moduleId, packData);
-            }
 
             // 进行processors断定
             // 默认是file类型

@@ -13,11 +13,10 @@ const setProcessor = (processName, processRunner) => {
     });
 
     // 特定类型记录器
-    let processDefineFunc = (d, moduleId) => {
+    let processDefineFunc = (d) => {
         base.tempM = {
             type: processName,
-            d,
-            moduleId
+            d
         };
     }
 
