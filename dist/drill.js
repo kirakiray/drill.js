@@ -1,5 +1,5 @@
 /*!
- * drill.js v3.5.4
+ * drill.js v3.5.5
  * https://github.com/kirakiray/drill.js
  * 
  * (c) 2018-2021 YAO
@@ -19,34 +19,69 @@
 
     //改良异步方法
     const nextTick = (() => {
-        if ((typeof $ !== "undefined") && (typeof $.nextTick !== "undefined")) {
-            return $.nextTick;
+        let isDebug = document.currentScript.getAttribute("debug") !== null;
+        if (isDebug) {
+            let nMap = new Map();
+            return (fun, key) => {
+                if (!key) {
+                    key = getRandomId();
+                }
+
+                let timer = nMap.get(key);
+                clearTimeout(timer);
+                nMap.set(key, setTimeout(() => {
+                    fun();
+                    nMap.delete(key);
+                }));
+            };
         }
-        if (document.currentScript.getAttribute("debug") !== null) {
-            return setTimeout;
-        }
+
+        // 定位对象寄存器
+        let nextTickMap = new Map();
+
+        let pnext = (func) => Promise.resolve().then(() => func())
 
         if (typeof process === "object" && process.nextTick) {
-            return process.nextTick;
+            pnext = process.nextTick;
         }
 
-        let isTick = false;
-        let nextTickArr = [];
-        return (fun) => {
-            if (!isTick) {
-                isTick = true;
-                setTimeout(() => {
-                    for (let i = 0; i < nextTickArr.length; i++) {
-                        nextTickArr[i]();
-                    }
-                    nextTickArr = [];
-                    isTick = false;
-                }, 0);
+        let inTick = false;
+        return (fun, key) => {
+            if (!key) {
+                key = getRandomId();
             }
-            nextTickArr.push(fun);
+
+            nextTickMap.set(key, {
+                key,
+                fun
+            });
+
+            if (inTick) {
+                return;
+            }
+
+            inTick = true;
+
+            pnext(() => {
+                if (nextTickMap.size) {
+                    nextTickMap.forEach(({
+                        key,
+                        fun
+                    }) => {
+                        try {
+                            fun();
+                        } catch (e) {
+                            console.error(e);
+                        }
+                        nextTickMap.delete(key);
+                    });
+                }
+
+                nextTickMap.clear();
+                inTick = false;
+            });
         };
     })();
-
     // 获取文件类型
     const getFileType = url => {
         let lastOri = url.split('/').pop();
@@ -723,8 +758,8 @@
         debug: {
             bag
         },
-        version: "3.5.4",
-        v: 3005004
+        version: "3.5.5",
+        v: 3005005
     };
     // 设置类型加载器的函数
     const setProcessor = (processName, processRunner) => {
