@@ -1,4 +1,16 @@
-# drill 3
+# drill 4
+
+已经是2021年了，可以用新的API优化更多代码；不用兼容太旧的浏览器了；
+
+frame等不常用功能变为插件；去除掉不常用的 `过渡中` 的状态；
+
+## 为什么使用 drill.js ？
+
+* 不依赖webpack nodejs ，管理项目资源(js/css/...)；
+* 按需加载模块，为项目提供 `过渡中` 的状态，方便做用户体验优化；
+
+
+<!-- # drill 3
 
 更改为浏览器的资源管理器，不单纯只是模块化框架；
 
@@ -37,4 +49,4 @@
 
 ## 案例
 
-采用 [Xhear](https://github.com/kirakiray/Xhear/) +  [drill.js](https://github.com/kirakiray/drill.js/)开发的 [PageCreator](https://kirakiray.com/pageCreator/)。
+采用 [Xhear](https://github.com/kirakiray/Xhear/) +  [drill.js](https://github.com/kirakiray/drill.js/)开发的 [PageCreator](https://kirakiray.com/pageCreator/)。 -->
