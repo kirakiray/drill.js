@@ -18,6 +18,7 @@ const nextTick = (() => {
 
     return pnext;
 })();
+
 // 获取文件类型
 const getFileType = url => {
     let lastOri = url.split('/').pop();
