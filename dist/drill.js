@@ -19,68 +19,13 @@
 
     //改良异步方法
     const nextTick = (() => {
-        let isDebug = document.currentScript.getAttribute("debug") !== null;
-        if (isDebug) {
-            let nMap = new Map();
-            return (fun, key) => {
-                if (!key) {
-                    key = getRandomId();
-                }
-
-                let timer = nMap.get(key);
-                clearTimeout(timer);
-                nMap.set(key, setTimeout(() => {
-                    fun();
-                    nMap.delete(key);
-                }));
-            };
-        }
-
-        // 定位对象寄存器
-        let nextTickMap = new Map();
-
-        let pnext = (func) => Promise.resolve().then(() => func())
+        const pnext = (func) => Promise.resolve().then(() => func());
 
         if (typeof process === "object" && process.nextTick) {
             pnext = process.nextTick;
         }
 
-        let inTick = false;
-        return (fun, key) => {
-            if (!key) {
-                key = getRandomId();
-            }
-
-            nextTickMap.set(key, {
-                key,
-                fun
-            });
-
-            if (inTick) {
-                return;
-            }
-
-            inTick = true;
-
-            pnext(() => {
-                if (nextTickMap.size) {
-                    nextTickMap.forEach(({
-                        key,
-                        fun
-                    }) => {
-                        try {
-                            fun();
-                        } catch (e) {
-                            console.error(e);
-                        }
-                        nextTickMap.delete(key);
-                    });
-                }
-
-                nextTickMap.clear();
-                inTick = false;
-            });
-        };
+        return pnext;
     })();
     // 获取文件类型
     const getFileType = url => {
