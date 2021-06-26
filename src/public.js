@@ -6,6 +6,8 @@ var getType = value => objectToString.call(value).toLowerCase().replace(/(\[obje
 const isFunction = d => getType(d).search('function') > -1;
 var isEmptyObj = obj => !(0 in Object.keys(obj));
 
+const { defineProperties } = Object;
+
 //改良异步方法
 const nextTick = (() => {
     const pnext = (func) => Promise.resolve().then(() => func());

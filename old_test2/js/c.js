@@ -1,3 +1,0 @@
-define((load) => {
-    return 'hahahahahahahahahaha';
-});
