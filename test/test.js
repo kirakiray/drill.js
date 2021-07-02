@@ -96,3 +96,11 @@
     let hasL1Source_after = await drill.has("@long/l1.js");
     tester.ok(!!before_scipt === true && !!after_script === false && hasL1Source_after === false, "remove ok");
 })();
+
+(async () => {
+    const tester = expect(1, 'query test');
+
+    let l2 = await load("long1/long2/long3/l2.js?aaa=aaa");
+
+    tester.ok(l2 === "long file02", "load query source ok");
+})();

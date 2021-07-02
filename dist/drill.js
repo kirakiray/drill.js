@@ -255,7 +255,19 @@
         });
     });
 
-    // 获取并通过utf8返回数据
+    // 通过utf8返回数据
+    ["html"].forEach(name => {
+        addLoader(name, async ({
+            src,
+            record
+        }) => {
+            let data = await fetch(src).then(e => e.text());
+
+            record.done(() => data);
+        });
+    });
+
+    // 获取并通过respon返回数据
     const loadByFetch = async ({
         src,
         record
@@ -379,8 +391,10 @@
 
         // 文件类型，loader使用的类型，一般去路径后缀
         get ftype() {
+            const urlObj = new URL(this.src);
+
             // 判断参数是否有 :xxx ，修正类型
-            let type = this.src.replace(/.+\.(.+)/, "$1");
+            let type = urlObj.pathname.replace(/.+\.(.+)/, "$1");
             this.params.some(e => {
                 if (/^:(.+)/.test(e)) {
                     type = e.replace(/^:(.+)/, "$1")

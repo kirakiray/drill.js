@@ -35,8 +35,10 @@ class DPackage {
 
     // 文件类型，loader使用的类型，一般去路径后缀
     get ftype() {
+        const urlObj = new URL(this.src);
+
         // 判断参数是否有 :xxx ，修正类型
-        let type = this.src.replace(/.+\.(.+)/, "$1");
+        let type = urlObj.pathname.replace(/.+\.(.+)/, "$1");
         this.params.some(e => {
             if (/^:(.+)/.test(e)) {
                 type = e.replace(/^:(.+)/, "$1")

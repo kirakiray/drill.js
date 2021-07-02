@@ -111,7 +111,16 @@ addLoader("css", async ({ src, record }) => {
     });
 });
 
-// 获取并通过utf8返回数据
+// 通过utf8返回数据
+["html"].forEach(name => {
+    addLoader(name, async ({ src, record }) => {
+        let data = await fetch(src).then(e => e.text());
+
+        record.done(() => data);
+    });
+});
+
+// 获取并通过respon返回数据
 const loadByFetch = async ({ src, record }) => {
     let data = await fetch(src);
 
