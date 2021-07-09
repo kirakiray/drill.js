@@ -106,10 +106,19 @@ function buildUp(dBag) {
             agent(pkg).then(done).catch(err => {
                 iserror = true;
 
+                if (err) {
+                    console.error({
+                        expr: str,
+                        src: pkg.src,
+                        ...err
+                    });
+                }
+
                 result[index] = err;
 
                 dBag[DRILL_REJECT]({
                     expr: str,
+                    src: pkg.src,
                     error: err
                 });
 

@@ -136,7 +136,7 @@
 
             record.type = type;
 
-            callback({
+            return callback({
                 src,
                 record
             });
@@ -174,9 +174,12 @@
 
                 resolve();
             });
-            script.addEventListener('error', () => {
+            script.addEventListener('error', (event) => {
                 // 加载错误
-                reject();
+                reject({
+                    desc: "load script error",
+                    event
+                });
             });
 
             // 添加进主体
@@ -272,10 +275,17 @@
         src,
         record
     }) => {
-        let data = await fetch(src);
+        let response = await fetch(src);
+
+        if (!response.ok) {
+            throw {
+                desc: "fetch " + response.statusText,
+                response
+            };
+        }
 
         // 重置getPack
-        record.done(() => data);
+        record.done(() => response);
     }
 
     // 所以文件的存储仓库
@@ -332,7 +342,7 @@
 
         if (loader) {
             // 加载资源
-            loader(record.src);
+            await loader(record.src);
         } else {
             // 不存在这种加载器
             console.warn({
@@ -341,7 +351,7 @@
             });
 
             // loadByUtf8({
-            loadByFetch({
+            await loadByFetch({
                 src: record.src,
                 record
             });
@@ -466,10 +476,19 @@
                 agent(pkg).then(done).catch(err => {
                     iserror = true;
 
+                    if (err) {
+                        console.error({
+                            expr: str,
+                            src: pkg.src,
+                            ...err
+                        });
+                    }
+
                     result[index] = err;
 
                     dBag[DRILL_REJECT]({
                         expr: str,
+                        src: pkg.src,
                         error: err
                     });
 

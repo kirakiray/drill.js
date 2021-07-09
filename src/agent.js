@@ -52,7 +52,7 @@ async function agent(pkg) {
 
     if (loader) {
         // 加载资源
-        loader(record.src);
+        await loader(record.src);
     } else {
         // 不存在这种加载器
         console.warn({
@@ -61,7 +61,7 @@ async function agent(pkg) {
         });
 
         // loadByUtf8({
-        loadByFetch({
+        await loadByFetch({
             src: record.src,
             record
         });

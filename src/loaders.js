@@ -7,7 +7,7 @@ const addLoader = (type, callback) => {
 
         record.type = type;
 
-        callback({
+        return callback({
             src,
             record
         });
@@ -42,9 +42,11 @@ addLoader("js", ({ src, record }) => {
 
             resolve();
         });
-        script.addEventListener('error', () => {
+        script.addEventListener('error', (event) => {
             // 加载错误
-            reject();
+            reject({
+                desc: "load script error", event
+            });
         });
 
         // 添加进主体
@@ -122,8 +124,14 @@ addLoader("css", async ({ src, record }) => {
 
 // 获取并通过respon返回数据
 const loadByFetch = async ({ src, record }) => {
-    let data = await fetch(src);
+    let response = await fetch(src);
+
+    if (!response.ok) {
+        throw {
+            desc: "fetch " + response.statusText, response
+        };
+    }
 
     // 重置getPack
-    record.done(() => data);
+    record.done(() => response);
 }

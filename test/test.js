@@ -104,3 +104,14 @@
 
     tester.ok(l2 === "long file02", "load query source ok");
 })();
+
+(async () => {
+    const tester = expect(1, 'load error test');
+
+    try {
+        let = await load("errorpath -p");
+        tester.ok(false, "load error not ok");
+    } catch (err) {
+        tester.ok(true, "load error ok");
+    }
+})();
