@@ -95,23 +95,23 @@
     let after_script = document.querySelector("script[src*='l1']");
     let hasL1Source_after = await drill.has("@long/l1.js");
     tester.ok(!!before_scipt === true && !!after_script === false && hasL1Source_after === false, "remove ok");
-})();
 
-(async () => {
-    const tester = expect(1, 'query test');
+    await (async () => {
+        const tester = expect(1, 'query test');
 
-    let l2 = await load("long1/long2/long3/l2.js?aaa=aaa");
+        let l2 = await load("long1/long2/long3/l2.js?aaa=aaa");
 
-    tester.ok(l2 === "long file02", "load query source ok");
-})();
+        tester.ok(l2 === "long file02", "load query source ok");
+    })();
 
-(async () => {
-    const tester = expect(1, 'load error test');
+    await (async () => {
+        const tester = expect(1, 'load error test');
 
-    try {
-        let = await load("errorpath -p");
-        tester.ok(false, "load error not ok");
-    } catch (err) {
-        tester.ok(true, "load error ok");
-    }
+        try {
+            let = await load("errorpath -p");
+            tester.ok(false, "load error not ok");
+        } catch (err) {
+            tester.ok(true, "load error ok");
+        }
+    })();
 })();

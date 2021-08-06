@@ -3,7 +3,7 @@ const loaders = new Map();
 // 添加加载器的方法
 const addLoader = (type, callback) => {
     loaders.set(type, src => {
-        const record = bag.get(src)
+        const record = getBag(src)
 
         record.type = type;
 

@@ -11,11 +11,11 @@ const addProcess = (name, callback) => {
                 let nowSrc = document.currentScript.src;
 
                 // 查看原来是否有record
-                let record = bag.get(nowSrc);
+                let record = getBag(nowSrc);
 
                 if (!record) {
                     record = new BagRecord(nowSrc);
-                    bag.set(nowSrc, record);
+                    setBag(nowSrc, record);
                 }
 
                 // 设置加载中的状态

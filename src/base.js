@@ -45,12 +45,12 @@
         async has(src) {
             let path = await load(`${src} -link`);
 
-            return !!bag.get(path);
+            return !!getBag(path);
         },
         // 删除该资源缓存
         async remove(src) {
             let path = await load(`${src} -link`);
-            let record = bag.get(path);
+            let record = getBag(path);
 
             // 删除挂载元素
             let sele = record.sourceElement;
@@ -67,6 +67,7 @@
                 bag, addLoader, addProcess
             });
         },
+        bag,
         // 版本信息
         version: "{{version}}",
         v: "{{versionCode}}"

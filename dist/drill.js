@@ -42,11 +42,11 @@
                     let nowSrc = document.currentScript.src;
 
                     // 查看原来是否有record
-                    let record = bag.get(nowSrc);
+                    let record = getBag(nowSrc);
 
                     if (!record) {
                         record = new BagRecord(nowSrc);
-                        bag.set(nowSrc, record);
+                        setBag(nowSrc, record);
                     }
 
                     // 设置加载中的状态
@@ -132,7 +132,7 @@
     // 添加加载器的方法
     const addLoader = (type, callback) => {
         loaders.set(type, src => {
-            const record = bag.get(src)
+            const record = getBag(src)
 
             record.type = type;
 
@@ -291,6 +291,16 @@
     // 所以文件的存储仓库
     const bag = new Map();
 
+    const setBag = (src, record) => {
+        let o = new URL(src);
+        bag.set(o.origin + o.pathname, record)
+    }
+
+    const getBag = (src) => {
+        let o = new URL(src);
+        return bag.get(o.origin + o.pathname);
+    }
+
     // 背包记录器
     class BagRecord {
         constructor(src) {
@@ -321,13 +331,32 @@
 
             this.doneTime = Date.now();
         }
+
+        fail(err) {
+            this.status = -1;
+            this.__reject(data);
+
+            delete this.__resolve;
+            delete this.__reject;
+
+            this.doneTime = Date.now();
+        }
     }
+
+    const notfindLoader = {};
 
     // 代理资源请求
     async function agent(pkg) {
-        let record = bag.get(pkg.src);
+        let record = getBag(pkg.src);
 
         if (record) {
+            if (record.status == -1) {
+                throw {
+                    expr: pkg.url,
+                    src: record.src
+                };
+            }
+
             const getPack = await record.data;
 
             return await getPack(pkg);
@@ -335,26 +364,35 @@
 
         record = new BagRecord(pkg.src);
 
-        bag.set(pkg.src, record);
+        setBag(pkg.src, record);
 
         // 根据后缀名获取loader
         let loader = loaders.get(pkg.ftype);
 
-        if (loader) {
-            // 加载资源
-            await loader(record.src);
-        } else {
-            // 不存在这种加载器
-            console.warn({
-                desc: "did not find this loader",
-                type: pkg.ftype
-            });
+        try {
+            if (loader) {
+                // 加载资源
+                await loader(record.src);
+            } else {
+                if (!notfindLoader[pkg.ftype]) {
+                    // 不存在这种加载器
+                    console.warn({
+                        desc: "did not find this loader",
+                        type: pkg.ftype
+                    });
 
-            // loadByUtf8({
-            await loadByFetch({
-                src: record.src,
-                record
-            });
+                    notfindLoader[pkg.ftype] = 1;
+                }
+
+                // loadByUtf8({
+                await loadByFetch({
+                    src: record.src,
+                    record
+                });
+            }
+        } catch (err) {
+            record.fail(err);
+            // throw err;
         }
 
         // 返回数据
@@ -621,12 +659,12 @@
         async has(src) {
             let path = await load(`${src} -link`);
 
-            return !!bag.get(path);
+            return !!getBag(path);
         },
         // 删除该资源缓存
         async remove(src) {
             let path = await load(`${src} -link`);
-            let record = bag.get(path);
+            let record = getBag(path);
 
             // 删除挂载元素
             let sele = record.sourceElement;
@@ -645,6 +683,7 @@
                 addProcess
             });
         },
+        bag,
         // 版本信息
         version: "4.0.0",
         v: 4000000
