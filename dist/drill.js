@@ -2,7 +2,7 @@
  * drill.js v4.0.0
  * https://github.com/kirakiray/drill.js
  * 
- * (c) 2018-2021 YAO
+ * (c) 2018-2022 YAO
  * Released under the MIT License.
  */
 ((glo) => {
@@ -11,9 +11,13 @@
     // 获取随机id
     const getRandomId = () => Math.random().toString(32).substr(2);
     var objectToString = Object.prototype.toString;
-    var getType = value => objectToString.call(value).toLowerCase().replace(/(\[object )|(])/g, '');
-    const isFunction = d => getType(d).search('function') > -1;
-    var isEmptyObj = obj => !(0 in Object.keys(obj));
+    var getType = (value) =>
+        objectToString
+        .call(value)
+        .toLowerCase()
+        .replace(/(\[object )|(])/g, "");
+    const isFunction = (d) => getType(d).search("function") > -1;
+    var isEmptyObj = (obj) => !(0 in Object.keys(obj));
 
     const {
         defineProperties
@@ -29,6 +33,7 @@
 
         return pnext;
     })();
+
     // 针对js类型的进程处理操作
     const processor = new Map();
 
@@ -64,12 +69,12 @@
                             repms.__relative__ = nowSrc;
 
                             return repms;
-                        }
+                        },
                     });
-                }
-            }
+                },
+            },
         });
-    }
+    };
 
     // 最初始的模块类型 define
     addProcess("define", async ({
@@ -87,7 +92,7 @@
             let result = await respone({
                 load: relativeLoad,
                 FILE: record.src,
-                exports
+                exports,
             });
 
             // 没有放回结果并且exports上有数据
@@ -97,12 +102,12 @@
 
             getPack = (pkg) => {
                 return result;
-            }
+            };
         } else {
             // 直接赋值result
             getPack = (pkg) => {
                 return respone;
-            }
+            };
         }
 
         // 返回getPack函数
@@ -116,7 +121,7 @@
         relativeLoad
     }) => {
         if (!isFunction(respone)) {
-            throw 'task must be a function';
+            throw "task must be a function";
         }
 
         record.done(async (pkg) => {
@@ -127,21 +132,22 @@
             });
         });
     });
+
     const loaders = new Map();
 
     // 添加加载器的方法
     const addLoader = (type, callback) => {
-        loaders.set(type, src => {
-            const record = getBag(src)
+        loaders.set(type, (src) => {
+            const record = getBag(src);
 
             record.type = type;
 
             return callback({
                 src,
-                record
+                record,
             });
         });
-    }
+    };
 
     addLoader("js", ({
         src,
@@ -149,10 +155,10 @@
     }) => {
         return new Promise((resolve, reject) => {
             // 主体script
-            let script = document.createElement('script');
+            let script = document.createElement("script");
 
             //填充相应数据
-            script.type = 'text/javascript';
+            script.type = "text/javascript";
             script.async = true;
             script.src = src;
 
@@ -160,7 +166,7 @@
             record.sourceElement = script;
 
             // 添加事件
-            script.addEventListener('load', async () => {
+            script.addEventListener("load", async () => {
                 // 添加脚本完成时间
                 record.loadedTime = Date.now();
 
@@ -174,11 +180,11 @@
 
                 resolve();
             });
-            script.addEventListener('error', (event) => {
+            script.addEventListener("error", (event) => {
                 // 加载错误
                 reject({
                     desc: "load script error",
-                    event
+                    event,
                 });
             });
 
@@ -200,13 +206,13 @@
         src,
         record
     }) => {
-        let data = await fetch(src).then(e => e.arrayBuffer());
+        let data = await fetch(src).then((e) => e.arrayBuffer());
 
         // 转换wasm模块
         let module = await WebAssembly.compile(data);
         const instance = new WebAssembly.Instance(module);
 
-        record.done(() => instance.exports)
+        record.done(() => instance.exports);
     });
 
     addLoader("json", async ({
@@ -250,21 +256,21 @@
             // 未加载完成的话要等待
             if (!link.sheet) {
                 await new Promise((resolve) => {
-                    link.addEventListener("load", e => {
+                    link.addEventListener("load", (e) => {
                         resolve();
                     });
-                })
+                });
             }
         });
     });
 
     // 通过utf8返回数据
-    ["html"].forEach(name => {
+    ["html"].forEach((name) => {
         addLoader(name, async ({
             src,
             record
         }) => {
-            let data = await fetch(src).then(e => e.text());
+            let data = await fetch(src).then((e) => e.text());
 
             record.done(() => data);
         });
@@ -280,26 +286,26 @@
         if (!response.ok) {
             throw {
                 desc: "fetch " + response.statusText,
-                response
+                response,
             };
         }
 
         // 重置getPack
         record.done(() => response);
-    }
+    };
 
     // 所以文件的存储仓库
     const bag = new Map();
 
     const setBag = (src, record) => {
         let o = new URL(src);
-        bag.set(o.origin + o.pathname, record)
-    }
+        bag.set(o.origin + o.pathname, record);
+    };
 
     const getBag = (src) => {
         let o = new URL(src);
         return bag.get(o.origin + o.pathname);
-    }
+    };
 
     // 背包记录器
     class BagRecord {
@@ -353,7 +359,7 @@
             if (record.status == -1) {
                 throw {
                     expr: pkg.url,
-                    src: record.src
+                    src: record.src,
                 };
             }
 
@@ -378,7 +384,7 @@
                     // 不存在这种加载器
                     console.warn({
                         desc: "did not find this loader",
-                        type: pkg.ftype
+                        type: pkg.ftype,
                     });
 
                     notfindLoader[pkg.ftype] = 1;
@@ -387,7 +393,7 @@
                 // loadByUtf8({
                 await loadByFetch({
                     src: record.src,
-                    record
+                    record,
                 });
             }
         } catch (err) {
@@ -400,6 +406,7 @@
 
         return await getPack(pkg);
     }
+
     // 存储地址
     const pathsMap = new Map();
 
@@ -443,9 +450,9 @@
 
             // 判断参数是否有 :xxx ，修正类型
             let type = urlObj.pathname.replace(/.+\.(.+)/, "$1");
-            this.params.some(e => {
+            this.params.some((e) => {
                 if (/^:(.+)/.test(e)) {
-                    type = e.replace(/^:(.+)/, "$1")
+                    type = e.replace(/^:(.+)/, "$1");
                     return true;
                 }
             });
@@ -465,7 +472,7 @@
 
     // 分发
     function buildUp(dBag) {
-        dBag.args.forEach(e => dBag.result.push(undefined))
+        dBag.args.forEach((e) => dBag.result.push(undefined));
 
         // 请求成功数统计
         let count = 0;
@@ -491,7 +498,7 @@
                     pendFunc({
                         index,
                         pkg,
-                        data
+                        data,
                     });
                 }
 
@@ -501,8 +508,8 @@
                     dBag[DRILL_RESOLVE](result);
                 }
 
-                done = null
-            }
+                done = null;
+            };
 
             // 如果带有-link参数，直接返回链接
             if (pkg.params.includes("-link")) {
@@ -511,30 +518,33 @@
                 done(pkg);
             } else {
                 // 代理转发
-                agent(pkg).then(done).catch(err => {
-                    iserror = true;
+                agent(pkg)
+                    .then(done)
+                    .catch((err) => {
+                        iserror = true;
 
-                    if (err) {
-                        console.error({
+                        if (err) {
+                            console.error({
+                                expr: str,
+                                src: pkg.src,
+                                ...err,
+                            });
+                        }
+
+                        result[index] = err;
+
+                        dBag[DRILL_REJECT]({
                             expr: str,
                             src: pkg.src,
-                            ...err
+                            error: err,
                         });
-                    }
 
-                    result[index] = err;
-
-                    dBag[DRILL_REJECT]({
-                        expr: str,
-                        src: pkg.src,
-                        error: err
+                        done = null;
                     });
-
-                    done = null
-                });
             }
         });
     }
+
     const DRILL_RESOLVE = Symbol("resolve");
     const DRILL_REJECT = Symbol("reject");
     const POST_DATA = Symbol("postData");
@@ -557,24 +567,24 @@
 
             defineProperties(this, {
                 [DRILL_RESOLVE]: {
-                    value: res
+                    value: res,
                 },
                 [DRILL_REJECT]: {
-                    value: rej
+                    value: rej,
                 },
                 // 请求参数
                 args: {
-                    value: args
+                    value: args,
                 },
                 // 返回的结果
                 result: {
-                    value: []
+                    value: [],
                 },
                 // 相对路径
                 __relative__: {
                     writable: true,
-                    value: ""
-                }
+                    value: "",
+                },
                 // 响应数量
                 // responded: {
                 //     value: 0
@@ -589,13 +599,13 @@
             if (this[DRILL_PENDFUNC]) {
                 throw {
                     desc: "pend has been used",
-                    target: this
+                    target: this,
                 };
             }
             defineProperties(this, {
                 [DRILL_PENDFUNC]: {
-                    value: func
-                }
+                    value: func,
+                },
             });
 
             return this;
@@ -606,20 +616,21 @@
             if (this[POST_DATA]) {
                 throw {
                     desc: "post has been used",
-                    target: this
+                    target: this,
                 };
             }
             defineProperties(this, {
                 [POST_DATA]: {
-                    value: data
-                }
+                    value: data,
+                },
             });
 
             return this;
         }
     }
 
-    const load = glo.load = (...args) => new Drill(...args);
+
+    const load = (glo.load = (...args) => new Drill(...args));
 
     const config = (opts) => {
         let {
@@ -627,14 +638,14 @@
         } = opts;
         if (paths) {
             // 快捷路径
-            Object.keys(paths).forEach(k => {
+            Object.keys(paths).forEach((k) => {
                 let val = paths[k];
 
                 // 不是@开头/结尾的定义为不合法
                 if (!/^@.+\/$/.test(k)) {
                     throw {
                         desc: "incorrect definition of paths",
-                        key: k
+                        key: k,
                     };
                 }
 
@@ -642,7 +653,7 @@
                     throw {
                         desc: "incorrect definition of paths",
                         key: k,
-                        path: val
+                        path: val,
                     };
                 }
 
@@ -650,7 +661,7 @@
                 pathsMap.set(new RegExp(`^` + k), val);
             });
         }
-    }
+    };
 
     const drill = {
         load,
@@ -680,20 +691,19 @@
             callback({
                 bag,
                 addLoader,
-                addProcess
+                addProcess,
             });
         },
         bag,
         // 版本信息
         version: "4.0.0",
-        v: 4000000
+        v: 4000000,
     };
 
     // 全局函数
     defineProperties(glo, {
         drill: {
-            value: drill
-        }
+            value: drill,
+        },
     });
-
 })(typeof globalThis != "undefined" ? globalThis : window);

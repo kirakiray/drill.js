@@ -24,19 +24,21 @@ const addProcess = (name, callback) => {
                 record.ptype = name;
 
                 callback({
-                    respone, record, relativeLoad(...args) {
+                    respone,
+                    record,
+                    relativeLoad(...args) {
                         let repms = new Drill(...args);
 
                         // 设置相对目录
                         repms.__relative__ = nowSrc;
 
                         return repms;
-                    }
+                    },
                 });
-            }
-        }
+            },
+        },
     });
-}
+};
 
 // 最初始的模块类型 define
 addProcess("define", async ({ respone, record, relativeLoad }) => {
@@ -50,7 +52,7 @@ addProcess("define", async ({ respone, record, relativeLoad }) => {
         let result = await respone({
             load: relativeLoad,
             FILE: record.src,
-            exports
+            exports,
         });
 
         // 没有放回结果并且exports上有数据
@@ -60,12 +62,12 @@ addProcess("define", async ({ respone, record, relativeLoad }) => {
 
         getPack = (pkg) => {
             return result;
-        }
+        };
     } else {
         // 直接赋值result
         getPack = (pkg) => {
             return respone;
-        }
+        };
     }
 
     // 返回getPack函数
@@ -75,7 +77,7 @@ addProcess("define", async ({ respone, record, relativeLoad }) => {
 // 进程模块
 addProcess("task", async ({ respone, record, relativeLoad }) => {
     if (!isFunction(respone)) {
-        throw 'task must be a function';
+        throw "task must be a function";
     }
 
     record.done(async (pkg) => {

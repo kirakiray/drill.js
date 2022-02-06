@@ -39,9 +39,9 @@ class DPackage {
 
         // 判断参数是否有 :xxx ，修正类型
         let type = urlObj.pathname.replace(/.+\.(.+)/, "$1");
-        this.params.some(e => {
+        this.params.some((e) => {
             if (/^:(.+)/.test(e)) {
-                type = e.replace(/^:(.+)/, "$1")
+                type = e.replace(/^:(.+)/, "$1");
                 return true;
             }
         });
@@ -61,7 +61,7 @@ class DPackage {
 
 // 分发
 function buildUp(dBag) {
-    dBag.args.forEach(e => dBag.result.push(undefined))
+    dBag.args.forEach((e) => dBag.result.push(undefined));
 
     // 请求成功数统计
     let count = 0;
@@ -83,7 +83,9 @@ function buildUp(dBag) {
 
             if (pendFunc) {
                 pendFunc({
-                    index, pkg, data
+                    index,
+                    pkg,
+                    data,
                 });
             }
 
@@ -93,8 +95,8 @@ function buildUp(dBag) {
                 dBag[DRILL_RESOLVE](result);
             }
 
-            done = null
-        }
+            done = null;
+        };
 
         // 如果带有-link参数，直接返回链接
         if (pkg.params.includes("-link")) {
@@ -103,27 +105,29 @@ function buildUp(dBag) {
             done(pkg);
         } else {
             // 代理转发
-            agent(pkg).then(done).catch(err => {
-                iserror = true;
+            agent(pkg)
+                .then(done)
+                .catch((err) => {
+                    iserror = true;
 
-                if (err) {
-                    console.error({
+                    if (err) {
+                        console.error({
+                            expr: str,
+                            src: pkg.src,
+                            ...err,
+                        });
+                    }
+
+                    result[index] = err;
+
+                    dBag[DRILL_REJECT]({
                         expr: str,
                         src: pkg.src,
-                        ...err
+                        error: err,
                     });
-                }
 
-                result[index] = err;
-
-                dBag[DRILL_REJECT]({
-                    expr: str,
-                    src: pkg.src,
-                    error: err
+                    done = null;
                 });
-
-                done = null
-            });
         }
     });
 }

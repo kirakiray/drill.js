@@ -3,13 +3,13 @@ const bag = new Map();
 
 const setBag = (src, record) => {
     let o = new URL(src);
-    bag.set(o.origin + o.pathname, record)
-}
+    bag.set(o.origin + o.pathname, record);
+};
 
 const getBag = (src) => {
     let o = new URL(src);
     return bag.get(o.origin + o.pathname);
-}
+};
 
 // 背包记录器
 class BagRecord {
@@ -63,7 +63,7 @@ async function agent(pkg) {
         if (record.status == -1) {
             throw {
                 expr: pkg.url,
-                src: record.src
+                src: record.src,
             };
         }
 
@@ -88,7 +88,7 @@ async function agent(pkg) {
                 // 不存在这种加载器
                 console.warn({
                     desc: "did not find this loader",
-                    type: pkg.ftype
+                    type: pkg.ftype,
                 });
 
                 notfindLoader[pkg.ftype] = 1;
@@ -97,7 +97,7 @@ async function agent(pkg) {
             // loadByUtf8({
             await loadByFetch({
                 src: record.src,
-                record
+                record,
             });
         }
     } catch (err) {

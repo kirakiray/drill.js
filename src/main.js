@@ -20,24 +20,24 @@ class Drill extends Promise {
 
         defineProperties(this, {
             [DRILL_RESOLVE]: {
-                value: res
+                value: res,
             },
             [DRILL_REJECT]: {
-                value: rej
+                value: rej,
             },
             // 请求参数
             args: {
-                value: args
+                value: args,
             },
             // 返回的结果
             result: {
-                value: []
+                value: [],
             },
             // 相对路径
             __relative__: {
                 writable: true,
-                value: ""
-            }
+                value: "",
+            },
             // 响应数量
             // responded: {
             //     value: 0
@@ -52,13 +52,13 @@ class Drill extends Promise {
         if (this[DRILL_PENDFUNC]) {
             throw {
                 desc: "pend has been used",
-                target: this
+                target: this,
             };
         }
         defineProperties(this, {
             [DRILL_PENDFUNC]: {
-                value: func
-            }
+                value: func,
+            },
         });
 
         return this;
@@ -69,13 +69,13 @@ class Drill extends Promise {
         if (this[POST_DATA]) {
             throw {
                 desc: "post has been used",
-                target: this
+                target: this,
             };
         }
         defineProperties(this, {
             [POST_DATA]: {
-                value: data
-            }
+                value: data,
+            },
         });
 
         return this;
