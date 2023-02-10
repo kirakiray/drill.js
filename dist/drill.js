@@ -2,7 +2,7 @@
  * drill.js v4.0.0
  * https://github.com/kirakiray/drill.js
  * 
- * (c) 2018-2022 YAO
+ * (c) 2018-2023 YAO
  * Released under the MIT License.
  */
 ((glo) => {
@@ -10,14 +10,14 @@
     // function
     // 获取随机id
     const getRandomId = () => Math.random().toString(32).substr(2);
-    var objectToString = Object.prototype.toString;
-    var getType = (value) =>
+    const objectToString = Object.prototype.toString;
+    const getType = (value) =>
         objectToString
         .call(value)
         .toLowerCase()
         .replace(/(\[object )|(])/g, "");
     const isFunction = (d) => getType(d).search("function") > -1;
-    var isEmptyObj = (obj) => !(0 in Object.keys(obj));
+    const isEmptyObj = (obj) => !(0 in Object.keys(obj));
 
     const {
         defineProperties
@@ -294,7 +294,7 @@
         record.done(() => response);
     };
 
-    // 所以文件的存储仓库
+    // So the information about the file exists on this object
     const bag = new Map();
 
     const setBag = (src, record) => {
@@ -307,14 +307,13 @@
         return bag.get(o.origin + o.pathname);
     };
 
-    // 背包记录器
     class BagRecord {
         constructor(src) {
             this.src = src;
-            // 0 加载中
-            // 1 加载资源成功（但依赖未完成）
-            // 2 加载完成
-            // -1 加载失败
+            // 0 Loading
+            // 1 Loaded resources successfully (but dependencies not completed)
+            // 2 Loading completed
+            // -1 Load failure
             this.status = 0;
             this.bid = "b_" + getRandomId();
 
@@ -398,7 +397,6 @@
             }
         } catch (err) {
             record.fail(err);
-            // throw err;
         }
 
         // 返回数据

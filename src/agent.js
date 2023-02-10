@@ -1,4 +1,4 @@
-// 所以文件的存储仓库
+// So the information about the file exists on this object
 const bag = new Map();
 
 const setBag = (src, record) => {
@@ -11,14 +11,13 @@ const getBag = (src) => {
     return bag.get(o.origin + o.pathname);
 };
 
-// 背包记录器
 class BagRecord {
     constructor(src) {
         this.src = src;
-        // 0 加载中
-        // 1 加载资源成功（但依赖未完成）
-        // 2 加载完成
-        // -1 加载失败
+        // 0 Loading
+        // 1 Loaded resources successfully (but dependencies not completed)
+        // 2 Loading completed
+        // -1 Load failure
         this.status = 0;
         this.bid = "b_" + getRandomId();
 
@@ -102,7 +101,6 @@ async function agent(pkg) {
         }
     } catch (err) {
         record.fail(err);
-        // throw err;
     }
 
     // 返回数据
