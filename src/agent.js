@@ -1,4 +1,4 @@
-// 所以文件的存储仓库
+// So the information about the file exists on this object
 const bag = new Map();
 
 const setBag = (src, record) => {
@@ -11,18 +11,17 @@ const getBag = (src) => {
     return bag.get(o.origin + o.pathname);
 };
 
-// 背包记录器
 class BagRecord {
     constructor(src) {
         this.src = src;
-        // 0 加载中
-        // 1 加载资源成功（但依赖未完成）
-        // 2 加载完成
-        // -1 加载失败
+        // 0 Loading
+        // 1 Loaded resources successfully (but dependencies not completed)
+        // 2 Loading completed
+        // -1 Load failure
         this.status = 0;
         this.bid = "b_" + getRandomId();
 
-        // getPack函数的存放处
+        // repository of the getPack function
         this.data = new Promise((res, rej) => {
             this.__resolve = res;
             this.__reject = rej;
@@ -31,7 +30,6 @@ class BagRecord {
         this.startTime = Date.now();
     }
 
-    // 完成设置
     done(data) {
         this.status = 2;
         this.__resolve(data);
@@ -55,7 +53,7 @@ class BagRecord {
 
 const notfindLoader = {};
 
-// 代理资源请求
+// Agent resource requests
 async function agent(pkg) {
     let record = getBag(pkg.src);
 
@@ -76,16 +74,16 @@ async function agent(pkg) {
 
     setBag(pkg.src, record);
 
-    // 根据后缀名获取loader
+    // Get loader by suffix name
     let loader = loaders.get(pkg.ftype);
 
     try {
         if (loader) {
-            // 加载资源
+            // Loading resource
             await loader(record.src);
         } else {
             if (!notfindLoader[pkg.ftype]) {
-                // 不存在这种加载器
+                // No such loader exists
                 console.warn({
                     desc: "did not find this loader",
                     type: pkg.ftype,
@@ -102,10 +100,8 @@ async function agent(pkg) {
         }
     } catch (err) {
         record.fail(err);
-        // throw err;
     }
 
-    // 返回数据
     const getPack = await record.data;
 
     return await getPack(pkg);

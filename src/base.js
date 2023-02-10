@@ -12,11 +12,11 @@
     const config = (opts) => {
         let { paths } = opts;
         if (paths) {
-            // 快捷路径
+            // Shortcut path
             Object.keys(paths).forEach((k) => {
                 let val = paths[k];
 
-                // 不是@开头/结尾的定义为不合法
+                // Definitions that do not start/end with @ are not legal
                 if (!/^@.+\/$/.test(k)) {
                     throw {
                         desc: "incorrect definition of paths",
@@ -41,27 +41,27 @@
     const drill = {
         load,
         config,
-        // 是否已加载该资源
+        // Whether the resource has been loaded
         async has(src) {
             let path = await load(`${src} -link`);
 
             return !!getBag(path);
         },
-        // 删除该资源缓存
+        // Delete this resource cache
         async remove(src) {
             let path = await load(`${src} -link`);
             let record = getBag(path);
 
-            // 删除挂载元素
+            // Delete Mounted Elements
             let sele = record.sourceElement;
             if (sele) {
                 sele.parentNode.removeChild(sele);
             }
 
-            // 删除缓存数据
+            // Delete cached data
             bag.delete(path);
         },
-        // 二次开发扩展方法
+        // Secondary development extension method
         ext(callback) {
             callback({
                 bag,
@@ -70,12 +70,11 @@
             });
         },
         bag,
-        // 版本信息
         version: "{{version}}",
         v: "{{versionCode}}",
     };
 
-    // 全局函数
+    // Global Functions
     defineProperties(glo, {
         drill: {
             value: drill,

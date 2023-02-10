@@ -1,7 +1,7 @@
-// 针对js类型的进程处理操作
+// Process handling operations for js types
 const processor = new Map();
 
-// 添加进程类型的方法
+// Functions for adding process types
 const addProcess = (name, callback) => {
     processor.set(name, callback);
 
@@ -10,7 +10,7 @@ const addProcess = (name, callback) => {
             value: (respone) => {
                 let nowSrc = document.currentScript.src;
 
-                // 查看原来是否有record
+                // Check if there is a record
                 let record = getBag(nowSrc);
 
                 if (!record) {
@@ -18,7 +18,7 @@ const addProcess = (name, callback) => {
                     setBag(nowSrc, record);
                 }
 
-                // 设置加载中的状态
+                // Set the loading status
                 record.status = 1;
 
                 record.ptype = name;
@@ -29,7 +29,7 @@ const addProcess = (name, callback) => {
                     relativeLoad(...args) {
                         let repms = new Drill(...args);
 
-                        // 设置相对目录
+                        // Set relative directory
                         repms.__relative__ = nowSrc;
 
                         return repms;
@@ -40,22 +40,21 @@ const addProcess = (name, callback) => {
     });
 };
 
-// 最初始的模块类型 define
+// Initial module type: define
 addProcess("define", async ({ respone, record, relativeLoad }) => {
-    // 完整的获取函数
+    // Functions for returning module content
     let getPack;
 
     if (isFunction(respone)) {
         const exports = {};
 
-        // 先运行返回结果
+        // Run first to return results
         let result = await respone({
             load: relativeLoad,
             FILE: record.src,
             exports,
         });
 
-        // 没有放回结果并且exports上有数据
         if (result === undefined && !isEmptyObj(exports)) {
             result = exports;
         }
@@ -64,17 +63,17 @@ addProcess("define", async ({ respone, record, relativeLoad }) => {
             return result;
         };
     } else {
-        // 直接赋值result
+        // Assign the result directly
         getPack = (pkg) => {
             return respone;
         };
     }
 
-    // 返回getPack函数
+    // Return the getPack function
     record.done(getPack);
 });
 
-// 进程模块
+// Initial module type: task
 addProcess("task", async ({ respone, record, relativeLoad }) => {
     if (!isFunction(respone)) {
         throw "task must be a function";

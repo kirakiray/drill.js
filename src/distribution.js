@@ -1,4 +1,4 @@
-// 存储地址
+// Save shortcut path in this object
 const pathsMap = new Map();
 
 class DPackage {
@@ -9,11 +9,10 @@ class DPackage {
         this.bag = bag;
     }
 
-    // 脚本地址
     get src() {
         let { url } = this;
 
-        // 快捷地址
+        // Add the part in front of the shortcut path
         if (/^@.+/.test(url)) {
             for (let [keyReg, path] of pathsMap) {
                 if (keyReg.test(url)) {
@@ -23,7 +22,7 @@ class DPackage {
             }
         }
 
-        // 如果有 -p 参数的，修正链接地址
+        // If there is a -p parameter, fix the link path
         if (this.params.includes("-p")) {
             let packName = url.replace(/.+\/(.+)/, "$1");
             url += `/${packName}.js`;
@@ -33,11 +32,11 @@ class DPackage {
         return obj.href;
     }
 
-    // 文件类型，loader使用的类型，一般去路径后缀
+    // File type, the type used by the loader, usually takes the path suffix
     get ftype() {
         const urlObj = new URL(this.src);
 
-        // 判断参数是否有 :xxx ，修正类型
+        // Determine if the parameter has :xxx , correction type
         let type = urlObj.pathname.replace(/.+\.(.+)/, "$1");
         this.params.some((e) => {
             if (/^:(.+)/.test(e)) {
@@ -49,34 +48,32 @@ class DPackage {
         // return this.url.replace(/.+\.(.+)/, "$1");
     }
 
-    // 寄存的数据
+    // Get the data passed during the module
     get data() {
         return this.bag[POST_DATA];
     }
-    // 获取相对路径
     get relative() {
         return this.bag.__relative__ || location.href;
     }
 }
 
-// 分发
+// Main distribution function
 function buildUp(dBag) {
     dBag.args.forEach((e) => dBag.result.push(undefined));
 
-    // 请求成功数统计
+    // Number of successful requests 
     let count = 0;
-    // 是否出错过
     let iserror = false;
 
     let { result } = dBag;
 
     const pendFunc = dBag[DRILL_PENDFUNC];
 
-    // 打包成可分发的对象
+    // Packaged into distributable objects
     dBag.args.forEach((str, index) => {
         let pkg = new DPackage(str, dBag);
 
-        // 执行完成函数
+        // Execution completion function
         let done = (data) => {
             result[index] = data;
             count++;
@@ -98,13 +95,13 @@ function buildUp(dBag) {
             done = null;
         };
 
-        // 如果带有-link参数，直接返回链接
+        // If the -link parameter is present, the link is returned directly
         if (pkg.params.includes("-link")) {
             done(pkg.src);
         } else if (pkg.params.includes("-pkg")) {
             done(pkg);
         } else {
-            // 代理转发
+            // Proxy Forwarding
             agent(pkg)
                 .then(done)
                 .catch((err) => {

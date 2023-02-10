@@ -25,29 +25,24 @@ class Drill extends Promise {
             [DRILL_REJECT]: {
                 value: rej,
             },
-            // 请求参数
+            // Parameters for load modules
             args: {
                 value: args,
             },
-            // 返回的结果
+            // The final array of returned results
             result: {
                 value: [],
             },
-            // 相对路径
+            // Relative path to load module
             __relative__: {
                 writable: true,
                 value: "",
             },
-            // 响应数量
-            // responded: {
-            //     value: 0
-            // }
         });
 
         nextTick(() => buildUp(this));
     }
 
-    // 加载中
     pend(func) {
         if (this[DRILL_PENDFUNC]) {
             throw {
@@ -64,7 +59,7 @@ class Drill extends Promise {
         return this;
     }
 
-    // 发送数据
+    // Passing data to the module to be loaded
     post(data) {
         if (this[POST_DATA]) {
             throw {

@@ -2,28 +2,26 @@
  * drill.js v4.0.0
  * https://github.com/kirakiray/drill.js
  * 
- * (c) 2018-2022 YAO
+ * (c) 2018-2023 YAO
  * Released under the MIT License.
  */
 ((glo) => {
     "use strict";
-    // function
-    // 获取随机id
+    // functions
     const getRandomId = () => Math.random().toString(32).substr(2);
-    var objectToString = Object.prototype.toString;
-    var getType = (value) =>
+    const objectToString = Object.prototype.toString;
+    const getType = (value) =>
         objectToString
         .call(value)
         .toLowerCase()
         .replace(/(\[object )|(])/g, "");
     const isFunction = (d) => getType(d).search("function") > -1;
-    var isEmptyObj = (obj) => !(0 in Object.keys(obj));
+    const isEmptyObj = (obj) => !(0 in Object.keys(obj));
 
     const {
         defineProperties
     } = Object;
 
-    //改良异步方法
     const nextTick = (() => {
         const pnext = (func) => Promise.resolve().then(() => func());
 
@@ -34,10 +32,10 @@
         return pnext;
     })();
 
-    // 针对js类型的进程处理操作
+    // Process handling operations for js types
     const processor = new Map();
 
-    // 添加进程类型的方法
+    // Functions for adding process types
     const addProcess = (name, callback) => {
         processor.set(name, callback);
 
@@ -46,7 +44,7 @@
                 value: (respone) => {
                     let nowSrc = document.currentScript.src;
 
-                    // 查看原来是否有record
+                    // Check if there is a record
                     let record = getBag(nowSrc);
 
                     if (!record) {
@@ -54,7 +52,7 @@
                         setBag(nowSrc, record);
                     }
 
-                    // 设置加载中的状态
+                    // Set the loading status
                     record.status = 1;
 
                     record.ptype = name;
@@ -65,7 +63,7 @@
                         relativeLoad(...args) {
                             let repms = new Drill(...args);
 
-                            // 设置相对目录
+                            // Set relative directory
                             repms.__relative__ = nowSrc;
 
                             return repms;
@@ -76,26 +74,25 @@
         });
     };
 
-    // 最初始的模块类型 define
+    // Initial module type: define
     addProcess("define", async ({
         respone,
         record,
         relativeLoad
     }) => {
-        // 完整的获取函数
+        // Functions for returning module content
         let getPack;
 
         if (isFunction(respone)) {
             const exports = {};
 
-            // 先运行返回结果
+            // Run first to return results
             let result = await respone({
                 load: relativeLoad,
                 FILE: record.src,
                 exports,
             });
 
-            // 没有放回结果并且exports上有数据
             if (result === undefined && !isEmptyObj(exports)) {
                 result = exports;
             }
@@ -104,17 +101,17 @@
                 return result;
             };
         } else {
-            // 直接赋值result
+            // Assign the result directly
             getPack = (pkg) => {
                 return respone;
             };
         }
 
-        // 返回getPack函数
+        // Return the getPack function
         record.done(getPack);
     });
 
-    // 进程模块
+    // Initial module type: task
     addProcess("task", async ({
         respone,
         record,
@@ -135,7 +132,7 @@
 
     const loaders = new Map();
 
-    // 添加加载器的方法
+    // function for adding loaders
     const addLoader = (type, callback) => {
         loaders.set(type, (src) => {
             const record = getBag(src);
@@ -154,41 +151,38 @@
         record
     }) => {
         return new Promise((resolve, reject) => {
-            // 主体script
+            // main script element
             let script = document.createElement("script");
 
-            //填充相应数据
             script.type = "text/javascript";
             script.async = true;
             script.src = src;
 
-            // 挂载script元素
+            // Mounted script element
             record.sourceElement = script;
 
-            // 添加事件
             script.addEventListener("load", async () => {
-                // 添加脚本完成时间
+                // Script load completion time
                 record.loadedTime = Date.now();
 
-                // 判断资源是否有被设置加载中或完成的状态
+                // Determine if a resource has been set to loading or completed status
                 if (record.status == 0) {
                     record.ptype = "script";
 
-                    // 未进入 1 或 2 状态，代表是普通js文件，直接执行done
+                    // No 1 or 2 state, it means it's a normal js file, just execute done
                     record.done((pkg) => {});
                 }
 
                 resolve();
             });
             script.addEventListener("error", (event) => {
-                // 加载错误
+                // load error
                 reject({
                     desc: "load script error",
                     event,
                 });
             });
 
-            // 添加进主体
             document.head.appendChild(script);
         });
     });
@@ -208,7 +202,6 @@
     }) => {
         let data = await fetch(src).then((e) => e.arrayBuffer());
 
-        // 转换wasm模块
         let module = await WebAssembly.compile(data);
         const instance = new WebAssembly.Instance(module);
 
@@ -221,7 +214,6 @@
     }) => {
         let data = await fetch(src);
 
-        // 转换json格式
         data = await data.json();
 
         record.done(() => data);
@@ -236,24 +228,23 @@
         link.type = "text/css";
         link.href = src;
 
-        // 挂载元素
         record.sourceElement = link;
 
         let isAppend = false;
 
         record.done(async (pkg) => {
             if (pkg.params.includes("-unpull")) {
-                // 带unpull直接返回
+                // If there is an unpull parameter, the link element is returned and not added to the head
                 return link;
             }
 
-            // 默认情况下会添加到body，并且不返回值
+            // By default it is added to the head and does not return a value
             if (!isAppend) {
                 document.head.appendChild(link);
                 isAppend = true;
             }
 
-            // 未加载完成的话要等待
+            // Wait if not finished loading
             if (!link.sheet) {
                 await new Promise((resolve) => {
                     link.addEventListener("load", (e) => {
@@ -264,7 +255,7 @@
         });
     });
 
-    // 通过utf8返回数据
+    // The following types return utf8 strings
     ["html"].forEach((name) => {
         addLoader(name, async ({
             src,
@@ -276,7 +267,6 @@
         });
     });
 
-    // 获取并通过respon返回数据
     const loadByFetch = async ({
         src,
         record
@@ -290,11 +280,11 @@
             };
         }
 
-        // 重置getPack
+        // Reset getPack
         record.done(() => response);
     };
 
-    // 所以文件的存储仓库
+    // So the information about the file exists on this object
     const bag = new Map();
 
     const setBag = (src, record) => {
@@ -307,18 +297,17 @@
         return bag.get(o.origin + o.pathname);
     };
 
-    // 背包记录器
     class BagRecord {
         constructor(src) {
             this.src = src;
-            // 0 加载中
-            // 1 加载资源成功（但依赖未完成）
-            // 2 加载完成
-            // -1 加载失败
+            // 0 Loading
+            // 1 Loaded resources successfully (but dependencies not completed)
+            // 2 Loading completed
+            // -1 Load failure
             this.status = 0;
             this.bid = "b_" + getRandomId();
 
-            // getPack函数的存放处
+            // repository of the getPack function
             this.data = new Promise((res, rej) => {
                 this.__resolve = res;
                 this.__reject = rej;
@@ -327,7 +316,6 @@
             this.startTime = Date.now();
         }
 
-        // 完成设置
         done(data) {
             this.status = 2;
             this.__resolve(data);
@@ -351,7 +339,7 @@
 
     const notfindLoader = {};
 
-    // 代理资源请求
+    // Agent resource requests
     async function agent(pkg) {
         let record = getBag(pkg.src);
 
@@ -372,16 +360,16 @@
 
         setBag(pkg.src, record);
 
-        // 根据后缀名获取loader
+        // Get loader by suffix name
         let loader = loaders.get(pkg.ftype);
 
         try {
             if (loader) {
-                // 加载资源
+                // Loading resource
                 await loader(record.src);
             } else {
                 if (!notfindLoader[pkg.ftype]) {
-                    // 不存在这种加载器
+                    // No such loader exists
                     console.warn({
                         desc: "did not find this loader",
                         type: pkg.ftype,
@@ -398,16 +386,14 @@
             }
         } catch (err) {
             record.fail(err);
-            // throw err;
         }
 
-        // 返回数据
         const getPack = await record.data;
 
         return await getPack(pkg);
     }
 
-    // 存储地址
+    // Save shortcut path in this object
     const pathsMap = new Map();
 
     class DPackage {
@@ -418,13 +404,12 @@
             this.bag = bag;
         }
 
-        // 脚本地址
         get src() {
             let {
                 url
             } = this;
 
-            // 快捷地址
+            // Add the part in front of the shortcut path
             if (/^@.+/.test(url)) {
                 for (let [keyReg, path] of pathsMap) {
                     if (keyReg.test(url)) {
@@ -434,7 +419,7 @@
                 }
             }
 
-            // 如果有 -p 参数的，修正链接地址
+            // If there is a -p parameter, fix the link path
             if (this.params.includes("-p")) {
                 let packName = url.replace(/.+\/(.+)/, "$1");
                 url += `/${packName}.js`;
@@ -444,11 +429,11 @@
             return obj.href;
         }
 
-        // 文件类型，loader使用的类型，一般去路径后缀
+        // File type, the type used by the loader, usually takes the path suffix
         get ftype() {
             const urlObj = new URL(this.src);
 
-            // 判断参数是否有 :xxx ，修正类型
+            // Determine if the parameter has :xxx , correction type
             let type = urlObj.pathname.replace(/.+\.(.+)/, "$1");
             this.params.some((e) => {
                 if (/^:(.+)/.test(e)) {
@@ -460,23 +445,21 @@
             // return this.url.replace(/.+\.(.+)/, "$1");
         }
 
-        // 寄存的数据
+        // Get the data passed during the module
         get data() {
             return this.bag[POST_DATA];
         }
-        // 获取相对路径
         get relative() {
             return this.bag.__relative__ || location.href;
         }
     }
 
-    // 分发
+    // Main distribution function
     function buildUp(dBag) {
         dBag.args.forEach((e) => dBag.result.push(undefined));
 
-        // 请求成功数统计
+        // Number of successful requests 
         let count = 0;
-        // 是否出错过
         let iserror = false;
 
         let {
@@ -485,11 +468,11 @@
 
         const pendFunc = dBag[DRILL_PENDFUNC];
 
-        // 打包成可分发的对象
+        // Packaged into distributable objects
         dBag.args.forEach((str, index) => {
             let pkg = new DPackage(str, dBag);
 
-            // 执行完成函数
+            // Execution completion function
             let done = (data) => {
                 result[index] = data;
                 count++;
@@ -511,13 +494,13 @@
                 done = null;
             };
 
-            // 如果带有-link参数，直接返回链接
+            // If the -link parameter is present, the link is returned directly
             if (pkg.params.includes("-link")) {
                 done(pkg.src);
             } else if (pkg.params.includes("-pkg")) {
                 done(pkg);
             } else {
-                // 代理转发
+                // Proxy Forwarding
                 agent(pkg)
                     .then(done)
                     .catch((err) => {
@@ -572,29 +555,24 @@
                 [DRILL_REJECT]: {
                     value: rej,
                 },
-                // 请求参数
+                // Parameters for load modules
                 args: {
                     value: args,
                 },
-                // 返回的结果
+                // The final array of returned results
                 result: {
                     value: [],
                 },
-                // 相对路径
+                // Relative path to load module
                 __relative__: {
                     writable: true,
                     value: "",
                 },
-                // 响应数量
-                // responded: {
-                //     value: 0
-                // }
             });
 
             nextTick(() => buildUp(this));
         }
 
-        // 加载中
         pend(func) {
             if (this[DRILL_PENDFUNC]) {
                 throw {
@@ -611,7 +589,7 @@
             return this;
         }
 
-        // 发送数据
+        // Passing data to the module to be loaded
         post(data) {
             if (this[POST_DATA]) {
                 throw {
@@ -637,11 +615,11 @@
             paths
         } = opts;
         if (paths) {
-            // 快捷路径
+            // Shortcut path
             Object.keys(paths).forEach((k) => {
                 let val = paths[k];
 
-                // 不是@开头/结尾的定义为不合法
+                // Definitions that do not start/end with @ are not legal
                 if (!/^@.+\/$/.test(k)) {
                     throw {
                         desc: "incorrect definition of paths",
@@ -666,27 +644,27 @@
     const drill = {
         load,
         config,
-        // 是否已加载该资源
+        // Whether the resource has been loaded
         async has(src) {
             let path = await load(`${src} -link`);
 
             return !!getBag(path);
         },
-        // 删除该资源缓存
+        // Delete this resource cache
         async remove(src) {
             let path = await load(`${src} -link`);
             let record = getBag(path);
 
-            // 删除挂载元素
+            // Delete Mounted Elements
             let sele = record.sourceElement;
             if (sele) {
                 sele.parentNode.removeChild(sele);
             }
 
-            // 删除缓存数据
+            // Delete cached data
             bag.delete(path);
         },
-        // 二次开发扩展方法
+        // Secondary development extension method
         ext(callback) {
             callback({
                 bag,
@@ -695,12 +673,11 @@
             });
         },
         bag,
-        // 版本信息
         version: "4.0.0",
         v: 4000000,
     };
 
-    // 全局函数
+    // Global Functions
     defineProperties(glo, {
         drill: {
             value: drill,

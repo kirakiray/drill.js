@@ -1,6 +1,6 @@
 const loaders = new Map();
 
-// 添加加载器的方法
+// function for adding loaders
 const addLoader = (type, callback) => {
     loaders.set(type, (src) => {
         const record = getBag(src);
@@ -16,41 +16,38 @@ const addLoader = (type, callback) => {
 
 addLoader("js", ({ src, record }) => {
     return new Promise((resolve, reject) => {
-        // 主体script
+        // main script element
         let script = document.createElement("script");
 
-        //填充相应数据
         script.type = "text/javascript";
         script.async = true;
         script.src = src;
 
-        // 挂载script元素
+        // Mounted script element
         record.sourceElement = script;
 
-        // 添加事件
         script.addEventListener("load", async () => {
-            // 添加脚本完成时间
+            // Script load completion time
             record.loadedTime = Date.now();
 
-            // 判断资源是否有被设置加载中或完成的状态
+            // Determine if a resource has been set to loading or completed status
             if (record.status == 0) {
                 record.ptype = "script";
 
-                // 未进入 1 或 2 状态，代表是普通js文件，直接执行done
+                // No 1 or 2 state, it means it's a normal js file, just execute done
                 record.done((pkg) => {});
             }
 
             resolve();
         });
         script.addEventListener("error", (event) => {
-            // 加载错误
+            // load error
             reject({
                 desc: "load script error",
                 event,
             });
         });
 
-        // 添加进主体
         document.head.appendChild(script);
     });
 });
@@ -64,7 +61,6 @@ addLoader("mjs", async ({ src, record }) => {
 addLoader("wasm", async ({ src, record }) => {
     let data = await fetch(src).then((e) => e.arrayBuffer());
 
-    // 转换wasm模块
     let module = await WebAssembly.compile(data);
     const instance = new WebAssembly.Instance(module);
 
@@ -74,7 +70,6 @@ addLoader("wasm", async ({ src, record }) => {
 addLoader("json", async ({ src, record }) => {
     let data = await fetch(src);
 
-    // 转换json格式
     data = await data.json();
 
     record.done(() => data);
@@ -86,24 +81,23 @@ addLoader("css", async ({ src, record }) => {
     link.type = "text/css";
     link.href = src;
 
-    // 挂载元素
     record.sourceElement = link;
 
     let isAppend = false;
 
     record.done(async (pkg) => {
         if (pkg.params.includes("-unpull")) {
-            // 带unpull直接返回
+            // If there is an unpull parameter, the link element is returned and not added to the head
             return link;
         }
 
-        // 默认情况下会添加到body，并且不返回值
+        // By default it is added to the head and does not return a value
         if (!isAppend) {
             document.head.appendChild(link);
             isAppend = true;
         }
 
-        // 未加载完成的话要等待
+        // Wait if not finished loading
         if (!link.sheet) {
             await new Promise((resolve) => {
                 link.addEventListener("load", (e) => {
@@ -114,7 +108,7 @@ addLoader("css", async ({ src, record }) => {
     });
 });
 
-// 通过utf8返回数据
+// The following types return utf8 strings
 ["html"].forEach((name) => {
     addLoader(name, async ({ src, record }) => {
         let data = await fetch(src).then((e) => e.text());
@@ -123,7 +117,6 @@ addLoader("css", async ({ src, record }) => {
     });
 });
 
-// 获取并通过respon返回数据
 const loadByFetch = async ({ src, record }) => {
     let response = await fetch(src);
 
@@ -134,6 +127,6 @@ const loadByFetch = async ({ src, record }) => {
         };
     }
 
-    // 重置getPack
+    // Reset getPack
     record.done(() => response);
 };
