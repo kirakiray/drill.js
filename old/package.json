@@ -1,23 +1,24 @@
 {
   "name": "drill.js",
-  "version": "5.0.0",
-  "description": "A declarative modular framework that runs on the browser",
+  "version": "4.0.0",
+  "description": "A browser-side modularity and resource management framework",
   "main": "dist/drill.js",
+  "directories": {
+    "doc": "doc",
+    "test": "test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "js-beautify": "^1.10.0",
+    "uglify-es": "^3.3.9"
+  },
   "scripts": {
-    "build": "parcel build src/dist.mjs -d dist --out-file drill.js --no-source-maps --global global"
+    "test": "node scripts/test.js",
+    "watch": "node scripts/watch.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kirakiray/drill.js.git"
-  },
-  "devDependencies": {
-    "@playwright/test": "^1.32.3",
-    "jasmine-core": "^4.6.0",
-    "koa": "^2.14.1",
-    "koa-static": "^5.0.0",
-    "parcel-bundler": "^1.12.5",
-    "parcel-plugin-wrapper": "^0.2.3",
-    "shelljs": "^0.8.5"
   },
   "author": {
     "name": "YAO",
