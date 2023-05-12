@@ -1,1 +1,2 @@
+// drill.js - v5.0.0 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
 !function(){"use strict";const e=e=>t=>{let r="";if(e.resolve)r=e.resolve(t);else{const n=new URL(e.url);r=new URL(t,n).href}return n(r)},n=async e=>{const n=new URL(e),{pathname:r}=n,s=r.slice(2+(r.lastIndexOf(".")-1>>>0)),o=t.get(s);if(o)return o(e)},t=new Map([["mjs",e=>import(e)],["txt",e=>fetch(e).then((e=>e.text()))]]);"undefined"!=typeof window&&(window.lm=function(n){return e(n)})}();

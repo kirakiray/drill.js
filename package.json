@@ -4,7 +4,7 @@
   "description": "A declarative modular framework that runs on the browser",
   "main": "dist/drill.js",
   "scripts": {
-    "build": "npm run rollup && npm run terser",
+    "build": "npm run rollup && npm run terser && node scripts/addComments.js",
     "terser": "terser dist/drill.dev.js -c -m -o dist/drill.js",
     "rollup": "rollup src/dist.mjs --file dist/drill.dev.js --format iife"
   },
