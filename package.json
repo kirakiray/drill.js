@@ -4,7 +4,9 @@
   "description": "A declarative modular framework that runs on the browser",
   "main": "dist/drill.js",
   "scripts": {
-    "build": "parcel build src/dist.mjs -d dist --out-file drill.js --no-source-maps --global global"
+    "build": "npm run rollup && npm run terser",
+    "terser": "terser dist/drill.dev.js -c -m -o dist/drill.js",
+    "rollup": "rollup src/dist.mjs --file dist/drill.dev.js --format iife"
   },
   "repository": {
     "type": "git",
@@ -15,9 +17,9 @@
     "jasmine-core": "^4.6.0",
     "koa": "^2.14.1",
     "koa-static": "^5.0.0",
-    "parcel-bundler": "^1.12.5",
-    "parcel-plugin-wrapper": "^0.2.3",
-    "shelljs": "^0.8.5"
+    "rollup": "^3.21.6",
+    "shelljs": "^0.8.5",
+    "terser": "^5.17.3"
   },
   "author": {
     "name": "YAO",
