@@ -1,7 +1,5 @@
-import drill from "./base.mjs";
-
-export default drill;
+import lm from "./main.mjs";
 
 if (typeof global !== "undefined") {
-  global.drill = drill;
+  global.lm = lm;
 }

@@ -29,7 +29,5 @@
     "url": "https://github.com/kirakiray/drill.js/issues"
   },
   "homepage": "https://github.com/kirakiray/drill.js",
-  "watchjs": {
-    "startyear": "2018"
-  }
+  "startyear": "2018"
 }
