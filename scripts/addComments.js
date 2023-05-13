@@ -7,12 +7,18 @@ const comment = `// ${PACKAGE.name} - v${PACKAGE.version} ${
   PACKAGE.homepage
 }  (c) ${PACKAGE.startyear}-${new Date().getFullYear()} ${PACKAGE.author.name}`;
 
-console.log(comment);
+const dirPath = "dist";
 
-["dist/drill.dev.js", "dist/drill.js"].forEach((path) => {
-  fs.writeFileSync(
-    path,
-    `${comment}\n${fs.readFileSync(path, "utf-8")}`,
-    "utf-8"
-  );
+fs.readdirSync(dirPath).forEach(function (file) {
+  const filePath = path.join(dirPath, file);
+  const extName = path.extname(filePath);
+
+  if (extName === ".js") {
+    console.log(filePath);
+    fs.writeFileSync(
+      filePath,
+      `${comment}\n${fs.readFileSync(filePath, "utf-8")}`,
+      "utf-8"
+    );
+  }
 });

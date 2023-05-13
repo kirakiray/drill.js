@@ -5,14 +5,18 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>drill test</title>
-    <!-- <script src="../dist/drill.js"></script> -->
+    <script src="../dist/drill.dev.js"></script>
     <script type="module">
-      import lm from "../src/main.mjs";
-      window.lm = lm;
+      // import "../src/dist.mjs";
+
+      lm.use("component", async (...args) => {
+        console.log("comp => ", args);
+      });
     </script>
+    <l-m src="./other/process-test.mjs"></l-m>
   </head>
   <body>
-    asdad
     <script type="module" src="./self/o1.js"></script>
+    <l-m src="./other/process-test.mjs"></l-m>
   </body>
 </html>

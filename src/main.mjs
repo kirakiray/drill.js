@@ -1,6 +1,4 @@
-export default function lm(meta) {
-  return createLoad(meta);
-}
+import { loader, setLoader, use } from "./loaders.mjs";
 
 const createLoad = (meta) => {
   const load = (url) => {
@@ -18,7 +16,7 @@ const createLoad = (meta) => {
   return load;
 };
 
-const agent = async (url) => {
+export const agent = async (url, opts) => {
   const urldata = new URL(url);
   const { pathname } = urldata;
 
@@ -27,23 +25,17 @@ const agent = async (url) => {
   const load = loader.get(type);
 
   if (load) {
-    return load(url);
+    return load(url, opts);
   }
 
-  debugger;
+  return fetch(url);
 };
 
-const loader = new Map([
-  [
-    "mjs",
-    (url) => {
-      return import(url);
-    },
-  ],
-  [
-    "txt",
-    (url) => {
-      return fetch(url).then((e) => e.text());
-    },
-  ],
-]);
+export default function lm(meta) {
+  return createLoad(meta);
+}
+
+Object.assign(lm, {
+  setLoader,
+  use,
+});
