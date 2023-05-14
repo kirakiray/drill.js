@@ -3,6 +3,24 @@
   'use strict';
 
   const loader = new Map();
+  const processor = {};
+
+  const setProcess = (name, handler) => {
+    if (name) {
+      handler = name;
+      name = ["js", "mjs"];
+    }
+    if (name instanceof Array) {
+      name.forEach((name) => {
+        const tasks = processor[name] || (processor[name] = []);
+        tasks.push(handler);
+      });
+      return;
+    }
+
+    const tasks = processor[name] || (processor[name] = []);
+    tasks.push(handler);
+  };
 
   const setLoader = (name, handler) => {
     if (name instanceof Array) {
@@ -13,28 +31,9 @@
     loader.set(name, handler);
   };
 
-  const processor = new Map();
-
-  setLoader(["mjs", "js"], async (url, opts) => {
-    const data = await import(url);
-    for (let f of processor.values()) {
-      const args = [data];
-      if (opts) {
-        args.push(opts);
-      }
-
-      await f(...args);
-    }
-    return data;
+  setLoader(["mjs", "js"], (url) => {
+    return import(url);
   });
-
-  const use = (name, func) => {
-    if (processor.has(name)) {
-      throw `${name} processor already exists`;
-    }
-
-    processor.set(name, func);
-  };
 
   setLoader(["txt", "html"], (url) => {
     return fetch(url).then((e) => e.text());
@@ -77,11 +76,24 @@
 
     const load = loader.get(type);
 
+    let data;
+
     if (load) {
-      return load(url, opts);
+      data = await load(url, opts);
+    } else {
+      data = fetch(url);
     }
 
-    return fetch(url);
+    const tasks = processor[type];
+    if (tasks) {
+      tasks.forEach((f) => {
+        const args = [url];
+        opts && args.push(opts);
+        f(...args);
+      });
+    }
+
+    return data;
   };
 
   function lm(meta) {
@@ -90,7 +102,7 @@
 
   Object.assign(lm, {
     setLoader,
-    use,
+    setProcess,
   });
 
   class LoadModule extends HTMLElement {
@@ -101,6 +113,10 @@
     }
 
     _init() {
+      if (this.__initSrc) {
+        return;
+      }
+
       let src = this.getAttribute("src");
 
       if (!src) {

@@ -1,4 +1,22 @@
 export const loader = new Map();
+export const processor = {};
+
+export const setProcess = (name, handler) => {
+  if (name) {
+    handler = name;
+    name = ["js", "mjs"];
+  }
+  if (name instanceof Array) {
+    name.forEach((name) => {
+      const tasks = processor[name] || (processor[name] = []);
+      tasks.push(handler);
+    });
+    return;
+  }
+
+  const tasks = processor[name] || (processor[name] = []);
+  tasks.push(handler);
+};
 
 export const setLoader = (name, handler) => {
   if (name instanceof Array) {
@@ -9,28 +27,9 @@ export const setLoader = (name, handler) => {
   loader.set(name, handler);
 };
 
-export const processor = new Map();
-
-setLoader(["mjs", "js"], async (url, opts) => {
-  const data = await import(url);
-  for (let f of processor.values()) {
-    const args = [data];
-    if (opts) {
-      args.push(opts);
-    }
-
-    await f(...args);
-  }
-  return data;
+setLoader(["mjs", "js"], (url) => {
+  return import(url);
 });
-
-export const use = (name, func) => {
-  if (processor.has(name)) {
-    throw `${name} processor already exists`;
-  }
-
-  processor.set(name, func);
-};
 
 setLoader(["txt", "html"], (url) => {
   return fetch(url).then((e) => e.text());

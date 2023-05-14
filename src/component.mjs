@@ -8,6 +8,10 @@ class LoadModule extends HTMLElement {
   }
 
   _init() {
+    if (this.__initSrc) {
+      return;
+    }
+
     let src = this.getAttribute("src");
 
     if (!src) {
