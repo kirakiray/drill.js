@@ -1,4 +1,4 @@
-import { loader, processor, setLoader, setProcess } from "./loaders.mjs";
+import { processor, use } from "./use.mjs";
 
 const createLoad = (meta) => {
   const load = (url) => {
@@ -22,23 +22,22 @@ export const agent = async (url, opts) => {
 
   const type = pathname.slice(((pathname.lastIndexOf(".") - 1) >>> 0) + 2);
 
-  const load = loader.get(type);
-
   let data;
 
-  if (load) {
-    data = await load(url, opts);
+  const tasks = processor[type];
+
+  if (tasks) {
+    for (let f of tasks) {
+      const temp = await f({
+        url,
+        data,
+        ...opts,
+      });
+
+      temp !== undefined && (data = temp);
+    }
   } else {
     data = fetch(url);
-  }
-
-  const tasks = processor[type];
-  if (tasks) {
-    tasks.forEach((f) => {
-      const args = [url];
-      opts && args.push(opts);
-      f(...args);
-    });
   }
 
   return data;
@@ -49,6 +48,5 @@ export default function lm(meta) {
 }
 
 Object.assign(lm, {
-  setLoader,
-  setProcess,
+  use,
 });

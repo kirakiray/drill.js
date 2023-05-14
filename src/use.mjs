@@ -1,11 +1,11 @@
-export const loader = new Map();
 export const processor = {};
 
-export const setProcess = (name, handler) => {
-  if (name) {
+export const use = (name, handler) => {
+  if (name instanceof Function) {
     handler = name;
     name = ["js", "mjs"];
   }
+
   if (name instanceof Array) {
     name.forEach((name) => {
       const tasks = processor[name] || (processor[name] = []);
@@ -18,28 +18,19 @@ export const setProcess = (name, handler) => {
   tasks.push(handler);
 };
 
-export const setLoader = (name, handler) => {
-  if (name instanceof Array) {
-    name.forEach((name) => loader.set(name, handler));
-    return;
-  }
-
-  loader.set(name, handler);
-};
-
-setLoader(["mjs", "js"], (url) => {
+use(["mjs", "js"], ({ url }) => {
   return import(url);
 });
 
-setLoader(["txt", "html"], (url) => {
+use(["txt", "html"], ({ url }) => {
   return fetch(url).then((e) => e.text());
 });
 
-setLoader("json", async (url) => {
+use("json", async ({ url }) => {
   return fetch(url).then((e) => e.json());
 });
 
-setLoader("wasm", async (url) => {
+use("wasm", async ({ url }) => {
   const data = await fetch(url).then((e) => e.arrayBuffer());
 
   const module = await WebAssembly.compile(data);

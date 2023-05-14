@@ -2,14 +2,14 @@
 (function () {
   'use strict';
 
-  const loader = new Map();
   const processor = {};
 
-  const setProcess = (name, handler) => {
-    if (name) {
+  const use = (name, handler) => {
+    if (name instanceof Function) {
       handler = name;
       name = ["js", "mjs"];
     }
+
     if (name instanceof Array) {
       name.forEach((name) => {
         const tasks = processor[name] || (processor[name] = []);
@@ -22,28 +22,19 @@
     tasks.push(handler);
   };
 
-  const setLoader = (name, handler) => {
-    if (name instanceof Array) {
-      name.forEach((name) => loader.set(name, handler));
-      return;
-    }
-
-    loader.set(name, handler);
-  };
-
-  setLoader(["mjs", "js"], (url) => {
+  use(["mjs", "js"], ({ url }) => {
     return import(url);
   });
 
-  setLoader(["txt", "html"], (url) => {
+  use(["txt", "html"], ({ url }) => {
     return fetch(url).then((e) => e.text());
   });
 
-  setLoader("json", async (url) => {
+  use("json", async ({ url }) => {
     return fetch(url).then((e) => e.json());
   });
 
-  setLoader("wasm", async (url) => {
+  use("wasm", async ({ url }) => {
     const data = await fetch(url).then((e) => e.arrayBuffer());
 
     const module = await WebAssembly.compile(data);
@@ -74,23 +65,22 @@
 
     const type = pathname.slice(((pathname.lastIndexOf(".") - 1) >>> 0) + 2);
 
-    const load = loader.get(type);
-
     let data;
 
-    if (load) {
-      data = await load(url, opts);
+    const tasks = processor[type];
+
+    if (tasks) {
+      for (let f of tasks) {
+        const temp = await f({
+          url,
+          data,
+          ...opts,
+        });
+
+        temp !== undefined && (data = temp);
+      }
     } else {
       data = fetch(url);
-    }
-
-    const tasks = processor[type];
-    if (tasks) {
-      tasks.forEach((f) => {
-        const args = [url];
-        opts && args.push(opts);
-        f(...args);
-      });
     }
 
     return data;
@@ -101,8 +91,8 @@
   }
 
   Object.assign(lm, {
-    setLoader,
-    setProcess,
+    // setLoader,
+    use,
   });
 
   class LoadModule extends HTMLElement {

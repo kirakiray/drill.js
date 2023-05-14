@@ -9,8 +9,8 @@
     <script type="module">
       import "../src/dist.mjs";
 
-      lm.setProcess(async (...args) => {
-        console.log("comp => ", args);
+      lm.use(async (e) => {
+        console.log("comp => ", e);
       });
     </script>
     <l-m src="./other/process-test.mjs"></l-m>
