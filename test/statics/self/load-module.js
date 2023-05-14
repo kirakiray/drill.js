@@ -20,4 +20,12 @@ describe("load module", () => {
       name: "ccc json",
     });
   });
+
+  test("load wasm succeed", async () => {
+    const { add, square } = await load("../other/wasm/test.wasm");
+
+    expect(add(3, 3)).toBe(6);
+
+    expect(square(3, 3)).toBe(9);
+  });
 });
