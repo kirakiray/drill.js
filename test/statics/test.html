@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>drill test</title>
+    <link
+      rel="stylesheet"
+      href="../../node_modules/jasmine-core/lib/jasmine-core/jasmine.css"
+    />
+    <script src="../../node_modules/jasmine-core/lib/jasmine-core/jasmine.js"></script>
+    <script src="../../node_modules/jasmine-core/lib/jasmine-core/jasmine-html.js"></script>
+    <script src="../../node_modules/jasmine-core/lib/jasmine-core/boot0.js"></script>
+    <script src="../../node_modules/jasmine-core/lib/jasmine-core/boot1.js"></script>
+    <script>
+      const test = it;
+    </script>
+    <script src="../../dist/drill.js"></script>
+    <script type="module">
+      lm.use(async (e) => {
+        console.log("comp => ", e);
+      });
+    </script>
+    <l-m src="./other/process-test.mjs" pause></l-m>
+  </head>
+  <body>
+    <script type="module" src="./self/o1.js"></script>
+    <!-- <l-m src="./self/o1.js"></l-m> -->
+    <l-m src="./other/process-test.mjs"></l-m>
+  </body>
+</html>

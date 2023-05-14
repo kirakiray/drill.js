@@ -4,9 +4,11 @@
   "description": "A declarative modular framework that runs on the browser",
   "main": "dist/drill.js",
   "scripts": {
-    "build": "npm run rollup && npm run terser && node scripts/addComments.js",
+    "build": "npm run rollup && npm run terser && node scripts/add-comments.js",
     "terser": "terser dist/drill.dev.js -c -m -o dist/drill.js",
-    "rollup": "rollup src/dist.mjs --file dist/drill.dev.js --format iife"
+    "rollup": "rollup src/dist.mjs --file dist/drill.dev.js --format iife",
+    "static-server": "node scripts/static-server",
+    "playwright": "npx playwright test"
   },
   "repository": {
     "type": "git",
