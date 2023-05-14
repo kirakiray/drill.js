@@ -1,24 +1,28 @@
 {
   "name": "drill.js",
-  "version": "4.0.0",
-  "description": "A browser-side modularity and resource management framework",
+  "version": "5.0.0",
+  "description": "A declarative modular framework that runs on the browser",
   "main": "dist/drill.js",
-  "directories": {
-    "doc": "doc",
-    "test": "test"
-  },
-  "dependencies": {},
-  "devDependencies": {
-    "js-beautify": "^1.10.0",
-    "uglify-es": "^3.3.9"
-  },
   "scripts": {
-    "test": "node scripts/test.js",
-    "watch": "node scripts/watch.js"
+    "build": "npm run rollup && npm run terser && node scripts/add-comments.js",
+    "terser": "terser dist/drill.dev.js -c -m -o dist/drill.js",
+    "rollup": "rollup src/dist.mjs --file dist/drill.dev.js --format iife",
+    "static-server": "node scripts/static-server",
+    "playwright": "npx playwright test",
+    "test": "node scripts/ci-test"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kirakiray/drill.js.git"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.32.3",
+    "jasmine-core": "^4.6.0",
+    "koa": "^2.14.1",
+    "koa-static": "^5.0.0",
+    "rollup": "^3.21.6",
+    "shelljs": "^0.8.5",
+    "terser": "^5.17.3"
   },
   "author": {
     "name": "YAO",
@@ -30,7 +34,5 @@
     "url": "https://github.com/kirakiray/drill.js/issues"
   },
   "homepage": "https://github.com/kirakiray/drill.js",
-  "watchjs": {
-    "startyear": "2018"
-  }
+  "startyear": "2018"
 }

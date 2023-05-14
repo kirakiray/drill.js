@@ -1,6 +1,5 @@
 {
   "editor.tabSize": 4,
   "prettier.tabWidth": 2,
-  "commentTranslate.source": "Google",
-  "commentTranslate.multiLineMerge": true
+  "liveServer.settings.port": 5505,
 }
