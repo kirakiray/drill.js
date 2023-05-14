@@ -91,7 +91,6 @@
   }
 
   Object.assign(lm, {
-    // setLoader,
     use,
   });
 
@@ -103,7 +102,7 @@
     }
 
     _init() {
-      if (this.__initSrc) {
+      if (this.__initSrc || this.attributes.hasOwnProperty("pause")) {
         return;
       }
 
@@ -113,6 +112,7 @@
         return;
         // throw `The ${this.tagName.toLowerCase()} element requires the src attribut `;
       }
+
       this.__initSrc = src;
       src = new URL(src, location.href, src).href;
       agent(src, {
@@ -130,11 +130,13 @@
           );
           this.setAttribute("src", this.__initSrc);
         }
+      } else if (name === "pause" && newValue === null) {
+        this._init();
       }
     }
 
     static get observedAttributes() {
-      return ["src"];
+      return ["src", "pause"];
     }
   }
 

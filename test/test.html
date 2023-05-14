@@ -5,15 +5,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>drill test</title>
-    <!-- <script src="../dist/drill.dev.js"></script> -->
+    <script src="../dist/drill.dev.js"></script>
     <script type="module">
-      import "../src/dist.mjs";
+      // import "../src/dist.mjs";
 
       lm.use(async (e) => {
         console.log("comp => ", e);
       });
     </script>
-    <l-m src="./other/process-test.mjs"></l-m>
+    <l-m src="./other/process-test.mjs" pause></l-m>
   </head>
   <body>
     <script type="module" src="./self/o1.js"></script>
