@@ -1,6 +1,6 @@
 # drill.js
 
-A declarative module loading library;
+A declarative module loader
 
 ## Why use drill.js?
 
