@@ -8,7 +8,8 @@
     "terser": "terser dist/drill.dev.js -c -m -o dist/drill.js",
     "rollup": "rollup src/dist.mjs --file dist/drill.dev.js --format iife",
     "static-server": "node scripts/static-server",
-    "playwright": "npx playwright test"
+    "playwright": "npx playwright test",
+    "test": "node scripts/ci-test"
   },
   "repository": {
     "type": "git",
