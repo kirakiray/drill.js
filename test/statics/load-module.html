@@ -17,17 +17,8 @@
       const test = it;
     </script>
     <script src="../../dist/drill.js"></script>
-    <script type="module">
-      lm.use(async (e) => {
-        console.log("comp => ", e);
-      });
-    </script>
-    <l-m src="./other/process-test.mjs" pause></l-m>
   </head>
   <body>
-    <script type="module" src="./self/o1.js"></script>
     <script src="./self/load-module.js" type="module"></script>
-    <!-- <l-m src="./self/o1.js"></l-m> -->
-    <l-m src="./other/process-test.mjs"></l-m>
   </body>
 </html>
