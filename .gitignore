@@ -2,3 +2,5 @@
 **/.DS_Store
 .cache
 playwright-report
+test-results
+coverage
