@@ -3,10 +3,14 @@
   "version": "5.0.0",
   "description": "A declarative modular framework that runs on the browser",
   "main": "dist/drill.js",
+  "exports": {
+    "require": "./dist/drill.js",
+    "import": "./src/base.mjs"
+  },
   "scripts": {
     "build": "npm run rollup && npm run terser && node scripts/add-comments.js",
-    "terser": "terser dist/drill.dev.js -c -m -o dist/drill.js",
-    "rollup": "rollup src/dist.mjs --file dist/drill.dev.js --format iife",
+    "terser": "terser dist/drill.js -c -m -o dist/drill.min.js",
+    "rollup": "rollup src/dist.mjs --file dist/drill.js --format iife",
     "static-server": "node scripts/static-server",
     "playwright": "npx playwright test",
     "test": "node scripts/ci-test"

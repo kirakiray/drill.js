@@ -1,5 +1,4 @@
-import lm from "./main.mjs";
-import "./component.mjs";
+import lm from "./base.mjs";
 
 if (typeof window !== "undefined") {
   window.lm = lm;
