@@ -1,4 +1,4 @@
-// drill.js - v5.0.0 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
+// drill.js - v5.0.1 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
 (function () {
   'use strict';
 
