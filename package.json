@@ -1,11 +1,11 @@
 {
   "name": "drill.js",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "A declarative modular framework that runs on the browser",
   "main": "dist/drill.js",
   "exports": {
     "require": "./dist/drill.js",
-    "import": "./src/base.mjs"
+    "import": "./src/dist.mjs"
   },
   "scripts": {
     "build": "npm run rollup && npm run terser && node scripts/add-comments.js",
