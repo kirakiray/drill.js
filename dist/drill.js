@@ -1,6 +1,9 @@
-// drill.js - v5.0.1 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
-(function () {
-  'use strict';
+//! drill.js - v5.0.2 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
+(function (global, factory) {
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+  typeof define === 'function' && define.amd ? define(factory) :
+  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.lm = factory());
+})(this, (function () { 'use strict';
 
   const processor = {};
 
@@ -153,8 +156,6 @@
     window.lm = lm;
   }
 
-  if (typeof module === "object") {
-    module.exports = lm;
-  }
+  return lm;
 
-})();
+}));
