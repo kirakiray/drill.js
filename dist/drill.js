@@ -1,4 +1,4 @@
-//! drill.js - v5.0.2 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
+//! drill.js - v5.0.3 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
@@ -47,6 +47,11 @@
   });
 
   const createLoad = (meta) => {
+    if (!meta) {
+      meta = {
+        url: document.location.href,
+      };
+    }
     const load = (url) => {
       let reurl = "";
       if (meta.resolve) {
