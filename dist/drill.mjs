@@ -1,4 +1,4 @@
-//! drill.js - v5.0.2 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
+//! drill.js - v5.0.3 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
 const processor = {};
 
 const use = (name, handler) => {
@@ -41,6 +41,11 @@ use("wasm", async ({ url }) => {
 });
 
 const createLoad = (meta) => {
+  if (!meta) {
+    meta = {
+      url: document.location.href,
+    };
+  }
   const load = (url) => {
     let reurl = "";
     if (meta.resolve) {
@@ -109,9 +114,18 @@ class LoadModule extends HTMLElement {
       return;
       // throw `The ${this.tagName.toLowerCase()} element requires the src attribut `;
     }
-
     this.__initSrc = src;
-    src = new URL(src, location.href, src).href;
+
+    const relatePath = this.getAttribute("relate-path");
+    this.removeAttribute("relate-path");
+    src = new URL(src, relatePath || location.href).href;
+    this.__relatePath = relatePath;
+    Object.defineProperties(this, {
+      src: {
+        configurable: true,
+        value: src,
+      },
+    });
     agent(src, {
       element: this,
     });
