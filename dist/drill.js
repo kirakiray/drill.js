@@ -46,6 +46,8 @@
     return instance.exports;
   });
 
+  const LOADED = Symbol("loaded");
+
   const createLoad = (meta) => {
     if (!meta) {
       meta = {
@@ -91,6 +93,13 @@
       data = fetch(url);
     }
 
+    if (opts && opts.element) {
+      const { element } = opts;
+      element[LOADED] = true;
+      const event = new Event("load");
+      element.dispatchEvent(event);
+    }
+
     return data;
   };
 
@@ -105,6 +114,14 @@
   class LoadModule extends HTMLElement {
     constructor(...args) {
       super(...args);
+
+      this[LOADED] = false;
+
+      Object.defineProperties(this, {
+        loaded: {
+          get: () => this[LOADED],
+        },
+      });
 
       this._init();
     }
