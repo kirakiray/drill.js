@@ -1,4 +1,4 @@
-//! drill.js - v5.0.3 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
+//! drill.js - v5.0.4 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
 const processor = {};
 
 const use = (name, handler) => {
@@ -39,6 +39,8 @@ use("wasm", async ({ url }) => {
 
   return instance.exports;
 });
+
+const LOADED = Symbol("loaded");
 
 const createLoad = (meta) => {
   if (!meta) {
@@ -85,6 +87,13 @@ const agent = async (url, opts) => {
     data = fetch(url);
   }
 
+  if (opts && opts.element) {
+    const { element } = opts;
+    element[LOADED] = true;
+    const event = new Event("load");
+    element.dispatchEvent(event);
+  }
+
   return data;
 };
 
@@ -99,6 +108,14 @@ Object.assign(lm, {
 class LoadModule extends HTMLElement {
   constructor(...args) {
     super(...args);
+
+    this[LOADED] = false;
+
+    Object.defineProperties(this, {
+      loaded: {
+        get: () => this[LOADED],
+      },
+    });
 
     this._init();
   }
