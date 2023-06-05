@@ -1,4 +1,4 @@
-//! drill.js - v5.0.4 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
+//! drill.js - v5.0.5 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
@@ -25,8 +25,12 @@
     tasks.push(handler);
   };
 
-  use(["mjs", "js"], ({ url }) => {
-    return import(url);
+  use(["mjs", "js"], ({ url, params }) => {
+    const d = new URL(url);
+    if (params.includes("-direct")) {
+      return import(url);
+    }
+    return import(`${d.origin}${d.pathname}`);
   });
 
   use(["txt", "html"], ({ url }) => {
@@ -54,8 +58,10 @@
         url: document.location.href,
       };
     }
-    const load = (url) => {
+    const load = (ourl) => {
       let reurl = "";
+      const [url, ...params] = ourl.split(" ");
+
       if (meta.resolve) {
         reurl = meta.resolve(url);
       } else {
@@ -64,7 +70,7 @@
         reurl = resolvedUrl.href;
       }
 
-      return agent(reurl);
+      return agent(reurl, { params });
     };
     return load;
   };
@@ -139,18 +145,19 @@
       }
       this.__initSrc = src;
 
-      const relatePath = this.getAttribute("relate-path");
-      this.removeAttribute("relate-path");
-      src = new URL(src, relatePath || location.href).href;
-      this.__relatePath = relatePath;
+      src = new URL(src, location.href).href;
       Object.defineProperties(this, {
         src: {
           configurable: true,
           value: src,
         },
       });
-      agent(src, {
+
+      const [url, ...params] = src.split(" ");
+
+      agent(url, {
         element: this,
+        params,
       });
     }
 
