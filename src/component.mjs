@@ -35,8 +35,12 @@ class LoadModule extends HTMLElement {
         value: src,
       },
     });
-    agent(src, {
+
+    const [url, ...params] = src.split(" ");
+
+    agent(url, {
       element: this,
+      params,
     });
   }
 

@@ -33,3 +33,27 @@ test("use", async ({ page }) => {
 
   await expect(data2.length).toBe(3);
 });
+
+test("load module count with parameters", async ({ page }) => {
+  await page.goto("http://localhost:3340/test/statics/cache.html");
+
+  await new Promise((res) => setTimeout(res, 100));
+
+  await expect(await page.innerText("body")).toBe("1");
+
+  await page.waitForFunction(async () => {
+    await load("./esm/test-count.mjs -direct"); // This will not work because it was loaded
+    document.body.innerHTML = mCount;
+  });
+
+  await expect(await page.innerText("body")).toBe("1");
+
+  await page.waitForFunction(async () => {
+    await load("./esm/test-count.mjs?v=2 -direct"); // with v=2 has not been loaded, so it will re-enter a new module
+    document.body.innerHTML = mCount;
+  });
+
+  await new Promise((res) => setTimeout(res, 100));
+
+  await expect(await page.innerText("body")).toBe("2");
+});

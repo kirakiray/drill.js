@@ -18,11 +18,12 @@
     (async () => {
       await load("./esm/test-count.mjs");
 
-      await load("./esm/test-count.mjs -reload");
+      await load("./esm/test-count.mjs");
 
       await load("./esm/test-count.mjs?v=1");
 
       document.write(mCount);
     })();
   </script>
+  <l-m src="./esm/test-count.mjs"></l-m>
 </html>

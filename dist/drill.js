@@ -25,10 +25,12 @@
     tasks.push(handler);
   };
 
-  use(["mjs", "js"], ({ url }) => {
+  use(["mjs", "js"], ({ url, params }) => {
     const d = new URL(url);
-    const k = import(`${d.origin}${d.pathname}`);
-    return k;
+    if (params.includes("-direct")) {
+      return import(url);
+    }
+    return import(`${d.origin}${d.pathname}`);
   });
 
   use(["txt", "html"], ({ url }) => {
@@ -150,8 +152,12 @@
           value: src,
         },
       });
-      agent(src, {
+
+      const [url, ...params] = src.split(" ");
+
+      agent(url, {
         element: this,
+        params,
       });
     }
 
