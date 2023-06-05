@@ -19,7 +19,9 @@ export const use = (name, handler) => {
 };
 
 use(["mjs", "js"], ({ url }) => {
-  return import(url);
+  const d = new URL(url);
+  const k = import(`${d.origin}${d.pathname}`);
+  return k;
 });
 
 use(["txt", "html"], ({ url }) => {
