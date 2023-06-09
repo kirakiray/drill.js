@@ -11,6 +11,7 @@ import LogListener from "less/lib/less-browser/log-listener";
 import ErrorReporting from "less/lib/less-browser/error-reporting";
 import Cache from "less/lib/less-browser/cache";
 import ImageSize from "less/lib/less-browser/image-size";
+import sourceMap from "source-map";
 
 export default (window, options) => {
   const document = window.document;

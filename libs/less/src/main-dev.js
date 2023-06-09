@@ -1,7 +1,7 @@
 import defaultOptions from "less/lib/less/default-options";
 import addDefaultOptions from "less/lib/less-browser/add-default-options";
 
-import root from "less/lib/less-browser/index";
+import root from "./less-browser-index-dev";
 import init from "./init";
 
 const options = defaultOptions();
