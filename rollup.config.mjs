@@ -2,6 +2,7 @@ import path from "path";
 import fs from "fs";
 import commonjs from "@rollup/plugin-commonjs";
 import jsonjs from "@rollup/plugin-json";
+import resolve from "@rollup/plugin-node-resolve";
 
 const CWD = process.cwd();
 let PACKAGE = fs.readFileSync(path.join(CWD, "package.json"));
@@ -17,17 +18,17 @@ export default [
     output: [
       {
         file: "libs/less/dist/less-drill.mjs",
-        format: "iife",
+        format: "es",
         banner,
       },
       {
         file: "libs/less/dist/less-drill.js",
         format: "umd",
-        name: "lm",
+        name: "less",
         banner,
       },
     ],
-    plugins: [commonjs(), jsonjs()],
+    plugins: [commonjs(), resolve(), jsonjs()],
   },
   {
     input: "src/base.mjs",

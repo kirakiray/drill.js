@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>less test</title>
     <script src="https://unpkg.com/source-map@0.6.0/dist/source-map.js"></script>
-    <!-- <script src="./less.js"></script> -->
-    <script src="../src/less.js"></script>
+    <!-- <script src="./fix-less.js"></script> -->
+    <script src="../dist/less-drill.js"></script>
     <script>
       const createFileUrl = (...args) => {
         const file = new File(...args);
@@ -18,8 +18,6 @@
       (async () => {
         const text = await fetch("./test.less").then((e) => e.text());
 
-        debugger;
-        const myLess = window.less({}, []);
 
         const data = await less.render(text, {
           sourceMap: {

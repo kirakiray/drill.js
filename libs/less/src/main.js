@@ -1,10 +1,23 @@
-// import less from "less/lib/less/index.js";
-import createLess from "less/lib/less";
+import defaultOptions from "less/lib/less/default-options";
+import addDefaultOptions from "less/lib/less-browser/add-default-options";
 
-export default createLess;
+// import root from "less/lib/less-browser/index";
+import root from "./lb-index";
 
-// import less from "./test/less.js";
+const options = defaultOptions();
 
-// console.log("less => ", less);
+if (window.less) {
+  for (const key in window.less) {
+    if (Object.prototype.hasOwnProperty.call(window.less, key)) {
+      options[key] = window.less[key];
+    }
+  }
+}
+addDefaultOptions(window, options);
 
-// export default less;
+options.plugins = options.plugins || [];
+
+const less = root(window, options);
+export default less;
+
+window.less = less;
