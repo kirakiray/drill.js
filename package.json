@@ -20,6 +20,9 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.32.3",
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-json": "^6.0.0",
+    "@rollup/plugin-node-resolve": "^15.1.0",
     "jasmine-core": "^4.6.0",
     "koa": "^2.14.1",
     "koa-static": "^5.0.0",
@@ -37,5 +40,8 @@
     "url": "https://github.com/kirakiray/drill.js/issues"
   },
   "homepage": "https://github.com/kirakiray/drill.js",
-  "startyear": "2018"
+  "startyear": "2018",
+  "dependencies": {
+    "less": "^4.1.3"
+  }
 }
