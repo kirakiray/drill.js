@@ -1,4 +1,15 @@
-export default (less) => {
+import defaultOptions from "less/lib/less/default-options";
+import addDefaultOptions from "less/lib/less-browser/add-default-options";
+
+export default (root) => {
+  const options = defaultOptions();
+
+  addDefaultOptions(window, options);
+
+  options.plugins = options.plugins || [];
+
+  const less = root(window, options);
+
   if (typeof lm !== "undefined") {
     lm.use("less", async ({ url, element }) => {
       const text = await fetch(url).then((e) => e.text());

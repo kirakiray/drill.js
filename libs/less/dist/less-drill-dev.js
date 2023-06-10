@@ -32,68 +32,40 @@
 		return a;
 	}
 
-	var defaultOptions = {};
+	var utils$4 = {};
 
-	Object.defineProperty(defaultOptions, "__esModule", { value: true });
-	// Export a new default each time
-	function default_1$1() {
-	    return {
-	        /* Inline Javascript - @plugin still allowed */
-	        javascriptEnabled: false,
-	        /* Outputs a makefile import dependency list to stdout. */
-	        depends: false,
-	        /* (DEPRECATED) Compress using less built-in compression.
-	         * This does an okay job but does not utilise all the tricks of
-	         * dedicated css compression. */
-	        compress: false,
-	        /* Runs the less parser and just reports errors without any output. */
-	        lint: false,
-	        /* Sets available include paths.
-	         * If the file in an @import rule does not exist at that exact location,
-	         * less will look for it at the location(s) passed to this option.
-	         * You might use this for instance to specify a path to a library which
-	         * you want to be referenced simply and relatively in the less files. */
-	        paths: [],
-	        /* color output in the terminal */
-	        color: true,
-	        /* The strictImports controls whether the compiler will allow an @import inside of either
-	         * @media blocks or (a later addition) other selector blocks.
-	         * See: https://github.com/less/less.js/issues/656 */
-	        strictImports: false,
-	        /* Allow Imports from Insecure HTTPS Hosts */
-	        insecure: false,
-	        /* Allows you to add a path to every generated import and url in your css.
-	         * This does not affect less import statements that are processed, just ones
-	         * that are left in the output css. */
-	        rootpath: '',
-	        /* By default URLs are kept as-is, so if you import a file in a sub-directory
-	         * that references an image, exactly the same URL will be output in the css.
-	         * This option allows you to re-write URL's in imported files so that the
-	         * URL is always relative to the base imported file */
-	        rewriteUrls: false,
-	        /* How to process math
-	         *   0 always           - eagerly try to solve all operations
-	         *   1 parens-division  - require parens for division "/"
-	         *   2 parens | strict  - require parens for all operations
-	         *   3 strict-legacy    - legacy strict behavior (super-strict)
-	         */
-	        math: 1,
-	        /* Without this option, less attempts to guess at the output unit when it does maths. */
-	        strictUnits: false,
-	        /* Effectively the declaration is put at the top of your base Less file,
-	         * meaning it can be used but it also can be overridden if this variable
-	         * is defined in the file. */
-	        globalVars: null,
-	        /* As opposed to the global variable option, this puts the declaration at the
-	         * end of your base file, meaning it will override anything defined in your Less file. */
-	        modifyVars: null,
-	        /* This option allows you to specify a argument to go on to every URL.  */
-	        urlArgs: ''
-	    };
+	Object.defineProperty(utils$4, "__esModule", { value: true });
+	var addDataAttr_1 = utils$4.addDataAttr = utils$4.extractId = void 0;
+	function extractId(href) {
+	    return href.replace(/^[a-z-]+:\/+?[^\/]+/, '') // Remove protocol & domain
+	        .replace(/[\?\&]livereload=\w+/, '') // Remove LiveReload cachebuster
+	        .replace(/^\//, '') // Remove root /
+	        .replace(/\.[a-zA-Z]+$/, '') // Remove simple extension
+	        .replace(/[^\.\w-]+/g, '-') // Replace illegal characters
+	        .replace(/\./g, ':'); // Replace dots with colons(for valid id)
 	}
-	var _default$a = defaultOptions.default = default_1$1;
+	utils$4.extractId = extractId;
+	function addDataAttr(options, tag) {
+	    if (!tag) {
+	        return;
+	    } // in case of tag is null or undefined
+	    for (var opt in tag.dataset) {
+	        if (tag.dataset.hasOwnProperty(opt)) {
+	            if (opt === 'env' || opt === 'dumpLineNumbers' || opt === 'rootpath' || opt === 'errorReporting') {
+	                options[opt] = tag.dataset[opt];
+	            }
+	            else {
+	                try {
+	                    options[opt] = JSON.parse(tag.dataset[opt]);
+	                }
+	                catch (_) { }
+	            }
+	        }
+	    }
+	}
+	addDataAttr_1 = utils$4.addDataAttr = addDataAttr;
 
-	var addDefaultOptions = {};
+	var less = {};
 
 	/******************************************************************************
 	Copyright (c) Microsoft Corporation.
@@ -447,146 +419,6 @@
 	});
 
 	var require$$0$1 = /*@__PURE__*/getAugmentedNamespace(tslib_es6$1);
-
-	var utils$4 = {};
-
-	Object.defineProperty(utils$4, "__esModule", { value: true });
-	var addDataAttr_1 = utils$4.addDataAttr = utils$4.extractId = void 0;
-	function extractId(href) {
-	    return href.replace(/^[a-z-]+:\/+?[^\/]+/, '') // Remove protocol & domain
-	        .replace(/[\?\&]livereload=\w+/, '') // Remove LiveReload cachebuster
-	        .replace(/^\//, '') // Remove root /
-	        .replace(/\.[a-zA-Z]+$/, '') // Remove simple extension
-	        .replace(/[^\.\w-]+/g, '-') // Replace illegal characters
-	        .replace(/\./g, ':'); // Replace dots with colons(for valid id)
-	}
-	utils$4.extractId = extractId;
-	function addDataAttr(options, tag) {
-	    if (!tag) {
-	        return;
-	    } // in case of tag is null or undefined
-	    for (var opt in tag.dataset) {
-	        if (tag.dataset.hasOwnProperty(opt)) {
-	            if (opt === 'env' || opt === 'dumpLineNumbers' || opt === 'rootpath' || opt === 'errorReporting') {
-	                options[opt] = tag.dataset[opt];
-	            }
-	            else {
-	                try {
-	                    options[opt] = JSON.parse(tag.dataset[opt]);
-	                }
-	                catch (_) { }
-	            }
-	        }
-	    }
-	}
-	addDataAttr_1 = utils$4.addDataAttr = addDataAttr;
-
-	var browser$1 = {};
-
-	Object.defineProperty(browser$1, "__esModule", { value: true });
-	var tslib_1$6 = require$$0$1;
-	var utils$3 = tslib_1$6.__importStar(utils$4);
-	var _default$9 = browser$1.default = {
-	    createCSS: function (document, styles, sheet) {
-	        // Strip the query-string
-	        var href = sheet.href || '';
-	        // If there is no title set, use the filename, minus the extension
-	        var id = "less:" + (sheet.title || utils$3.extractId(href));
-	        // If this has already been inserted into the DOM, we may need to replace it
-	        var oldStyleNode = document.getElementById(id);
-	        var keepOldStyleNode = false;
-	        // Create a new stylesheet node for insertion or (if necessary) replacement
-	        var styleNode = document.createElement('style');
-	        styleNode.setAttribute('type', 'text/css');
-	        if (sheet.media) {
-	            styleNode.setAttribute('media', sheet.media);
-	        }
-	        styleNode.id = id;
-	        if (!styleNode.styleSheet) {
-	            styleNode.appendChild(document.createTextNode(styles));
-	            // If new contents match contents of oldStyleNode, don't replace oldStyleNode
-	            keepOldStyleNode = (oldStyleNode !== null && oldStyleNode.childNodes.length > 0 && styleNode.childNodes.length > 0 &&
-	                oldStyleNode.firstChild.nodeValue === styleNode.firstChild.nodeValue);
-	        }
-	        var head = document.getElementsByTagName('head')[0];
-	        // If there is no oldStyleNode, just append; otherwise, only append if we need
-	        // to replace oldStyleNode with an updated stylesheet
-	        if (oldStyleNode === null || keepOldStyleNode === false) {
-	            var nextEl = sheet && sheet.nextSibling || null;
-	            if (nextEl) {
-	                nextEl.parentNode.insertBefore(styleNode, nextEl);
-	            }
-	            else {
-	                head.appendChild(styleNode);
-	            }
-	        }
-	        if (oldStyleNode && keepOldStyleNode === false) {
-	            oldStyleNode.parentNode.removeChild(oldStyleNode);
-	        }
-	        // For IE.
-	        // This needs to happen *after* the style element is added to the DOM, otherwise IE 7 and 8 may crash.
-	        // See http://social.msdn.microsoft.com/Forums/en-US/7e081b65-878a-4c22-8e68-c10d39c2ed32/internet-explorer-crashes-appending-style-element-to-head
-	        if (styleNode.styleSheet) {
-	            try {
-	                styleNode.styleSheet.cssText = styles;
-	            }
-	            catch (e) {
-	                throw new Error('Couldn\'t reassign styleSheet.cssText.');
-	            }
-	        }
-	    },
-	    currentScript: function (window) {
-	        var document = window.document;
-	        return document.currentScript || (function () {
-	            var scripts = document.getElementsByTagName('script');
-	            return scripts[scripts.length - 1];
-	        })();
-	    }
-	};
-
-	Object.defineProperty(addDefaultOptions, "__esModule", { value: true });
-	var tslib_1$5 = require$$0$1;
-	var utils_1 = utils$4;
-	var browser_1$1 = tslib_1$5.__importDefault(browser$1);
-	var _default$8 = addDefaultOptions.default = (function (window, options) {
-	    // use options from the current script tag data attribues
-	    utils_1.addDataAttr(options, browser_1$1.default.currentScript(window));
-	    if (options.isFileProtocol === undefined) {
-	        options.isFileProtocol = /^(file|(chrome|safari)(-extension)?|resource|qrc|app):/.test(window.location.protocol);
-	    }
-	    // Load styles asynchronously (default: false)
-	    //
-	    // This is set to `false` by default, so that the body
-	    // doesn't start loading before the stylesheets are parsed.
-	    // Setting this to `true` can result in flickering.
-	    //
-	    options.async = options.async || false;
-	    options.fileAsync = options.fileAsync || false;
-	    // Interval between watch polls
-	    options.poll = options.poll || (options.isFileProtocol ? 1000 : 1500);
-	    options.env = options.env || (window.location.hostname == '127.0.0.1' ||
-	        window.location.hostname == '0.0.0.0' ||
-	        window.location.hostname == 'localhost' ||
-	        (window.location.port &&
-	            window.location.port.length > 0) ||
-	        options.isFileProtocol ? 'development'
-	        : 'production');
-	    var dumpLineNumbers = /!dumpLineNumbers:(comments|mediaquery|all)/.exec(window.location.hash);
-	    if (dumpLineNumbers) {
-	        options.dumpLineNumbers = dumpLineNumbers[1];
-	    }
-	    if (options.useFileCache === undefined) {
-	        options.useFileCache = true;
-	    }
-	    if (options.onReady === undefined) {
-	        options.onReady = true;
-	    }
-	    if (options.relativeUrls) {
-	        options.rewriteUrls = 'all';
-	    }
-	});
-
-	var less$1 = {};
 
 	var environment = {};
 
@@ -1480,7 +1312,7 @@
 
 	var lessError = {};
 
-	var utils$2 = {};
+	var utils$3 = {};
 
 	var constants = {};
 
@@ -1936,10 +1768,10 @@
 	var hasRequiredUtils;
 
 	function requireUtils () {
-		if (hasRequiredUtils) return utils$2;
+		if (hasRequiredUtils) return utils$3;
 		hasRequiredUtils = 1;
-		Object.defineProperty(utils$2, "__esModule", { value: true });
-		utils$2.flattenArray = utils$2.merge = utils$2.copyOptions = utils$2.defaults = utils$2.clone = utils$2.copyArray = utils$2.getLocation = void 0;
+		Object.defineProperty(utils$3, "__esModule", { value: true });
+		utils$3.flattenArray = utils$3.merge = utils$3.copyOptions = utils$3.defaults = utils$3.clone = utils$3.copyArray = utils$3.getLocation = void 0;
 		var tslib_1 = require$$0$1;
 		/* jshint proto: true */
 		var Constants = tslib_1.__importStar(requireConstants());
@@ -1959,7 +1791,7 @@
 		        column: column
 		    };
 		}
-		utils$2.getLocation = getLocation;
+		utils$3.getLocation = getLocation;
 		function copyArray(arr) {
 		    var i;
 		    var length = arr.length;
@@ -1969,7 +1801,7 @@
 		    }
 		    return copy;
 		}
-		utils$2.copyArray = copyArray;
+		utils$3.copyArray = copyArray;
 		function clone(obj) {
 		    var cloned = {};
 		    for (var prop in obj) {
@@ -1979,7 +1811,7 @@
 		    }
 		    return cloned;
 		}
-		utils$2.clone = clone;
+		utils$3.clone = clone;
 		function defaults(obj1, obj2) {
 		    var newObj = obj2 || {};
 		    if (!obj2._defaults) {
@@ -1991,7 +1823,7 @@
 		    }
 		    return newObj;
 		}
-		utils$2.defaults = defaults;
+		utils$3.defaults = defaults;
 		function copyOptions(obj1, obj2) {
 		    if (obj2 && obj2._defaults) {
 		        return obj2;
@@ -2035,7 +1867,7 @@
 		    }
 		    return opts;
 		}
-		utils$2.copyOptions = copyOptions;
+		utils$3.copyOptions = copyOptions;
 		function merge(obj1, obj2) {
 		    for (var prop in obj2) {
 		        if (obj2.hasOwnProperty(prop)) {
@@ -2044,7 +1876,7 @@
 		    }
 		    return obj1;
 		}
-		utils$2.merge = merge;
+		utils$3.merge = merge;
 		function flattenArray(arr, result) {
 		    if (result === void 0) { result = []; }
 		    for (var i = 0, length_1 = arr.length; i < length_1; i++) {
@@ -2060,9 +1892,9 @@
 		    }
 		    return result;
 		}
-		utils$2.flattenArray = flattenArray;
+		utils$3.flattenArray = flattenArray;
 		
-		return utils$2;
+		return utils$3;
 	}
 
 	var hasRequiredLessError;
@@ -2859,14 +2691,14 @@
 		return functionRegistry;
 	}
 
-	var _default$7 = {};
+	var _default$a = {};
 
 	var hasRequired_default;
 
 	function require_default () {
-		if (hasRequired_default) return _default$7;
+		if (hasRequired_default) return _default$a;
 		hasRequired_default = 1;
-		Object.defineProperty(_default$7, "__esModule", { value: true });
+		Object.defineProperty(_default$a, "__esModule", { value: true });
 		var tslib_1 = require$$0$1;
 		var keyword_1 = tslib_1.__importDefault(requireKeyword());
 		var defaultFunc = {
@@ -2890,9 +2722,9 @@
 		        this.value_ = this.error_ = null;
 		    }
 		};
-		_default$7.default = defaultFunc;
+		_default$a.default = defaultFunc;
 		
-		return _default$7;
+		return _default$a;
 	}
 
 	var hasRequiredRuleset;
@@ -12648,7 +12480,7 @@
 	var directories = {
 		test: "./test"
 	};
-	var browser = "./dist/less.js";
+	var browser$1 = "./dist/less.js";
 	var engines = {
 		node: ">=6"
 	};
@@ -12767,7 +12599,7 @@
 		main: main,
 		module: module,
 		directories: directories,
-		browser: browser,
+		browser: browser$1,
 		engines: engines,
 		scripts: scripts,
 		optionalDependencies: optionalDependencies,
@@ -12806,31 +12638,31 @@
 		return parseNodeVersion_1;
 	}
 
-	Object.defineProperty(less$1, "__esModule", { value: true });
-	var tslib_1$4 = require$$0$1;
-	var environment_1 = tslib_1$4.__importDefault(requireEnvironment());
-	var data_1 = tslib_1$4.__importDefault(requireData());
-	var tree_1 = tslib_1$4.__importDefault(requireTree());
-	var abstract_file_manager_1 = tslib_1$4.__importDefault(requireAbstractFileManager());
-	var abstract_plugin_loader_1 = tslib_1$4.__importDefault(requireAbstractPluginLoader());
-	var visitors_1 = tslib_1$4.__importDefault(requireVisitors());
-	var parser_1 = tslib_1$4.__importDefault(requireParser());
-	var functions_1 = tslib_1$4.__importDefault(requireFunctions());
-	var contexts_1 = tslib_1$4.__importDefault(requireContexts());
-	var less_error_1 = tslib_1$4.__importDefault(requireLessError());
-	var transform_tree_1 = tslib_1$4.__importDefault(requireTransformTree());
-	var utils$1 = tslib_1$4.__importStar(requireUtils());
-	var plugin_manager_1 = tslib_1$4.__importDefault(requirePluginManager());
-	var logger_1 = tslib_1$4.__importDefault(requireLogger());
-	var source_map_output_1 = tslib_1$4.__importDefault(requireSourceMapOutput());
-	var source_map_builder_1 = tslib_1$4.__importDefault(requireSourceMapBuilder());
-	var parse_tree_1 = tslib_1$4.__importDefault(requireParseTree());
-	var import_manager_1 = tslib_1$4.__importDefault(requireImportManager());
-	var parse_1 = tslib_1$4.__importDefault(requireParse());
-	var render_1 = tslib_1$4.__importDefault(requireRender());
+	Object.defineProperty(less, "__esModule", { value: true });
+	var tslib_1$6 = require$$0$1;
+	var environment_1 = tslib_1$6.__importDefault(requireEnvironment());
+	var data_1 = tslib_1$6.__importDefault(requireData());
+	var tree_1 = tslib_1$6.__importDefault(requireTree());
+	var abstract_file_manager_1 = tslib_1$6.__importDefault(requireAbstractFileManager());
+	var abstract_plugin_loader_1 = tslib_1$6.__importDefault(requireAbstractPluginLoader());
+	var visitors_1 = tslib_1$6.__importDefault(requireVisitors());
+	var parser_1 = tslib_1$6.__importDefault(requireParser());
+	var functions_1 = tslib_1$6.__importDefault(requireFunctions());
+	var contexts_1 = tslib_1$6.__importDefault(requireContexts());
+	var less_error_1 = tslib_1$6.__importDefault(requireLessError());
+	var transform_tree_1 = tslib_1$6.__importDefault(requireTransformTree());
+	var utils$2 = tslib_1$6.__importStar(requireUtils());
+	var plugin_manager_1 = tslib_1$6.__importDefault(requirePluginManager());
+	var logger_1 = tslib_1$6.__importDefault(requireLogger());
+	var source_map_output_1 = tslib_1$6.__importDefault(requireSourceMapOutput());
+	var source_map_builder_1 = tslib_1$6.__importDefault(requireSourceMapBuilder());
+	var parse_tree_1 = tslib_1$6.__importDefault(requireParseTree());
+	var import_manager_1 = tslib_1$6.__importDefault(requireImportManager());
+	var parse_1 = tslib_1$6.__importDefault(requireParse());
+	var render_1 = tslib_1$6.__importDefault(requireRender());
 	var package_json_1 = require$$21;
-	var parse_node_version_1 = tslib_1$4.__importDefault(requireParseNodeVersion());
-	function default_1(environment, fileManagers) {
+	var parse_node_version_1 = tslib_1$6.__importDefault(requireParseNodeVersion());
+	function default_1$1(environment, fileManagers) {
 	    var sourceMapOutput, sourceMapBuilder, parseTree, importManager;
 	    environment = new environment_1.default(environment, fileManagers);
 	    sourceMapOutput = source_map_output_1.default(environment);
@@ -12860,7 +12692,7 @@
 	        parse: parse,
 	        LessError: less_error_1.default,
 	        transformTree: transform_tree_1.default,
-	        utils: utils$1,
+	        utils: utils$2,
 	        PluginManager: plugin_manager_1.default,
 	        logger: logger_1.default
 	    };
@@ -12898,15 +12730,78 @@
 	    initial.render = initial.render.bind(api);
 	    return api;
 	}
-	var _default$6 = less$1.default = default_1;
+	var _default$9 = less.default = default_1$1;
+
+	var browser = {};
+
+	Object.defineProperty(browser, "__esModule", { value: true });
+	var tslib_1$5 = require$$0$1;
+	var utils$1 = tslib_1$5.__importStar(utils$4);
+	var _default$8 = browser.default = {
+	    createCSS: function (document, styles, sheet) {
+	        // Strip the query-string
+	        var href = sheet.href || '';
+	        // If there is no title set, use the filename, minus the extension
+	        var id = "less:" + (sheet.title || utils$1.extractId(href));
+	        // If this has already been inserted into the DOM, we may need to replace it
+	        var oldStyleNode = document.getElementById(id);
+	        var keepOldStyleNode = false;
+	        // Create a new stylesheet node for insertion or (if necessary) replacement
+	        var styleNode = document.createElement('style');
+	        styleNode.setAttribute('type', 'text/css');
+	        if (sheet.media) {
+	            styleNode.setAttribute('media', sheet.media);
+	        }
+	        styleNode.id = id;
+	        if (!styleNode.styleSheet) {
+	            styleNode.appendChild(document.createTextNode(styles));
+	            // If new contents match contents of oldStyleNode, don't replace oldStyleNode
+	            keepOldStyleNode = (oldStyleNode !== null && oldStyleNode.childNodes.length > 0 && styleNode.childNodes.length > 0 &&
+	                oldStyleNode.firstChild.nodeValue === styleNode.firstChild.nodeValue);
+	        }
+	        var head = document.getElementsByTagName('head')[0];
+	        // If there is no oldStyleNode, just append; otherwise, only append if we need
+	        // to replace oldStyleNode with an updated stylesheet
+	        if (oldStyleNode === null || keepOldStyleNode === false) {
+	            var nextEl = sheet && sheet.nextSibling || null;
+	            if (nextEl) {
+	                nextEl.parentNode.insertBefore(styleNode, nextEl);
+	            }
+	            else {
+	                head.appendChild(styleNode);
+	            }
+	        }
+	        if (oldStyleNode && keepOldStyleNode === false) {
+	            oldStyleNode.parentNode.removeChild(oldStyleNode);
+	        }
+	        // For IE.
+	        // This needs to happen *after* the style element is added to the DOM, otherwise IE 7 and 8 may crash.
+	        // See http://social.msdn.microsoft.com/Forums/en-US/7e081b65-878a-4c22-8e68-c10d39c2ed32/internet-explorer-crashes-appending-style-element-to-head
+	        if (styleNode.styleSheet) {
+	            try {
+	                styleNode.styleSheet.cssText = styles;
+	            }
+	            catch (e) {
+	                throw new Error('Couldn\'t reassign styleSheet.cssText.');
+	            }
+	        }
+	    },
+	    currentScript: function (window) {
+	        var document = window.document;
+	        return document.currentScript || (function () {
+	            var scripts = document.getElementsByTagName('script');
+	            return scripts[scripts.length - 1];
+	        })();
+	    }
+	};
 
 	var fileManager = {};
 
 	/* global window, XMLHttpRequest */
 	Object.defineProperty(fileManager, "__esModule", { value: true });
-	var tslib_1$3 = require$$0$1;
-	var abstract_file_manager_js_1 = tslib_1$3.__importDefault(requireAbstractFileManager());
-	var options$1;
+	var tslib_1$4 = require$$0$1;
+	var abstract_file_manager_js_1 = tslib_1$4.__importDefault(requireAbstractFileManager());
+	var options;
 	var logger;
 	var fileCache = {};
 	// TODOS - move log somewhere. pathDiff and doing something similar in node. use pathDiff in the other browser file for the initial load
@@ -12923,7 +12818,7 @@
 	    },
 	    doXHR: function (url, type, callback, errback) {
 	        var xhr = new XMLHttpRequest();
-	        var async = options$1.isFileProtocol ? options$1.fileAsync : true;
+	        var async = options.isFileProtocol ? options.fileAsync : true;
 	        if (typeof xhr.overrideMimeType === 'function') {
 	            xhr.overrideMimeType('text/css');
 	        }
@@ -12939,7 +12834,7 @@
 	                errback(xhr.status, url);
 	            }
 	        }
-	        if (options$1.isFileProtocol && !options$1.fileAsync) {
+	        if (options.isFileProtocol && !options.fileAsync) {
 	            if (xhr.status === 0 || (xhr.status >= 200 && xhr.status < 300)) {
 	                callback(xhr.responseText);
 	            }
@@ -12998,8 +12893,8 @@
 	        });
 	    }
 	});
-	var _default$5 = fileManager.default = (function (opts, log) {
-	    options$1 = opts;
+	var _default$7 = fileManager.default = (function (opts, log) {
+	    options = opts;
 	    logger = log;
 	    return FileManager;
 	});
@@ -13009,8 +12904,8 @@
 	// TODO: Add tests for browser @plugin
 	/* global window */
 	Object.defineProperty(pluginLoader, "__esModule", { value: true });
-	var tslib_1$2 = require$$0$1;
-	var abstract_plugin_loader_js_1 = tslib_1$2.__importDefault(requireAbstractPluginLoader());
+	var tslib_1$3 = require$$0$1;
+	var abstract_plugin_loader_js_1 = tslib_1$3.__importDefault(requireAbstractPluginLoader());
 	/**
 	 * Browser Plugin Loader
 	 */
@@ -13026,12 +12921,12 @@
 	        });
 	    }
 	});
-	var _default$4 = pluginLoader.default = PluginLoader;
+	var _default$6 = pluginLoader.default = PluginLoader;
 
 	var logListener = {};
 
 	Object.defineProperty(logListener, "__esModule", { value: true });
-	var _default$3 = logListener.default = (function (less, options) {
+	var _default$5 = logListener.default = (function (less, options) {
 	    var logLevel_debug = 4;
 	    var logLevel_info = 3;
 	    var logLevel_warn = 2;
@@ -13075,10 +12970,10 @@
 	var errorReporting = {};
 
 	Object.defineProperty(errorReporting, "__esModule", { value: true });
-	var tslib_1$1 = require$$0$1;
-	var utils = tslib_1$1.__importStar(utils$4);
-	var browser_1 = tslib_1$1.__importDefault(browser$1);
-	var _default$2 = errorReporting.default = (function (window, less, options) {
+	var tslib_1$2 = require$$0$1;
+	var utils = tslib_1$2.__importStar(utils$4);
+	var browser_1$1 = tslib_1$2.__importDefault(browser);
+	var _default$4 = errorReporting.default = (function (window, less, options) {
 	    function errorHTML(e, rootHref) {
 	        var id = "less-error-message:" + utils.extractId(rootHref || '');
 	        var template = '<li><label>{line}</label><pre class="{class}">{content}</pre></li>';
@@ -13110,7 +13005,7 @@
 	        }
 	        elem.innerHTML = content;
 	        // CSS for error messages
-	        browser_1.default.createCSS(window.document, [
+	        browser_1$1.default.createCSS(window.document, [
 	            '.less-error-message ul, .less-error-message li {',
 	            'list-style-type: none;',
 	            'margin-right: 15px;',
@@ -13234,7 +13129,7 @@
 
 	// Cache system is a bit outdated and could do with work
 	Object.defineProperty(cache, "__esModule", { value: true });
-	var _default$1 = cache.default = (function (window, options, logger) {
+	var _default$3 = cache.default = (function (window, options, logger) {
 	    var cache = null;
 	    if (options.env !== 'development') {
 	        try {
@@ -13279,9 +13174,9 @@
 	var imageSize = {};
 
 	Object.defineProperty(imageSize, "__esModule", { value: true });
-	var tslib_1 = require$$0$1;
-	var function_registry_1 = tslib_1.__importDefault(requireFunctionRegistry());
-	var _default = imageSize.default = (function () {
+	var tslib_1$1 = require$$0$1;
+	var function_registry_1 = tslib_1$1.__importDefault(requireFunctionRegistry());
+	var _default$2 = imageSize.default = (function () {
 	    function imageSize() {
 	        throw {
 	            type: 'Runtime',
@@ -16455,23 +16350,23 @@
 
 	var root = (window, options) => {
 	  const document = window.document;
-	  const less = _default$6({
+	  const less = _default$9({
 	    getSourceMapGenerator: () => sourceMap.SourceMapGenerator,
 	  });
 
 	  less.options = options;
 	  const environment = less.environment;
-	  const FileManager = _default$5(options, less.logger);
+	  const FileManager = _default$7(options, less.logger);
 	  const fileManager = new FileManager();
 	  environment.addFileManager(fileManager);
 	  less.FileManager = FileManager;
-	  less.PluginLoader = _default$4;
+	  less.PluginLoader = _default$6;
 
-	  _default$3(less, options);
-	  const errors = _default$2(window, less, options);
+	  _default$5(less, options);
+	  const errors = _default$4(window, less, options);
 	  const cache = (less.cache =
-	    options.cache || _default$1(window, options, less.logger));
-	  _default(less.environment);
+	    options.cache || _default$3(window, options, less.logger));
+	  _default$2(less.environment);
 
 	  // Setup user functions - Deprecate?
 	  if (options.functions) {
@@ -16629,7 +16524,7 @@
 	            if (e) {
 	              errors.add(e, e.href || sheet.href);
 	            } else if (css) {
-	              _default$9.createCSS(window.document, css, sheet);
+	              _default$8.createCSS(window.document, css, sheet);
 	            }
 	          });
 	        }
@@ -16727,7 +16622,7 @@
 	            } else {
 	              less.logger.info(`Rendered ${sheet.href} successfully.`);
 	            }
-	            _default$9.createCSS(window.document, css, sheet);
+	            _default$8.createCSS(window.document, css, sheet);
 	            less.logger.info(
 	              `CSS for ${sheet.href} generated in ${new Date() - endTime}ms`
 	            );
@@ -16763,7 +16658,120 @@
 	  return less;
 	};
 
-	var init = (less) => {
+	var defaultOptions = {};
+
+	Object.defineProperty(defaultOptions, "__esModule", { value: true });
+	// Export a new default each time
+	function default_1() {
+	    return {
+	        /* Inline Javascript - @plugin still allowed */
+	        javascriptEnabled: false,
+	        /* Outputs a makefile import dependency list to stdout. */
+	        depends: false,
+	        /* (DEPRECATED) Compress using less built-in compression.
+	         * This does an okay job but does not utilise all the tricks of
+	         * dedicated css compression. */
+	        compress: false,
+	        /* Runs the less parser and just reports errors without any output. */
+	        lint: false,
+	        /* Sets available include paths.
+	         * If the file in an @import rule does not exist at that exact location,
+	         * less will look for it at the location(s) passed to this option.
+	         * You might use this for instance to specify a path to a library which
+	         * you want to be referenced simply and relatively in the less files. */
+	        paths: [],
+	        /* color output in the terminal */
+	        color: true,
+	        /* The strictImports controls whether the compiler will allow an @import inside of either
+	         * @media blocks or (a later addition) other selector blocks.
+	         * See: https://github.com/less/less.js/issues/656 */
+	        strictImports: false,
+	        /* Allow Imports from Insecure HTTPS Hosts */
+	        insecure: false,
+	        /* Allows you to add a path to every generated import and url in your css.
+	         * This does not affect less import statements that are processed, just ones
+	         * that are left in the output css. */
+	        rootpath: '',
+	        /* By default URLs are kept as-is, so if you import a file in a sub-directory
+	         * that references an image, exactly the same URL will be output in the css.
+	         * This option allows you to re-write URL's in imported files so that the
+	         * URL is always relative to the base imported file */
+	        rewriteUrls: false,
+	        /* How to process math
+	         *   0 always           - eagerly try to solve all operations
+	         *   1 parens-division  - require parens for division "/"
+	         *   2 parens | strict  - require parens for all operations
+	         *   3 strict-legacy    - legacy strict behavior (super-strict)
+	         */
+	        math: 1,
+	        /* Without this option, less attempts to guess at the output unit when it does maths. */
+	        strictUnits: false,
+	        /* Effectively the declaration is put at the top of your base Less file,
+	         * meaning it can be used but it also can be overridden if this variable
+	         * is defined in the file. */
+	        globalVars: null,
+	        /* As opposed to the global variable option, this puts the declaration at the
+	         * end of your base file, meaning it will override anything defined in your Less file. */
+	        modifyVars: null,
+	        /* This option allows you to specify a argument to go on to every URL.  */
+	        urlArgs: ''
+	    };
+	}
+	var _default$1 = defaultOptions.default = default_1;
+
+	var addDefaultOptions = {};
+
+	Object.defineProperty(addDefaultOptions, "__esModule", { value: true });
+	var tslib_1 = require$$0$1;
+	var utils_1 = utils$4;
+	var browser_1 = tslib_1.__importDefault(browser);
+	var _default = addDefaultOptions.default = (function (window, options) {
+	    // use options from the current script tag data attribues
+	    utils_1.addDataAttr(options, browser_1.default.currentScript(window));
+	    if (options.isFileProtocol === undefined) {
+	        options.isFileProtocol = /^(file|(chrome|safari)(-extension)?|resource|qrc|app):/.test(window.location.protocol);
+	    }
+	    // Load styles asynchronously (default: false)
+	    //
+	    // This is set to `false` by default, so that the body
+	    // doesn't start loading before the stylesheets are parsed.
+	    // Setting this to `true` can result in flickering.
+	    //
+	    options.async = options.async || false;
+	    options.fileAsync = options.fileAsync || false;
+	    // Interval between watch polls
+	    options.poll = options.poll || (options.isFileProtocol ? 1000 : 1500);
+	    options.env = options.env || (window.location.hostname == '127.0.0.1' ||
+	        window.location.hostname == '0.0.0.0' ||
+	        window.location.hostname == 'localhost' ||
+	        (window.location.port &&
+	            window.location.port.length > 0) ||
+	        options.isFileProtocol ? 'development'
+	        : 'production');
+	    var dumpLineNumbers = /!dumpLineNumbers:(comments|mediaquery|all)/.exec(window.location.hash);
+	    if (dumpLineNumbers) {
+	        options.dumpLineNumbers = dumpLineNumbers[1];
+	    }
+	    if (options.useFileCache === undefined) {
+	        options.useFileCache = true;
+	    }
+	    if (options.onReady === undefined) {
+	        options.onReady = true;
+	    }
+	    if (options.relativeUrls) {
+	        options.rewriteUrls = 'all';
+	    }
+	});
+
+	var init = (root) => {
+	  const options = _default$1();
+
+	  _default(window, options);
+
+	  options.plugins = options.plugins || [];
+
+	  const less = root(window, options);
+
 	  if (typeof lm !== "undefined") {
 	    lm.use("less", async ({ url, element }) => {
 	      const text = await fetch(url).then((e) => e.text());
@@ -16806,16 +16814,6 @@
 
 	const createFileUrl = (...args) => URL.createObjectURL(new File(...args));
 
-	const options = _default$a();
-
-	_default$8(window, options);
-
-	options.plugins = options.plugins || [];
-
-	const less = root(window, options);
-
-	init(less);
-
-	// export default less;
+	init(root);
 
 }));

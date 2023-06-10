@@ -32,68 +32,7 @@
 		return a;
 	}
 
-	var defaultOptions = {};
-
-	Object.defineProperty(defaultOptions, "__esModule", { value: true });
-	// Export a new default each time
-	function default_1() {
-	    return {
-	        /* Inline Javascript - @plugin still allowed */
-	        javascriptEnabled: false,
-	        /* Outputs a makefile import dependency list to stdout. */
-	        depends: false,
-	        /* (DEPRECATED) Compress using less built-in compression.
-	         * This does an okay job but does not utilise all the tricks of
-	         * dedicated css compression. */
-	        compress: false,
-	        /* Runs the less parser and just reports errors without any output. */
-	        lint: false,
-	        /* Sets available include paths.
-	         * If the file in an @import rule does not exist at that exact location,
-	         * less will look for it at the location(s) passed to this option.
-	         * You might use this for instance to specify a path to a library which
-	         * you want to be referenced simply and relatively in the less files. */
-	        paths: [],
-	        /* color output in the terminal */
-	        color: true,
-	        /* The strictImports controls whether the compiler will allow an @import inside of either
-	         * @media blocks or (a later addition) other selector blocks.
-	         * See: https://github.com/less/less.js/issues/656 */
-	        strictImports: false,
-	        /* Allow Imports from Insecure HTTPS Hosts */
-	        insecure: false,
-	        /* Allows you to add a path to every generated import and url in your css.
-	         * This does not affect less import statements that are processed, just ones
-	         * that are left in the output css. */
-	        rootpath: '',
-	        /* By default URLs are kept as-is, so if you import a file in a sub-directory
-	         * that references an image, exactly the same URL will be output in the css.
-	         * This option allows you to re-write URL's in imported files so that the
-	         * URL is always relative to the base imported file */
-	        rewriteUrls: false,
-	        /* How to process math
-	         *   0 always           - eagerly try to solve all operations
-	         *   1 parens-division  - require parens for division "/"
-	         *   2 parens | strict  - require parens for all operations
-	         *   3 strict-legacy    - legacy strict behavior (super-strict)
-	         */
-	        math: 1,
-	        /* Without this option, less attempts to guess at the output unit when it does maths. */
-	        strictUnits: false,
-	        /* Effectively the declaration is put at the top of your base Less file,
-	         * meaning it can be used but it also can be overridden if this variable
-	         * is defined in the file. */
-	        globalVars: null,
-	        /* As opposed to the global variable option, this puts the declaration at the
-	         * end of your base file, meaning it will override anything defined in your Less file. */
-	        modifyVars: null,
-	        /* This option allows you to specify a argument to go on to every URL.  */
-	        urlArgs: ''
-	    };
-	}
-	var _default$3 = defaultOptions.default = default_1;
-
-	var addDefaultOptions = {};
+	var lessBrowser = {};
 
 	/******************************************************************************
 	Copyright (c) Microsoft Corporation.
@@ -481,122 +420,7 @@
 	}
 	utils$1.addDataAttr = addDataAttr;
 
-	var browser$1 = {};
-
-	var hasRequiredBrowser;
-
-	function requireBrowser () {
-		if (hasRequiredBrowser) return browser$1;
-		hasRequiredBrowser = 1;
-		Object.defineProperty(browser$1, "__esModule", { value: true });
-		var tslib_1 = require$$0$1;
-		var utils = tslib_1.__importStar(utils$1);
-		browser$1.default = {
-		    createCSS: function (document, styles, sheet) {
-		        // Strip the query-string
-		        var href = sheet.href || '';
-		        // If there is no title set, use the filename, minus the extension
-		        var id = "less:" + (sheet.title || utils.extractId(href));
-		        // If this has already been inserted into the DOM, we may need to replace it
-		        var oldStyleNode = document.getElementById(id);
-		        var keepOldStyleNode = false;
-		        // Create a new stylesheet node for insertion or (if necessary) replacement
-		        var styleNode = document.createElement('style');
-		        styleNode.setAttribute('type', 'text/css');
-		        if (sheet.media) {
-		            styleNode.setAttribute('media', sheet.media);
-		        }
-		        styleNode.id = id;
-		        if (!styleNode.styleSheet) {
-		            styleNode.appendChild(document.createTextNode(styles));
-		            // If new contents match contents of oldStyleNode, don't replace oldStyleNode
-		            keepOldStyleNode = (oldStyleNode !== null && oldStyleNode.childNodes.length > 0 && styleNode.childNodes.length > 0 &&
-		                oldStyleNode.firstChild.nodeValue === styleNode.firstChild.nodeValue);
-		        }
-		        var head = document.getElementsByTagName('head')[0];
-		        // If there is no oldStyleNode, just append; otherwise, only append if we need
-		        // to replace oldStyleNode with an updated stylesheet
-		        if (oldStyleNode === null || keepOldStyleNode === false) {
-		            var nextEl = sheet && sheet.nextSibling || null;
-		            if (nextEl) {
-		                nextEl.parentNode.insertBefore(styleNode, nextEl);
-		            }
-		            else {
-		                head.appendChild(styleNode);
-		            }
-		        }
-		        if (oldStyleNode && keepOldStyleNode === false) {
-		            oldStyleNode.parentNode.removeChild(oldStyleNode);
-		        }
-		        // For IE.
-		        // This needs to happen *after* the style element is added to the DOM, otherwise IE 7 and 8 may crash.
-		        // See http://social.msdn.microsoft.com/Forums/en-US/7e081b65-878a-4c22-8e68-c10d39c2ed32/internet-explorer-crashes-appending-style-element-to-head
-		        if (styleNode.styleSheet) {
-		            try {
-		                styleNode.styleSheet.cssText = styles;
-		            }
-		            catch (e) {
-		                throw new Error('Couldn\'t reassign styleSheet.cssText.');
-		            }
-		        }
-		    },
-		    currentScript: function (window) {
-		        var document = window.document;
-		        return document.currentScript || (function () {
-		            var scripts = document.getElementsByTagName('script');
-		            return scripts[scripts.length - 1];
-		        })();
-		    }
-		};
-		
-		return browser$1;
-	}
-
-	Object.defineProperty(addDefaultOptions, "__esModule", { value: true });
-	var tslib_1$1 = require$$0$1;
-	var utils_1$1 = utils$1;
-	var browser_1$1 = tslib_1$1.__importDefault(requireBrowser());
-	var _default$2 = addDefaultOptions.default = (function (window, options) {
-	    // use options from the current script tag data attribues
-	    utils_1$1.addDataAttr(options, browser_1$1.default.currentScript(window));
-	    if (options.isFileProtocol === undefined) {
-	        options.isFileProtocol = /^(file|(chrome|safari)(-extension)?|resource|qrc|app):/.test(window.location.protocol);
-	    }
-	    // Load styles asynchronously (default: false)
-	    //
-	    // This is set to `false` by default, so that the body
-	    // doesn't start loading before the stylesheets are parsed.
-	    // Setting this to `true` can result in flickering.
-	    //
-	    options.async = options.async || false;
-	    options.fileAsync = options.fileAsync || false;
-	    // Interval between watch polls
-	    options.poll = options.poll || (options.isFileProtocol ? 1000 : 1500);
-	    options.env = options.env || (window.location.hostname == '127.0.0.1' ||
-	        window.location.hostname == '0.0.0.0' ||
-	        window.location.hostname == 'localhost' ||
-	        (window.location.port &&
-	            window.location.port.length > 0) ||
-	        options.isFileProtocol ? 'development'
-	        : 'production');
-	    var dumpLineNumbers = /!dumpLineNumbers:(comments|mediaquery|all)/.exec(window.location.hash);
-	    if (dumpLineNumbers) {
-	        options.dumpLineNumbers = dumpLineNumbers[1];
-	    }
-	    if (options.useFileCache === undefined) {
-	        options.useFileCache = true;
-	    }
-	    if (options.onReady === undefined) {
-	        options.onReady = true;
-	    }
-	    if (options.relativeUrls) {
-	        options.rewriteUrls = 'all';
-	    }
-	});
-
-	var lessBrowser = {};
-
-	var less$1 = {};
+	var less = {};
 
 	var environment = {};
 
@@ -2869,14 +2693,14 @@
 		return functionRegistry;
 	}
 
-	var _default$1 = {};
+	var _default$3 = {};
 
 	var hasRequired_default;
 
 	function require_default () {
-		if (hasRequired_default) return _default$1;
+		if (hasRequired_default) return _default$3;
 		hasRequired_default = 1;
-		Object.defineProperty(_default$1, "__esModule", { value: true });
+		Object.defineProperty(_default$3, "__esModule", { value: true });
 		var tslib_1 = require$$0$1;
 		var keyword_1 = tslib_1.__importDefault(requireKeyword());
 		var defaultFunc = {
@@ -2900,9 +2724,9 @@
 		        this.value_ = this.error_ = null;
 		    }
 		};
-		_default$1.default = defaultFunc;
+		_default$3.default = defaultFunc;
 		
-		return _default$1;
+		return _default$3;
 	}
 
 	var hasRequiredRuleset;
@@ -12658,7 +12482,7 @@
 	var directories = {
 		test: "./test"
 	};
-	var browser = "./dist/less.js";
+	var browser$1 = "./dist/less.js";
 	var engines = {
 		node: ">=6"
 	};
@@ -12777,7 +12601,7 @@
 		main: main,
 		module: module,
 		directories: directories,
-		browser: browser,
+		browser: browser$1,
 		engines: engines,
 		scripts: scripts,
 		optionalDependencies: optionalDependencies,
@@ -12819,9 +12643,9 @@
 	var hasRequiredLess;
 
 	function requireLess () {
-		if (hasRequiredLess) return less$1;
+		if (hasRequiredLess) return less;
 		hasRequiredLess = 1;
-		Object.defineProperty(less$1, "__esModule", { value: true });
+		Object.defineProperty(less, "__esModule", { value: true });
 		var tslib_1 = require$$0$1;
 		var environment_1 = tslib_1.__importDefault(requireEnvironment());
 		var data_1 = tslib_1.__importDefault(requireData());
@@ -12913,9 +12737,80 @@
 		    initial.render = initial.render.bind(api);
 		    return api;
 		}
-		less$1.default = default_1;
+		less.default = default_1;
 		
-		return less$1;
+		return less;
+	}
+
+	var browser = {};
+
+	var hasRequiredBrowser;
+
+	function requireBrowser () {
+		if (hasRequiredBrowser) return browser;
+		hasRequiredBrowser = 1;
+		Object.defineProperty(browser, "__esModule", { value: true });
+		var tslib_1 = require$$0$1;
+		var utils = tslib_1.__importStar(utils$1);
+		browser.default = {
+		    createCSS: function (document, styles, sheet) {
+		        // Strip the query-string
+		        var href = sheet.href || '';
+		        // If there is no title set, use the filename, minus the extension
+		        var id = "less:" + (sheet.title || utils.extractId(href));
+		        // If this has already been inserted into the DOM, we may need to replace it
+		        var oldStyleNode = document.getElementById(id);
+		        var keepOldStyleNode = false;
+		        // Create a new stylesheet node for insertion or (if necessary) replacement
+		        var styleNode = document.createElement('style');
+		        styleNode.setAttribute('type', 'text/css');
+		        if (sheet.media) {
+		            styleNode.setAttribute('media', sheet.media);
+		        }
+		        styleNode.id = id;
+		        if (!styleNode.styleSheet) {
+		            styleNode.appendChild(document.createTextNode(styles));
+		            // If new contents match contents of oldStyleNode, don't replace oldStyleNode
+		            keepOldStyleNode = (oldStyleNode !== null && oldStyleNode.childNodes.length > 0 && styleNode.childNodes.length > 0 &&
+		                oldStyleNode.firstChild.nodeValue === styleNode.firstChild.nodeValue);
+		        }
+		        var head = document.getElementsByTagName('head')[0];
+		        // If there is no oldStyleNode, just append; otherwise, only append if we need
+		        // to replace oldStyleNode with an updated stylesheet
+		        if (oldStyleNode === null || keepOldStyleNode === false) {
+		            var nextEl = sheet && sheet.nextSibling || null;
+		            if (nextEl) {
+		                nextEl.parentNode.insertBefore(styleNode, nextEl);
+		            }
+		            else {
+		                head.appendChild(styleNode);
+		            }
+		        }
+		        if (oldStyleNode && keepOldStyleNode === false) {
+		            oldStyleNode.parentNode.removeChild(oldStyleNode);
+		        }
+		        // For IE.
+		        // This needs to happen *after* the style element is added to the DOM, otherwise IE 7 and 8 may crash.
+		        // See http://social.msdn.microsoft.com/Forums/en-US/7e081b65-878a-4c22-8e68-c10d39c2ed32/internet-explorer-crashes-appending-style-element-to-head
+		        if (styleNode.styleSheet) {
+		            try {
+		                styleNode.styleSheet.cssText = styles;
+		            }
+		            catch (e) {
+		                throw new Error('Couldn\'t reassign styleSheet.cssText.');
+		            }
+		        }
+		    },
+		    currentScript: function (window) {
+		        var document = window.document;
+		        return document.currentScript || (function () {
+		            var scripts = document.getElementsByTagName('script');
+		            return scripts[scripts.length - 1];
+		        })();
+		    }
+		};
+		
+		return browser;
 	}
 
 	var fileManager = {};
@@ -13372,21 +13267,21 @@
 	}
 
 	Object.defineProperty(lessBrowser, "__esModule", { value: true });
-	var tslib_1 = require$$0$1;
+	var tslib_1$1 = require$$0$1;
 	//
 	// index.js
 	// Should expose the additional browser functions on to the less object
 	//
-	var utils_1 = utils$1;
-	var less_1 = tslib_1.__importDefault(requireLess());
-	var browser_1 = tslib_1.__importDefault(requireBrowser());
-	var file_manager_1 = tslib_1.__importDefault(requireFileManager());
-	var plugin_loader_1 = tslib_1.__importDefault(requirePluginLoader());
-	var log_listener_1 = tslib_1.__importDefault(requireLogListener());
-	var error_reporting_1 = tslib_1.__importDefault(requireErrorReporting());
-	var cache_1 = tslib_1.__importDefault(requireCache());
-	var image_size_1 = tslib_1.__importDefault(requireImageSize());
-	var _default = lessBrowser.default = (function (window, options) {
+	var utils_1$1 = utils$1;
+	var less_1 = tslib_1$1.__importDefault(requireLess());
+	var browser_1$1 = tslib_1$1.__importDefault(requireBrowser());
+	var file_manager_1 = tslib_1$1.__importDefault(requireFileManager());
+	var plugin_loader_1 = tslib_1$1.__importDefault(requirePluginLoader());
+	var log_listener_1 = tslib_1$1.__importDefault(requireLogListener());
+	var error_reporting_1 = tslib_1$1.__importDefault(requireErrorReporting());
+	var cache_1 = tslib_1$1.__importDefault(requireCache());
+	var image_size_1 = tslib_1$1.__importDefault(requireImageSize());
+	var _default$2 = lessBrowser.default = (function (window, options) {
 	    var document = window.document;
 	    var less = less_1.default();
 	    less.options = options;
@@ -13453,7 +13348,7 @@
 	    }
 	    function loadStyleSheet(sheet, callback, reload, remaining, modifyVars) {
 	        var instanceOptions = clone(options);
-	        utils_1.addDataAttr(instanceOptions, sheet);
+	        utils_1$1.addDataAttr(instanceOptions, sheet);
 	        instanceOptions.mime = sheet.type;
 	        if (modifyVars) {
 	            instanceOptions.modifyVars = modifyVars;
@@ -13516,7 +13411,7 @@
 	                            errors.add(e, e.href || sheet.href);
 	                        }
 	                        else if (css) {
-	                            browser_1.default.createCSS(window.document, css, sheet);
+	                            browser_1$1.default.createCSS(window.document, css, sheet);
 	                        }
 	                    });
 	                }
@@ -13599,7 +13494,7 @@
 	                    else {
 	                        less.logger.info("Rendered " + sheet.href + " successfully.");
 	                    }
-	                    browser_1.default.createCSS(window.document, css, sheet);
+	                    browser_1$1.default.createCSS(window.document, css, sheet);
 	                    less.logger.info("CSS for " + sheet.href + " generated in " + (new Date() - endTime) + "ms");
 	                    // Count completed sheet
 	                    remainingSheets--;
@@ -13624,7 +13519,120 @@
 	    return less;
 	});
 
-	var init = (less) => {
+	var defaultOptions = {};
+
+	Object.defineProperty(defaultOptions, "__esModule", { value: true });
+	// Export a new default each time
+	function default_1() {
+	    return {
+	        /* Inline Javascript - @plugin still allowed */
+	        javascriptEnabled: false,
+	        /* Outputs a makefile import dependency list to stdout. */
+	        depends: false,
+	        /* (DEPRECATED) Compress using less built-in compression.
+	         * This does an okay job but does not utilise all the tricks of
+	         * dedicated css compression. */
+	        compress: false,
+	        /* Runs the less parser and just reports errors without any output. */
+	        lint: false,
+	        /* Sets available include paths.
+	         * If the file in an @import rule does not exist at that exact location,
+	         * less will look for it at the location(s) passed to this option.
+	         * You might use this for instance to specify a path to a library which
+	         * you want to be referenced simply and relatively in the less files. */
+	        paths: [],
+	        /* color output in the terminal */
+	        color: true,
+	        /* The strictImports controls whether the compiler will allow an @import inside of either
+	         * @media blocks or (a later addition) other selector blocks.
+	         * See: https://github.com/less/less.js/issues/656 */
+	        strictImports: false,
+	        /* Allow Imports from Insecure HTTPS Hosts */
+	        insecure: false,
+	        /* Allows you to add a path to every generated import and url in your css.
+	         * This does not affect less import statements that are processed, just ones
+	         * that are left in the output css. */
+	        rootpath: '',
+	        /* By default URLs are kept as-is, so if you import a file in a sub-directory
+	         * that references an image, exactly the same URL will be output in the css.
+	         * This option allows you to re-write URL's in imported files so that the
+	         * URL is always relative to the base imported file */
+	        rewriteUrls: false,
+	        /* How to process math
+	         *   0 always           - eagerly try to solve all operations
+	         *   1 parens-division  - require parens for division "/"
+	         *   2 parens | strict  - require parens for all operations
+	         *   3 strict-legacy    - legacy strict behavior (super-strict)
+	         */
+	        math: 1,
+	        /* Without this option, less attempts to guess at the output unit when it does maths. */
+	        strictUnits: false,
+	        /* Effectively the declaration is put at the top of your base Less file,
+	         * meaning it can be used but it also can be overridden if this variable
+	         * is defined in the file. */
+	        globalVars: null,
+	        /* As opposed to the global variable option, this puts the declaration at the
+	         * end of your base file, meaning it will override anything defined in your Less file. */
+	        modifyVars: null,
+	        /* This option allows you to specify a argument to go on to every URL.  */
+	        urlArgs: ''
+	    };
+	}
+	var _default$1 = defaultOptions.default = default_1;
+
+	var addDefaultOptions = {};
+
+	Object.defineProperty(addDefaultOptions, "__esModule", { value: true });
+	var tslib_1 = require$$0$1;
+	var utils_1 = utils$1;
+	var browser_1 = tslib_1.__importDefault(requireBrowser());
+	var _default = addDefaultOptions.default = (function (window, options) {
+	    // use options from the current script tag data attribues
+	    utils_1.addDataAttr(options, browser_1.default.currentScript(window));
+	    if (options.isFileProtocol === undefined) {
+	        options.isFileProtocol = /^(file|(chrome|safari)(-extension)?|resource|qrc|app):/.test(window.location.protocol);
+	    }
+	    // Load styles asynchronously (default: false)
+	    //
+	    // This is set to `false` by default, so that the body
+	    // doesn't start loading before the stylesheets are parsed.
+	    // Setting this to `true` can result in flickering.
+	    //
+	    options.async = options.async || false;
+	    options.fileAsync = options.fileAsync || false;
+	    // Interval between watch polls
+	    options.poll = options.poll || (options.isFileProtocol ? 1000 : 1500);
+	    options.env = options.env || (window.location.hostname == '127.0.0.1' ||
+	        window.location.hostname == '0.0.0.0' ||
+	        window.location.hostname == 'localhost' ||
+	        (window.location.port &&
+	            window.location.port.length > 0) ||
+	        options.isFileProtocol ? 'development'
+	        : 'production');
+	    var dumpLineNumbers = /!dumpLineNumbers:(comments|mediaquery|all)/.exec(window.location.hash);
+	    if (dumpLineNumbers) {
+	        options.dumpLineNumbers = dumpLineNumbers[1];
+	    }
+	    if (options.useFileCache === undefined) {
+	        options.useFileCache = true;
+	    }
+	    if (options.onReady === undefined) {
+	        options.onReady = true;
+	    }
+	    if (options.relativeUrls) {
+	        options.rewriteUrls = 'all';
+	    }
+	});
+
+	var init = (root) => {
+	  const options = _default$1();
+
+	  _default(window, options);
+
+	  options.plugins = options.plugins || [];
+
+	  const less = root(window, options);
+
 	  if (typeof lm !== "undefined") {
 	    lm.use("less", async ({ url, element }) => {
 	      const text = await fetch(url).then((e) => e.text());
@@ -13667,16 +13675,6 @@
 
 	const createFileUrl = (...args) => URL.createObjectURL(new File(...args));
 
-	const options = _default$3();
-
-	_default$2(window, options);
-
-	options.plugins = options.plugins || [];
-
-	const less = _default(window, options);
-
-	init(less);
-
-	// export default less;
+	init(_default$2);
 
 }));
