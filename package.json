@@ -23,6 +23,7 @@
     "@rollup/plugin-commonjs": "^25.0.0",
     "@rollup/plugin-json": "^6.0.0",
     "@rollup/plugin-node-resolve": "^15.1.0",
+    "@rollup/plugin-terser": "^0.4.3",
     "jasmine-core": "^4.6.0",
     "koa": "^2.14.1",
     "koa-static": "^5.0.0",

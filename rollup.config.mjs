@@ -3,6 +3,7 @@ import fs from "fs";
 import commonjs from "@rollup/plugin-commonjs";
 import jsonjs from "@rollup/plugin-json";
 import resolve from "@rollup/plugin-node-resolve";
+import terser from "@rollup/plugin-terser";
 
 const CWD = process.cwd();
 let PACKAGE = fs.readFileSync(path.join(CWD, "package.json"));

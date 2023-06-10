@@ -13624,7 +13624,7 @@
 	    }
 	});
 
-	var init = (root) => {
+	var init = (root, hasSourceMap = 1) => {
 	  const options = _default$1();
 
 	  _default(window, options);
@@ -13641,17 +13641,29 @@
 	        return text;
 	      }
 
-	      const data = await less.render(text, { sourceMap: {} });
+	      const opts = {};
 
-	      const m = JSON.parse(data.map);
-	      m.sources = [url];
+	      if (hasSourceMap) {
+	        opts.sourceMap = {};
+	      }
+
+	      const data = await less.render(text, opts);
+
+	      let m;
+
+	      if (hasSourceMap) {
+	        m = JSON.parse(data.map);
+	        m.sources = [url];
+	      }
 
 	      const cssUrl = createFileUrl(
 	        [
 	          data.css +
-	            `\n/*# sourceMappingURL=data:application/json;base64,${btoa(
-              JSON.stringify(m)
-            )} */`,
+	            (hasSourceMap
+	              ? `\n/*# sourceMappingURL=data:application/json;base64,${btoa(
+                  JSON.stringify(m)
+                )} */`
+	              : ""),
 	        ],
 	        "test.css"
 	      );
@@ -13675,6 +13687,6 @@
 
 	const createFileUrl = (...args) => URL.createObjectURL(new File(...args));
 
-	init(_default$2);
+	init(_default$2, false);
 
 }));

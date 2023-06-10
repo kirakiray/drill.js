@@ -1,7 +1,7 @@
 import defaultOptions from "less/lib/less/default-options";
 import addDefaultOptions from "less/lib/less-browser/add-default-options";
 
-export default (root) => {
+export default (root, hasSourceMap = 1) => {
   const options = defaultOptions();
 
   addDefaultOptions(window, options);
@@ -18,17 +18,29 @@ export default (root) => {
         return text;
       }
 
-      const data = await less.render(text, { sourceMap: {} });
+      const opts = {};
 
-      const m = JSON.parse(data.map);
-      m.sources = [url];
+      if (hasSourceMap) {
+        opts.sourceMap = {};
+      }
+
+      const data = await less.render(text, opts);
+
+      let m;
+
+      if (hasSourceMap) {
+        m = JSON.parse(data.map);
+        m.sources = [url];
+      }
 
       const cssUrl = createFileUrl(
         [
           data.css +
-            `\n/*# sourceMappingURL=data:application/json;base64,${btoa(
-              JSON.stringify(m)
-            )} */`,
+            (hasSourceMap
+              ? `\n/*# sourceMappingURL=data:application/json;base64,${btoa(
+                  JSON.stringify(m)
+                )} */`
+              : ""),
         ],
         "test.css"
       );
