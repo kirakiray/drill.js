@@ -70,7 +70,14 @@ class LM extends LoadModule {
   }
 }
 
-new Promise((res) => setTimeout(res)).then(() => {
+const ready = () => {
   customElements.define("load-module", LoadModule);
   customElements.define("l-m", LM);
-});
+  window.removeEventListener("load", ready);
+};
+
+if (document.readyState === "complete") {
+  ready();
+} else {
+  window.addEventListener("load", ready);
+}

@@ -227,13 +227,18 @@ class LM extends LoadModule {
   }
 }
 
-new Promise((res) => setTimeout(res)).then(() => {
+const ready = () => {
   customElements.define("load-module", LoadModule);
   customElements.define("l-m", LM);
-});
+  window.removeEventListener("load", ready);
+};
 
-if (typeof window !== "undefined") {
-  window.lm = lm;
+if (document.readyState === "complete") {
+  ready();
+} else {
+  window.addEventListener("load", ready);
 }
+
+window.lm = lm;
 
 export { lm as default };
