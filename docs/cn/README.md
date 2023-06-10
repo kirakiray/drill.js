@@ -34,7 +34,6 @@ drill.js 是一个加强版的web加载工具，它的存在目的是为了让we
 export const getDesc = () => {
   return "I am target/test-module.mjs";
 };
-
 ```
 
 ```html
@@ -62,6 +61,44 @@ export const getDesc = () => {
   </body>
 </html>
 ```
+
+`load` 方法和 `import` 保持一致，但是 `load` 提供了更丰富的加载内容，默认情况下，已经支持 `.json` 和 `.wasm` 文件；
+
+```json
+// target/ccc.json
+{
+    "name": "ccc json"
+}
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>load more type</title>
+    <script src="https://cdn.jsdelivr.net/npm/drill.js"></script>
+  </head>
+  <body>
+    <script type="module">
+      const load = lm(import.meta);
+      
+
+      (async () => {
+        const json = await load("./target/ccc.json");
+
+        console.log(json.name); // => ccc json
+      })();
+    </script>
+  </body>
+</html>
+```
+
+## 扩展机制
+
+
 
 ## 声明式加载文件
 

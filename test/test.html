@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      const getOid = () => Math.random().toString(32).slice(2);
+
+      class Onion {
+        constructor() {
+          this._middlewares = new Map();
+        }
+
+        use(middleware) {
+          const oid = getOid();
+          this._middlewares.set(oid, middleware);
+          return oid;
+        }
+
+        unuse(oid) {
+          return this._middlewares.delete(oid);
+        }
+
+        async run(context) {
+          let index = -1;
+
+          const middlewares = Array.from(this._middlewares.values());
+
+          const next = async () => {
+            index++;
+            if (index < middlewares.length) {
+              await middlewares[index](context, next);
+            }
+          };
+
+          await next();
+        }
+      }
+
+      // 使用示例
+      const app = new Onion();
+
+      app.use(async (ctx, next) => {
+        console.log("第一个中间件 - 开始");
+        await next();
+        console.log("第一个中间件 - 结束");
+      });
+
+      app.use(async (ctx, next) => {
+        console.log("第二个中间件 - 开始");
+        await next();
+        console.log("第二个中间件 - 结束");
+      });
+
+      app.use(async (ctx, next) => {
+        console.log("第三个中间件 - 开始");
+        ctx.body = "Hello World";
+        console.log("第三个中间件 - 结束");
+      });
+
+      app
+        .run({})
+        .then(() => console.log("处理程序执行完毕"))
+        .catch((err) => console.error(err));
+    </script>
+  </body>
+</html>

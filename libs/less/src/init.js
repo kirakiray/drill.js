@@ -11,11 +11,16 @@ export default (root, hasSourceMap = 1) => {
   const less = root(window, options);
 
   if (typeof lm !== "undefined") {
-    lm.use("less", async ({ url, element }) => {
+    lm.use("less", async (ctx, next) => {
+      const { url, element } = ctx;
+
       const text = await fetch(url).then((e) => e.text());
 
       if (!element) {
-        return text;
+        ctx.result = text;
+
+        next();
+        return;
       }
 
       const opts = {};
@@ -56,6 +61,8 @@ export default (root, hasSourceMap = 1) => {
       } else {
         root.appendChild(link);
       }
+
+      next();
     });
   } else {
     window.less = less;

@@ -5,15 +5,16 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>use test</title>
-    <!-- <script type="module">
+    <script type="module">
       import "../../src/base.mjs";
-    </script> -->
-    <script src="../../dist/drill.js"></script>
+    </script>
+    <!-- <script src="../../dist/drill.js"></script> -->
     <script type="module">
       window.uses = [];
-      lm.use(async (e) => {
-        console.log("comp => ", e);
-        uses.push(e);
+      lm.use(async (ctx, next) => {
+        await next();
+        console.log("ctx => ", ctx);
+        uses.push(ctx);
       });
     </script>
     <l-m src="./other/process-test.mjs" pause id="target-lm"></l-m>

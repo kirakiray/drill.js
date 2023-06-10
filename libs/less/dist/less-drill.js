@@ -1,4 +1,4 @@
-//! drill.js - v5.0.6 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
+//! drill.js - v5.1.0 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
 function getAugmentedNamespace(n) {
   if (n.__esModule) return n;
   var f = n.default;
@@ -13629,11 +13629,16 @@ var init = (root, hasSourceMap = 1) => {
   const less = root(window, options);
 
   if (typeof lm !== "undefined") {
-    lm.use("less", async ({ url, element }) => {
+    lm.use("less", async (ctx, next) => {
+      const { url, element } = ctx;
+
       const text = await fetch(url).then((e) => e.text());
 
       if (!element) {
-        return text;
+        ctx.result = text;
+
+        next();
+        return;
       }
 
       const opts = {};
@@ -13674,6 +13679,8 @@ var init = (root, hasSourceMap = 1) => {
       } else {
         root.appendChild(link);
       }
+
+      next();
     });
   } else {
     window.less = less;
