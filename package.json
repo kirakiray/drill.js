@@ -11,7 +11,8 @@
     "build": "rollup -c",
     "static-server": "node scripts/static-server",
     "playwright": "npx playwright test",
-    "test": "node scripts/ci-test"
+    "test": "node scripts/ci-test",
+    "codegen": "npx playwright codegen localhost:3340/"
   },
   "repository": {
     "type": "git",
