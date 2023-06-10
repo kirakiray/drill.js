@@ -8,8 +8,7 @@
     "import": "./src/dist.mjs"
   },
   "scripts": {
-    "build": "rollup -c && npm run terser",
-    "terser": "terser dist/drill.js -c -m -o dist/drill.min.js && terser dist/drill.mjs -c -m -o dist/drill.min.mjs",
+    "build": "rollup -c",
     "static-server": "node scripts/static-server",
     "playwright": "npx playwright test",
     "test": "node scripts/ci-test"
@@ -28,8 +27,7 @@
     "koa": "^2.14.1",
     "koa-static": "^5.0.0",
     "rollup": "^3.21.6",
-    "shelljs": "^0.8.5",
-    "terser": "^5.17.3"
+    "shelljs": "^0.8.5"
   },
   "author": {
     "name": "YAO",

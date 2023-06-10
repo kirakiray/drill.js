@@ -41,7 +41,7 @@ export default [
     output: [
       {
         file: "libs/less/dist/less-drill-dev.js",
-        format: "umd",
+        format: "es",
         name: "less",
         banner,
       },
@@ -64,5 +64,22 @@ export default [
       },
     ],
     plugins: [],
+  },
+  {
+    input: "src/base.mjs",
+    output: [
+      {
+        file: "dist/drill.min.mjs",
+        format: "es",
+        banner,
+      },
+      {
+        file: "dist/drill.min.js",
+        format: "umd",
+        name: "lm",
+        banner,
+      },
+    ],
+    plugins: [terser()],
   },
 ];

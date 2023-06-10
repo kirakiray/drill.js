@@ -1,9 +1,10 @@
-@width: 10px;
+@width: 100px;
 @height: @width + 10px;
 
 #header {
   width: @width;
   height: @height;
+  background-color: #eee;
 }
 
 .bordered {
@@ -11,18 +12,16 @@
   border-bottom: solid 2px black;
 }
 
-#menu a {
-  color: #111;
-  .bordered();
+#menu {
+  a {
+    color: #111;
+    .bordered();
+  }
 }
 
-.post a {
-  color: red;
-  .bordered();
-}
-
-div {
-  span {
+.post {
+  a {
     color: red;
+    .bordered();
   }
 }
