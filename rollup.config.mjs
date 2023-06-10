@@ -17,19 +17,24 @@ export default [
   {
     input: "libs/less/src/main.js",
     output: [
-      // {
-      //   file: "libs/less/dist/less-drill-dev.mjs",
-      //   format: "es",
-      //   banner,
-      // },
       {
         file: "libs/less/dist/less-drill.js",
-        format: "umd",
-        name: "less",
+        format: "es",
         banner,
       },
     ],
     plugins: [commonjs(), resolve(), jsonjs()],
+  },
+  {
+    input: "libs/less/src/main.js",
+    output: [
+      {
+        file: "libs/less/dist/less-drill.min.js",
+        format: "es",
+        banner,
+      },
+    ],
+    plugins: [commonjs(), resolve(), jsonjs(), terser()],
   },
   {
     input: "libs/less/src/main-dev.js",
