@@ -7,7 +7,7 @@ drill.js 是一个加强版的web加载工具，它的存在目的是为了让we
 在 html 文件中直接使用 `script` 标签引用 drill.js 文件，就可以初始化环境；
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/drill.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/drill.min.js"></script>
 ```
 
 建议在 html 文件 head 内进行初始化，如下：
@@ -18,7 +18,7 @@ drill.js 是一个加强版的web加载工具，它的存在目的是为了让we
 <head>
     <meta charset="UTF-8">
     <title>page title</title>
-    <script src="https://cdn.jsdelivr.net/npm/drill.js"></script>  // ⬅️ 
+    <script src="https://cdn.jsdelivr.net/npm/drill.min.js"></script>  // ⬅️ 
     ...
 </head>
 <body>
@@ -44,7 +44,7 @@ export const getDesc = () => {
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>load module</title>
-    <script src="https://cdn.jsdelivr.net/npm/drill.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/drill.min.js"></script>
   </head>
   <body>
     <script type="module">
@@ -79,13 +79,12 @@ export const getDesc = () => {
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>load more type</title>
-    <script src="https://cdn.jsdelivr.net/npm/drill.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/drill.min.js"></script>
   </head>
   <body>
     <script type="module">
       const load = lm(import.meta);
       
-
       (async () => {
         const json = await load("./target/ccc.json");
 
@@ -140,9 +139,58 @@ lm.use('vue',async(ctx,next)=>{
 <!-- <script type="module" src="path/of/the/module.mjs"></script> -->
 ```
 
-## 模块数据预处理
+## 模块预处理
 
-通过扩展
+通过扩展方法 `use` 我们可以对模块数据进行预处理，下面举个预处理组件注册数据的案例；
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>lm use</title>
+    <script src="https://cdn.jsdelivr.net/npm/drill.min.js"></script>
+    <script src="./register-drill.js"></script>
+    <l-m src="./test-comp.mjs"></l-m>
+  </head>
+  <body>
+    <test-comp></test-comp>
+  </body>
+</html>
+```
+
+```javascript
+// register-drill.js
+lm.use(["js", "mjs"], async (ctx, next) => {
+  const { content, tag, type } = ctx.result;
+
+  if (type === "component") {
+    class MyElement extends HTMLElement {
+      constructor() {
+        super();
+        this.innerHTML = content;
+      }
+    }
+
+    customElements.define(tag, MyElement);
+  }
+
+  next();
+});
+```
+
+```javascript
+// test-comp.mjs
+export const type = "component";
+
+export const tag = "test-comp";
+
+export const content = "Hello, World! This is my custom element.";
+```
+
+查看效果后，可以看到 `test-comp` 元素会被注册，并直接填充了 content 的内容；
 
 ## 官方扩展
 
