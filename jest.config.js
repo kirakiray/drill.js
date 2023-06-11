@@ -1,9 +1,4 @@
 module.exports = {
-  presets: [["@babel/preset-env", { targets: { node: "current" } }]],
-  moduleFileExtensions: ["js", "mjs"],
-  transform: {
-    "^.+\\.js$": "babel-jest",
-  },
   testMatch: [
     "**/*.test.js", // 使用 Glob 模式匹配需要测试的文件
   ],
