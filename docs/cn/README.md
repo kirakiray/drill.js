@@ -7,7 +7,7 @@ drill.js 是一个加强版的web加载工具，它的存在目的是为了让we
 在 html 文件中直接使用 `script` 标签引用 drill.js 文件，就可以初始化环境；
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/drill.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/drill.js/dist/drill.min.js"></script>
 ```
 
 建议在 html 文件 head 内进行初始化，如下：
@@ -18,7 +18,7 @@ drill.js 是一个加强版的web加载工具，它的存在目的是为了让we
 <head>
     <meta charset="UTF-8">
     <title>page title</title>
-    <script src="https://cdn.jsdelivr.net/npm/drill.min.js"></script>  // ⬅️ 
+    <script src="https://cdn.jsdelivr.net/npm/drill.js/dist/drill.min.js"></script>  // ⬅️ 
     ...
 </head>
 <body>
@@ -44,7 +44,7 @@ export const getDesc = () => {
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>load module</title>
-    <script src="https://cdn.jsdelivr.net/npm/drill.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/drill.js/dist/drill.min.js"></script>
   </head>
   <body>
     <script type="module">
@@ -79,7 +79,7 @@ export const getDesc = () => {
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>load more type</title>
-    <script src="https://cdn.jsdelivr.net/npm/drill.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/drill.js/dist/drill.min.js"></script>
   </head>
   <body>
     <script type="module">
@@ -151,7 +151,7 @@ lm.use('vue',async(ctx,next)=>{
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>lm use</title>
-    <script src="https://cdn.jsdelivr.net/npm/drill.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/drill.js/dist/drill.min.js"></script>
     <script src="./register-drill.js"></script>
     <l-m src="./test-comp.mjs"></l-m>
   </head>
@@ -192,5 +192,9 @@ export const content = "Hello, World! This is my custom element.";
 
 查看效果后，可以看到 `test-comp` 元素会被注册，并直接填充了 content 的内容；
 
+后面注册组件就不用写一大堆东西，只需要封装 es module 数据，使用时用声明式加载即可；
+
 ## 官方扩展
+
+[drill-less](https://github.com/kirakiray/drill.js/tree/main/libs/less) : 让浏览器直接支持 `.less` 文件；
 
