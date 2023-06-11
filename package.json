@@ -10,8 +10,9 @@
   "scripts": {
     "build": "rollup -c",
     "static-server": "node scripts/static-server",
-    "playwright": "npx playwright test",
-    "test": "node scripts/ci-test",
+    "test": "npm run playwright",
+    "playwright": "node scripts/playwright-test",
+    "jest": "",
     "codegen": "npx playwright codegen localhost:3340/"
   },
   "repository": {
@@ -19,12 +20,15 @@
     "url": "git+https://github.com/kirakiray/drill.js.git"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.22.5",
     "@playwright/test": "^1.32.3",
     "@rollup/plugin-commonjs": "^25.0.0",
     "@rollup/plugin-json": "^6.0.0",
     "@rollup/plugin-node-resolve": "^15.1.0",
     "@rollup/plugin-terser": "^0.4.3",
+    "babel-jest": "^29.5.0",
     "jasmine-core": "^4.6.0",
+    "jest": "^29.5.0",
     "koa": "^2.14.1",
     "koa-static": "^5.0.0",
     "rollup": "^3.21.6",

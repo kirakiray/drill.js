@@ -27,7 +27,7 @@ drill.js 是一个加强版的web加载工具，它的存在目的是为了让we
 
 ## 在 es module 环境下使用加载器
 
-提供在JS环境下的加载器，在 esmodule 环境下使用，通过 `lm` 方法初始化，下面为加载 `test-module.mjs` 的案例；
+提供在JS环境下的加载器，在 es module 环境下使用，通过 `lm` 方法初始化，下面为加载 `test-module.mjs` 的案例；
 
 ```javascript
 // target/test-module.mjs
@@ -96,21 +96,53 @@ export const getDesc = () => {
 </html>
 ```
 
-## 扩展机制
+如何支持更多的文件类型？请继续看；
 
+## 扩展文件类型支持
 
+你可以通过[查看源代码](https://github.com/kirakiray/drill.js/blob/main/src/use.mjs)，知道如何支持 `.json` 文件；
+
+```javascript
+use("json", async (ctx, next) => {
+  const { url } = ctx;
+
+  ctx.result = await fetch(url).then((e) => e.json());
+
+  next();
+});
+```
+
+这是一个类似 koa 的中间件机制，通过设置 `ctx.result` 为返回的内容；
+
+use 第一个参数为扩展文件的类型，第二个是中间件函数；
+
+`use` 方法已经暴露在 `lm` 对象上，你可以通过 `lm.use` 扩展支持的更多类型；
+
+记得要执行 `next` 函数，不然下一个中间件将不会运行
+
+```javascript
+lm.use('vue',async(ctx,next)=>{
+  ... // Support for vue file logic
+
+  next();
+});
+```
 
 ## 声明式加载文件
 
-通过 直接使用 `load-module` 或 `l-m` 标签加载自定义文件；
+通过 直接标签 `load-module` 或 `l-m` 加载模块；
 
 ```html
 <load-module src="path/of/the/module.mjs"></load-module>
 <!-- or -->
 <l-m src="path/of/the/module.mjs"></l-m>
+<!-- Yes, the same method and effect as the script tag -->
+<!-- <script type="module" src="path/of/the/module.mjs"></script> -->
 ```
 
-## 插件机制
+## 模块数据预处理
 
+通过扩展
 
-## 官方插件
+## 官方扩展
+
