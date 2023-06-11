@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>load module</title>
+    <script src="https://cdn.jsdelivr.net/npm/drill.js"></script>
+  </head>
+  <body>
+    <script type="module">
+      const load = lm(import.meta);
+
+      (async () => {
+        // const test = await import("./target/test-module.mjs");
+          const test = await load("./target/test-module.mjs"); // Yes, it's the same as asynchronous import
+
+        console.log("test => ", test);
+        document.write(test.getDesc());
+      })();
+    </script>
+  </body>
+</html>

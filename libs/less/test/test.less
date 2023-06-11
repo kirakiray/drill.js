@@ -1,0 +1,26 @@
+@width: 100px;
+@height: @width + 10px;
+
+#header {
+  width: @width;
+  height: @height;
+  background-color: rgb(238, 238, 238);
+}
+
+.bordered {
+  border: dotted 1px rgb(255, 0, 0);
+}
+
+#menu {
+  a {
+    color: rgb(0, 255, 0);
+    .bordered();
+  }
+}
+
+.post {
+  a {
+    color: rgb(255, 0, 255);
+    .bordered();
+  }
+}

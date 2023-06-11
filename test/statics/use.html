@@ -11,9 +11,10 @@
     <script src="../../dist/drill.js"></script>
     <script type="module">
       window.uses = [];
-      lm.use(async (e) => {
-        console.log("comp => ", e);
-        uses.push(e);
+      lm.use(async (ctx, next) => {
+        await next();
+        console.log("ctx => ", ctx);
+        uses.push(ctx);
       });
     </script>
     <l-m src="./other/process-test.mjs" pause id="target-lm"></l-m>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>load more type</title>
+    <script src="https://cdn.jsdelivr.net/npm/drill.js"></script>
+  </head>
+  <body>
+    <script type="module">
+      const load = lm(import.meta);
+
+      (async () => {
+        const text = await load("./target/bbb.txt");
+        const json = await load("./target/ccc.json");
+        const wasmUtil = await load("./target/wasm/test.wasm");
+
+        console.log("text => ", text);
+        console.log("json => ", json);
+        console.log("wasm => ", wasmUtil.add(3, 3), wasmUtil.square(3, 3));
+
+        document.write(`<pre>
+text => ${text}
+json => ${JSON.stringify(json)}
+wasm => ${wasmUtil.add(3, 3)} ${wasmUtil.square(3, 3)}
+</pre>`);
+      })();
+    </script>
+  </body>
+</html>
