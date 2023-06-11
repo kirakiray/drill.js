@@ -1,35 +1,54 @@
-# drill.js 使用文档
+# drill.js
 
-drill.js 是一个加强版的web加载工具，它的存在目的是为了让web前端开发避开[nodejs](https://nodejs.org/)的束缚，它提供了丰富的扩展功能，提供了 **声明式加载**的功能；
+## 简介
 
-## 如何使用？
+`drill.js` 是一个加强版的 web 加载工具，旨在让前端开发摆脱对 Node.js 的依赖。它提供了丰富的扩展功能，并支持声明式加载模块。
 
-在 html 文件中直接使用 `script` 标签引用 drill.js 文件，就可以初始化环境；
+与传统的前端开发方式相比，`drill.js` 提供了更灵活的加载和处理模块的方式，使前端开发更加便捷和高效。
+## 安装
+
+可以通过以下方式之一来安装 `drill.js`： 
+- 通过 CDN 引入：
+在 HTML 文件的 `<head>` 部分引入以下脚本标签：
 
 ```html
+
 <script src="https://cdn.jsdelivr.net/npm/drill.js/dist/drill.min.js"></script>
-```
+``` 
+- 通过包管理器安装：
+使用 npm 或 yarn 等包管理工具进行安装：
 
-建议在 html 文件 head 内进行初始化，如下：
+```shell
+
+npm install drill.js
+```
+## 初始化
+
+在使用 `drill.js` 之前，需要在 HTML 文件中引入 `drill.js` 脚本以初始化环境。建议将初始化脚本放在 HTML 文件的 `<head>` 部分。
 
 ```html
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>page title</title>
-    <script src="https://cdn.jsdelivr.net/npm/drill.js/dist/drill.min.js"></script>  // ⬅️ 
-    ...
+    <title>My Web Page</title>
+    <script src="https://cdn.jsdelivr.net/npm/drill.js/dist/drill.min.js"></script>
+    <!-- 其他 head 部分的内容 -->
 </head>
 <body>
-   ...
+   <!-- 页面内容 -->
+</body>
+</html>
 ```
 
-## 在 es module 环境下使用加载器
 
-提供在JS环境下的加载器，在 es module 环境下使用，通过 `lm` 方法初始化，下面为加载 `test-module.mjs` 的案例；
+## 加载模块
+
+在 ES 模块环境下，可以使用 `lm` 方法进行模块加载。以下是加载 `test-module.mjs` 模块的示例：
 
 ```javascript
+
 // target/test-module.mjs
 export const getDesc = () => {
   return "I am target/test-module.mjs";
@@ -37,13 +56,12 @@ export const getDesc = () => {
 ```
 
 ```html
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>load module</title>
+    <title>Load Module</title>
     <script src="https://cdn.jsdelivr.net/npm/drill.js/dist/drill.min.js"></script>
   </head>
   <body>
@@ -51,8 +69,7 @@ export const getDesc = () => {
       const load = lm(import.meta);
 
       (async () => {
-          // const test = await import("./target/test-module.mjs");
-          const test = await load("./target/test-module.mjs"); // Yes, it's the same as asynchronous import
+          const test = await load("./target/test-module.mjs");
 
         document.write(test.getDesc());
         console.log(test.getDesc()); // => I am target/test-module.mjs
@@ -62,44 +79,27 @@ export const getDesc = () => {
 </html>
 ```
 
-`load` 方法和 `import` 保持一致，但是 `load` 提供了更丰富的加载内容，默认情况下，已经支持 `.json` 和 `.wasm` 文件；
 
-```json
-// target/ccc.json
-{
-    "name": "ccc json"
-}
-```
+
+通过 `load` 方法加载模块，可以使用异步 `import` 相同的语法。加载的模块可以通过 `test` 变量访问模块的导出内容。
+
+## 声明式加载
+
+通过 `<load-module>` 或 `<l-m>` 标签可以进行声明式加载模块，类似于使用 `<script>` 标签加载模块。
 
 ```html
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>load more type</title>
-    <script src="https://cdn.jsdelivr.net/npm/drill.js/dist/drill.min.js"></script>
-  </head>
-  <body>
-    <script type="module">
-      const load = lm(import.meta);
-      
-      (async () => {
-        const json = await load("./target/ccc.json");
-
-        console.log(json.name); // => ccc json
-      })();
-    </script>
-  </body>
-</html>
+<load-module src="path/to/the/module.mjs"></load-module>
+<!-- 或 -->
+<l-m src="path/to/the/module.mjs"></l-m>
 ```
 
-如何支持更多的文件类型？请继续看；
+
+
+这种方式与传统的 `<script>` 标签具有相同的效果，可以方便地声明加载模块。
 
 ## 扩展文件类型支持
 
-你可以通过[查看源代码](https://github.com/kirakiray/drill.js/blob/main/src/use.mjs)，知道如何支持 `.json` 文件；
+可以通过 `lm.use` 方法扩展 `drill.js` 对特定文件类型的支持。以下是扩展支持 `.json` 文件的示例：
 
 ```javascript
 use("json", async (ctx, next) => {
@@ -111,46 +111,18 @@ use("json", async (ctx, next) => {
 });
 ```
 
-这是一个类似 koa 的中间件机制，通过设置 `ctx.result` 为返回的内容；
-
-use 第一个参数为扩展文件的类型，第二个是中间件函数；
-
-`use` 方法已经暴露在 `lm` 对象上，你可以通过 `lm.use` 扩展支持的更多类型；
-
-记得要执行 `next` 函数，不然下一个中间件将不会运行
-
-```javascript
-lm.use('vue',async(ctx,next)=>{
-  ... // Support for vue file logic
-
-  next();
-});
-```
-
-## 声明式加载文件
-
-通过 直接标签 `load-module` 或 `l-m` 加载模块；
-
-```html
-<load-module src="path/of/the/module.mjs"></load-module>
-<!-- or -->
-<l-m src="path/of/the/module.mjs"></l-m>
-<!-- Yes, the same method and effect as the script tag -->
-<!-- <script type="module" src="path/of/the/module.mjs"></script> -->
-```
+使用类似 Koa 的中间件机制，通过设置 `ctx.result` 返回相应的内容。可以使用 `lm.use` 扩展更多文件类型的支持。
 
 ## 模块预处理
 
-通过扩展方法 `use` 我们可以对模块数据进行预处理，下面举个预处理组件注册数据的案例；
+可以使用 `lm.use` 方法对模块数据进行预处理。以下是一个预处理组件注册数据的示例：
 
 ```html
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>lm use</title>
+    <title>Module Preprocessing</title>
     <script src="https://cdn.jsdelivr.net/npm/drill.js/dist/drill.min.js"></script>
     <script src="./register-drill.js"></script>
     <l-m src="./test-comp.mjs"></l-m>
@@ -190,11 +162,6 @@ export const tag = "test-comp";
 export const content = "Hello, World! This is my custom element.";
 ```
 
-查看效果后，可以看到 `test-comp` 元素会被注册，并直接填充了 content 的内容；
+在预处理中，可以根据模块的类型和内容进行相应的操作。上述示例中，将组件注册数据处理为自定义元素。
 
-后面注册组件就不用写一大堆东西，只需要封装 es module 数据，使用时用声明式加载即可；
-
-## 官方扩展
-
-[drill-less](https://github.com/kirakiray/drill.js/tree/main/libs/less) : 让浏览器直接支持 `.less` 文件；
-
+以上是 `drill.js` 的部分使用文档内容。继续编写剩下的内容，包括示例和用法，常见问题解答，API 参考等。
