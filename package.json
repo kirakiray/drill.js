@@ -29,7 +29,8 @@
     "koa": "^2.14.1",
     "koa-static": "^5.0.0",
     "rollup": "^3.21.6",
-    "shelljs": "^0.8.5"
+    "shelljs": "^0.8.5",
+    "vitest": "^0.32.0"
   },
   "author": {
     "name": "YAO",
