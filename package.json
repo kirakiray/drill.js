@@ -1,6 +1,6 @@
 {
   "name": "drill.js",
-  "version": "5.1.1",
+  "version": "5.1.2",
   "description": "A declarative modular framework that runs on the browser",
   "main": "dist/drill.js",
   "exports": {
@@ -10,7 +10,7 @@
   "scripts": {
     "build": "rollup -c",
     "static-server": "node scripts/static-server",
-    "test": "npm run playwright",
+    "test": "npm run playwright && npx vitest",
     "playwright": "node scripts/playwright-test",
     "jest": "",
     "codegen": "npx playwright codegen localhost:3340/"
@@ -29,7 +29,8 @@
     "koa": "^2.14.1",
     "koa-static": "^5.0.0",
     "rollup": "^3.21.6",
-    "shelljs": "^0.8.5"
+    "shelljs": "^0.8.5",
+    "vitest": "^0.32.0"
   },
   "author": {
     "name": "YAO",
@@ -45,5 +46,15 @@
   "dependencies": {
     "less": "^4.1.3",
     "source-map": "~0.6.0"
-  }
+  },
+  "keywords": [
+    "drill.js",
+    "drill",
+    "drilljs",
+    "script",
+    "modules",
+    "module loader",
+    "loader",
+    "es modules"
+  ]
 }

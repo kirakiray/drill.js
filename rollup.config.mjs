@@ -13,6 +13,10 @@ const banner = `//! ${PACKAGE.name} - v${PACKAGE.version} ${
   PACKAGE.homepage
 }  (c) ${PACKAGE.startyear}-${new Date().getFullYear()} ${PACKAGE.author.name}`;
 
+const lessBanner = `// less-drill ${PACKAGE.homepage}/tree/main/libs/less  (c) ${
+  PACKAGE.startyear
+}-${new Date().getFullYear()} ${PACKAGE.author.name}`;
+
 export default [
   {
     input: "libs/less/src/main.js",
@@ -20,7 +24,7 @@ export default [
       {
         file: "libs/less/dist/less-drill.js",
         format: "es",
-        banner,
+        banner: lessBanner,
       },
     ],
     plugins: [commonjs(), resolve(), jsonjs()],
@@ -31,7 +35,7 @@ export default [
       {
         file: "libs/less/dist/less-drill.min.js",
         format: "es",
-        banner,
+        banner: lessBanner,
         sourcemap: true,
       },
     ],
@@ -44,7 +48,7 @@ export default [
         file: "libs/less/dist/less-drill-dev.js",
         format: "es",
         name: "less",
-        banner,
+        banner: lessBanner,
         sourcemap: true,
       },
     ],

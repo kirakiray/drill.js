@@ -1,4 +1,4 @@
-//! drill.js - v5.1.1 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
+//! drill.js - v5.1.2 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
 const getOid = () => Math.random().toString(32).slice(2);
 
 class Onion {
