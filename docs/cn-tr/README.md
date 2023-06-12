@@ -194,4 +194,4 @@ export const style = {
 
 以上是 `drill.js` 的部分使用文件內容。繼續編寫剩下的內容，包括示例和用法，常見問題解答，API 參考等。
 
-關於開發外掛程式的詳細資訊，[請點擊查閱](https://chat.openai.com/c/plug-ins.md) 。
+關於開發外掛程式的詳細資訊，[請點擊查閱](./plug-ins.md) 。
