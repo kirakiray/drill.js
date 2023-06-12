@@ -1,4 +1,4 @@
-//! drill.js - v5.1.0 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
+//! drill.js - v5.1.1 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
 const getOid = () => Math.random().toString(32).slice(2);
 
 class Onion {
@@ -199,6 +199,19 @@ class LoadModule extends HTMLElement {
       element: this,
       params,
     });
+  }
+
+  connectedCallback() {
+    const event = new CustomEvent("connected");
+    event.root = this._root = this.getRootNode();
+    this.dispatchEvent(event);
+  }
+
+  disconnectedCallback() {
+    const event = new CustomEvent("disconnected");
+    event.root = this._root;
+    delete this._root;
+    this.dispatchEvent(event);
   }
 
   attributeChangedCallback(name, oldValue, newValue) {

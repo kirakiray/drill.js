@@ -5,6 +5,11 @@
 `drill.js` 是一个加强版的 web 加载工具，旨在让前端开发摆脱对 Node.js 的依赖。它提供了丰富的扩展功能，并支持声明式加载模块。
 
 与传统的前端开发方式相比，`drill.js` 提供了更灵活的加载和处理模块的方式，使前端开发更加便捷和高效。
+
+## 官方扩展
+
+- [drill-less](https://github.com/kirakiray/drill.js/tree/main/libs/less) : 让浏览器直接支持 `.less` 文件；
+
 ## 安装
 
 可以通过以下方式之一来安装 `drill.js`： 
@@ -42,13 +47,15 @@ npm install drill.js
 </html>
 ```
 
-
 ## 加载模块
 
 在 ES 模块环境下，可以使用 `lm` 方法进行模块加载。以下是加载 `test-module.mjs` 模块的示例：
 
-```javascript
+[点击我查看代码](https://github1s.com/kirakiray/drill.js/blob/main/examples/load-module/index.html)
 
+[点击我查看效果](https://kirakiray.github.io/drill.js/examples/load-module/)
+
+```javascript
 // target/test-module.mjs
 export const getDesc = () => {
   return "I am target/test-module.mjs";
@@ -56,7 +63,6 @@ export const getDesc = () => {
 ```
 
 ```html
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -79,8 +85,6 @@ export const getDesc = () => {
 </html>
 ```
 
-
-
 通过 `load` 方法加载模块，可以使用异步 `import` 相同的语法。加载的模块可以通过 `test` 变量访问模块的导出内容。
 
 ## 声明式加载
@@ -92,8 +96,6 @@ export const getDesc = () => {
 <!-- 或 -->
 <l-m src="path/to/the/module.mjs"></l-m>
 ```
-
-
 
 这种方式与传统的 `<script>` 标签具有相同的效果，可以方便地声明加载模块。
 
@@ -113,9 +115,15 @@ use("json", async (ctx, next) => {
 
 使用类似 Koa 的中间件机制，通过设置 `ctx.result` 返回相应的内容。可以使用 `lm.use` 扩展更多文件类型的支持。
 
+官方[已支持的类型示例代码](https://github1s.com/kirakiray/drill.js/blob/main/examples/load-more-type/index.html)；查看[在线效果](https://kirakiray.github.io/drill.js/examples/load-more-type/)；
+
 ## 模块预处理
 
 可以使用 `lm.use` 方法对模块数据进行预处理。以下是一个预处理组件注册数据的示例：
+
+[点击我查看效果](https://kirakiray.github.io/drill.js/examples/lm-use/)
+
+[点击我查看代码](https://github1s.com/kirakiray/drill.js/blob/main/examples/lm-use/index.html)；
 
 ```html
 <!DOCTYPE html>
@@ -136,13 +144,14 @@ use("json", async (ctx, next) => {
 ```javascript
 // register-drill.js
 lm.use(["js", "mjs"], async (ctx, next) => {
-  const { content, tag, type } = ctx.result;
+  const { content, tag, type, style } = ctx.result;
 
   if (type === "component") {
     class MyElement extends HTMLElement {
       constructor() {
         super();
         this.innerHTML = content;
+        style && Object.assign(this.style, style);
       }
     }
 
@@ -151,6 +160,7 @@ lm.use(["js", "mjs"], async (ctx, next) => {
 
   next();
 });
+
 ```
 
 ```javascript
@@ -160,8 +170,17 @@ export const type = "component";
 export const tag = "test-comp";
 
 export const content = "Hello, World! This is my custom element.";
+
+export const style = {
+  color: "red",
+  padding: "10px",
+  margin: "10px",
+  backgroundColor: "#eee",
+};
 ```
 
 在预处理中，可以根据模块的类型和内容进行相应的操作。上述示例中，将组件注册数据处理为自定义元素。
 
 以上是 `drill.js` 的部分使用文档内容。继续编写剩下的内容，包括示例和用法，常见问题解答，API 参考等。
+
+关于开发插件的细节，[请点击查阅](./plug-ins.md)。

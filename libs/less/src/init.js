@@ -57,10 +57,20 @@ export default (root, hasSourceMap = 1) => {
       const root = element.getRootNode();
 
       if (root === document) {
-        document.head.append(link);
+        root.head.append(link);
       } else {
         root.appendChild(link);
       }
+
+      let f;
+      element.addEventListener(
+        "disconnected",
+        (f = (e) => {
+          link.remove();
+          URL.revokeObjectURL(cssUrl);
+          element.removeEventListener("disconnected", f);
+        })
+      );
 
       next();
     });
