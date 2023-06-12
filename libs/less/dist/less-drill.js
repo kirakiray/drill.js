@@ -1,4 +1,4 @@
-//! drill.js - v5.1.1 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
+// less-drill https://github.com/kirakiray/drill.js/tree/main/libs/less  (c) 2018-2023 YAO
 function getAugmentedNamespace(n) {
   if (n.__esModule) return n;
   var f = n.default;
