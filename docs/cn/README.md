@@ -5,6 +5,11 @@
 `drill.js` 是一个加强版的 web 加载工具，旨在让前端开发摆脱对 Node.js 的依赖。它提供了丰富的扩展功能，并支持声明式加载模块。
 
 与传统的前端开发方式相比，`drill.js` 提供了更灵活的加载和处理模块的方式，使前端开发更加便捷和高效。
+
+## 官方扩展
+
+- [drill-less](https://github.com/kirakiray/drill.js/tree/main/libs/less) : 让浏览器直接支持 `.less` 文件；
+
 ## 安装
 
 可以通过以下方式之一来安装 `drill.js`： 
@@ -41,7 +46,6 @@ npm install drill.js
 </body>
 </html>
 ```
-
 
 ## 加载模块
 
@@ -178,3 +182,5 @@ export const style = {
 在预处理中，可以根据模块的类型和内容进行相应的操作。上述示例中，将组件注册数据处理为自定义元素。
 
 以上是 `drill.js` 的部分使用文档内容。继续编写剩下的内容，包括示例和用法，常见问题解答，API 参考等。
+
+关于开发插件的细节，[请点击查阅](./plug-ins.md)。
