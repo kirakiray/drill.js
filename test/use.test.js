@@ -1,12 +1,10 @@
 import { test, expect } from "vitest";
-import Onion from "../src/onion.mjs";
+import { use, processor } from "../src/use.mjs";
 
-test("Onion test", async () => {
-  const oni = new Onion();
-
+test("use test", async () => {
   const saver = [];
 
-  oni.use(async (ctx, next) => {
+  use("csv", async (ctx, next) => {
     saver.push("a" + ctx.num);
     ctx.num++;
 
@@ -16,7 +14,7 @@ test("Onion test", async () => {
     ctx.num++;
   });
 
-  const oid = oni.use(async (ctx, next) => {
+  use("csv", async (ctx, next) => {
     saver.push("b" + ctx.num);
     ctx.num++;
 
@@ -26,7 +24,7 @@ test("Onion test", async () => {
     ctx.num++;
   });
 
-  oni.use(async (ctx, next) => {
+  use("csv", async (ctx, next) => {
     saver.push("c" + ctx.num);
     ctx.num++;
 
@@ -36,19 +34,9 @@ test("Onion test", async () => {
     ctx.num++;
   });
 
-  await oni.run({
+  await processor["csv"].run({
     num: 0,
   });
 
   expect(saver).toEqual(["a0", "b1", "c2", "c3", "b4", "a5"]);
-
-  saver.splice(0, 10000);
-
-  oni.unuse(oid);
-
-  await oni.run({
-    num: 100,
-  });
-
-  expect(saver).toEqual(["a100", "c101", "c102", "a103"]);
 });
