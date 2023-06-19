@@ -2,6 +2,8 @@
 
 Make browsers support `.ts` files directly, without having to compile them in advance;
 
+> Compiling API based on Typescript 5.1.3
+
 ## Usage
 
 Reference the ts-drill plugin after drill.js;
@@ -16,3 +18,4 @@ Reference the ts-drill plugin after drill.js;
 <!-- Followed by l-m tags using .ts files -->
 <l-m src="./test.ts"></l-m>
 ```
+
