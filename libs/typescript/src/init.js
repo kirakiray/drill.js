@@ -40,8 +40,8 @@ async function transpileTypeScriptToJavaScript(tsCode, { isSourceMap } = {}) {
     compilerOptions: {
       ...options,
       strict: true,
-      inlineSourceMap: isSourceMap ? true : false,
-      inlineSources: isSourceMap ? true : false,
+      inlineSourceMap: !!isSourceMap,
+      inlineSources: !!isSourceMap,
       target: "ES6",
       useCaseSensitiveFileNames: true,
       cache: true,
