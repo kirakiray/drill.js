@@ -13,11 +13,45 @@ const banner = `//! ${PACKAGE.name} - v${PACKAGE.version} ${
   PACKAGE.homepage
 }  (c) ${PACKAGE.startyear}-${new Date().getFullYear()} ${PACKAGE.author.name}`;
 
-const lessBanner = `// less-drill ${PACKAGE.homepage}/tree/main/libs/less  (c) ${
-  PACKAGE.startyear
-}-${new Date().getFullYear()} ${PACKAGE.author.name}`;
+const lessBanner = `// less-drill ${
+  PACKAGE.homepage
+}/tree/main/libs/less  (c) ${PACKAGE.startyear}-${new Date().getFullYear()} ${
+  PACKAGE.author.name
+}`;
 
 export default [
+  {
+    input: "libs/typescript/src/main.js",
+    output: [
+      {
+        file: "libs/typescript/dist/ts-drill.js",
+        format: "umd",
+      },
+    ],
+    plugins: [commonjs(), resolve(), jsonjs()],
+  },
+  {
+    input: "libs/typescript/src/main.js",
+    output: [
+      {
+        file: "libs/typescript/dist/ts-drill.min.js",
+        format: "umd",
+        sourcemap: true,
+      },
+    ],
+    plugins: [commonjs(), resolve(), jsonjs(), terser()],
+  },
+  {
+    input: "libs/typescript/src/main-dev.js",
+    output: [
+      {
+        file: "libs/typescript/dist/ts-drill-dev.js",
+        format: "umd",
+        sourcemap: true,
+      },
+    ],
+    plugins: [commonjs(), resolve(), jsonjs()],
+  },
   {
     input: "libs/less/src/main.js",
     output: [
