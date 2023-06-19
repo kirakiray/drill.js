@@ -14,6 +14,7 @@
 Compared to traditional front-end development approaches, `drill.js` offers a more flexible way to load and handle modules, making front-end development more convenient and efficient.
 ## Official Extensions 
 - [drill-less](https://github.com/kirakiray/drill.js/tree/main/libs/less) : Enables direct support for `.less` files in browsers.
+- [drill-ts](https://github.com/kirakiray/drill.js/tree/main/libs/typescript) : Enables direct support for `.ts` files in browsers.
 
 ## Installation
 
