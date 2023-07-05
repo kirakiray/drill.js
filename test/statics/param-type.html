@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>load by param type</title>
+    <!-- <script type="module" src="../../src/base.mjs"></script> -->
+    <script src="../../dist/drill.js"></script>
+  </head>
+  <body>
+    <script type="module">
+      const load = lm(import.meta);
+
+      (async () => {
+        const data = await load("./esm/test-count.mjs .txt");
+
+        document.write(typeof data);
+      })();
+    </script>
+  </body>
+</html>

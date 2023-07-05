@@ -61,3 +61,11 @@ test("load module count with parameters", async ({ page }) => {
 
   await expect(await page.innerText("body")).toBe("2");
 });
+
+test("param type", async ({ page }) => {
+  await page.goto("http://localhost:3340/test/statics/param-type.html");
+
+  await new Promise((res) => setTimeout(res, 100));
+
+  await expect(await page.innerText("body")).toBe("string");
+});
