@@ -19,7 +19,7 @@ export default (root, hasSourceMap = 1) => {
       if (!element) {
         ctx.result = text;
 
-        next();
+        await next();
         return;
       }
 
@@ -72,7 +72,7 @@ export default (root, hasSourceMap = 1) => {
         })
       );
 
-      next();
+      await next();
     });
   } else {
     window.less = less;

@@ -9,7 +9,7 @@ export default ({ isSourceMap = true } = {}) => {
       if (!element) {
         ctx.result = tsCode;
 
-        next();
+        await next();
         return;
       }
       const jsCode = await transpileTypeScriptToJavaScript(tsCode, {
@@ -29,6 +29,8 @@ export default ({ isSourceMap = true } = {}) => {
       } else {
         root.appendChild(script);
       }
+
+      await next();
     });
   }
 };

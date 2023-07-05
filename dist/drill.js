@@ -1,4 +1,4 @@
-//! drill.js - v5.1.2 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
+//! drill.js - v5.2.0 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
@@ -62,42 +62,50 @@
   };
 
   use(["mjs", "js"], async (ctx, next) => {
-    const { url, params } = ctx;
-    const d = new URL(url);
-    if (params.includes("-direct")) {
-      ctx.result = await import(url);
+    if (!ctx.result) {
+      const { url, params } = ctx;
+      const d = new URL(url);
+      if (params.includes("-direct")) {
+        ctx.result = await import(url);
+      }
+      ctx.result = await import(`${d.origin}${d.pathname}`);
     }
-    ctx.result = await import(`${d.origin}${d.pathname}`);
 
-    next();
+    await next();
   });
 
-  use(["txt", "html"], async (ctx, next) => {
-    const { url } = ctx;
-    ctx.result = await fetch(url).then((e) => e.text());
+  use(["txt", "html", "htm"], async (ctx, next) => {
+    if (!ctx.result) {
+      const { url } = ctx;
+      ctx.result = await fetch(url).then((e) => e.text());
+    }
 
-    next();
+    await next();
   });
 
   use("json", async (ctx, next) => {
-    const { url } = ctx;
+    if (!ctx.result) {
+      const { url } = ctx;
 
-    ctx.result = await fetch(url).then((e) => e.json());
+      ctx.result = await fetch(url).then((e) => e.json());
+    }
 
-    next();
+    await next();
   });
 
   use("wasm", async (ctx, next) => {
-    const { url } = ctx;
+    if (!ctx.result) {
+      const { url } = ctx;
 
-    const data = await fetch(url).then((e) => e.arrayBuffer());
+      const data = await fetch(url).then((e) => e.arrayBuffer());
 
-    const module = await WebAssembly.compile(data);
-    const instance = new WebAssembly.Instance(module);
+      const module = await WebAssembly.compile(data);
+      const instance = new WebAssembly.Instance(module);
 
-    ctx.result = instance.exports;
+      ctx.result = instance.exports;
+    }
 
-    next();
+    await next();
   });
 
   const LOADED = Symbol("loaded");
@@ -129,7 +137,18 @@
     const urldata = new URL(url);
     const { pathname } = urldata;
 
-    const type = pathname.slice(((pathname.lastIndexOf(".") - 1) >>> 0) + 2);
+    let type;
+
+    opts.params &&
+      opts.params.forEach((e) => {
+        if (/^\..+/.test(e)) {
+          type = e.replace(/^\.(.+)/, "$1");
+        }
+      });
+
+    if (!type) {
+      type = pathname.slice(((pathname.lastIndexOf(".") - 1) >>> 0) + 2);
+    }
 
     const ctx = {
       url,

@@ -7,6 +7,7 @@ test("Onion test", async () => {
   const saver = [];
 
   oni.use(async (ctx, next) => {
+    await new Promise((res) => setTimeout(res, 500));
     saver.push("a" + ctx.num);
     ctx.num++;
 
