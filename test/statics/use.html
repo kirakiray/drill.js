@@ -5,24 +5,33 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>use test</title>
-    <!-- <script type="module">
-      import "../../src/base.mjs";
-    </script> -->
+    <!-- <script type="module" src="../../src/base.mjs"></script> -->
     <script src="../../dist/drill.js"></script>
     <script type="module">
       window.uses = [];
-      lm.use(async (ctx, next) => {
-        await next();
+      window.useOrders = [];
+      lm.use(["js", "mjs"], async (ctx, next) => {
+        useOrders.push(2);
+        await new Promise((res) => setTimeout(res, 100));
+        useOrders.push(3);
         console.log("ctx => ", ctx);
+
         uses.push(ctx);
+
+        await next();
       });
     </script>
+    <!-- will be in a suspended state -->
     <l-m src="./other/process-test.mjs" pause id="target-lm"></l-m>
   </head>
   <body>
     <script type="module">
       const load = lm(import.meta);
+      useOrders.push(1);
       const t1 = await load("./esm/test-module1.mjs");
+      useOrders.push(4);
+
+      console.log("t1 => ", t1);
     </script>
     <l-m src="./other/process-test.mjs"></l-m>
   </body>

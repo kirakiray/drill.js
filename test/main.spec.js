@@ -13,6 +13,8 @@ test("load module are all correct", async ({ page }) => {
 test("use", async ({ page }) => {
   await page.goto("http://localhost:3340/test/statics/use.html");
 
+  await new Promise((res) => setTimeout(res, 300));
+
   const { _preview: p1 } = await page.waitForFunction(async () => {
     return JSON.stringify(uses);
   });
@@ -24,6 +26,8 @@ test("use", async ({ page }) => {
   await page.waitForFunction(async () => {
     document.querySelector("#target-lm").removeAttribute("pause");
   });
+
+  await new Promise((res) => setTimeout(res, 300));
 
   const { _preview: p2 } = await page.waitForFunction(async () => {
     return JSON.stringify(uses);

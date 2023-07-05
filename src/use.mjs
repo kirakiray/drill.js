@@ -33,7 +33,7 @@ use(["mjs", "js"], async (ctx, next) => {
     ctx.result = await import(`${d.origin}${d.pathname}`);
   }
 
-  next();
+  await next();
 });
 
 use(["txt", "html"], async (ctx, next) => {
@@ -42,7 +42,7 @@ use(["txt", "html"], async (ctx, next) => {
     ctx.result = await fetch(url).then((e) => e.text());
   }
 
-  next();
+  await next();
 });
 
 use("json", async (ctx, next) => {
@@ -52,7 +52,7 @@ use("json", async (ctx, next) => {
     ctx.result = await fetch(url).then((e) => e.json());
   }
 
-  next();
+  await next();
 });
 
 use("wasm", async (ctx, next) => {
@@ -67,5 +67,5 @@ use("wasm", async (ctx, next) => {
     ctx.result = instance.exports;
   }
 
-  next();
+  await next();
 });
