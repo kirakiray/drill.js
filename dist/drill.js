@@ -74,7 +74,7 @@
     await next();
   });
 
-  use(["txt", "html"], async (ctx, next) => {
+  use(["txt", "html", "htm"], async (ctx, next) => {
     if (!ctx.result) {
       const { url } = ctx;
       ctx.result = await fetch(url).then((e) => e.text());
