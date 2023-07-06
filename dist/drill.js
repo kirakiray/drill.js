@@ -65,7 +65,11 @@
     if (!ctx.result) {
       const { url, params } = ctx;
       const d = new URL(url);
-      if (params.includes("-direct")) {
+      if (
+        /^blob:/.test(url) ||
+        /^data:/.test(url) ||
+        params.includes("-direct")
+      ) {
         ctx.result = await import(url);
       } else {
         ctx.result = await import(`${d.origin}${d.pathname}`);
