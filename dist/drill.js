@@ -1,4 +1,4 @@
-//! drill.js - v5.2.0 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
+//! drill.js - v5.2.1 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
@@ -67,8 +67,9 @@
       const d = new URL(url);
       if (params.includes("-direct")) {
         ctx.result = await import(url);
+      } else {
+        ctx.result = await import(`${d.origin}${d.pathname}`);
       }
-      ctx.result = await import(`${d.origin}${d.pathname}`);
     }
 
     await next();
