@@ -1,4 +1,4 @@
-//! drill.js - v5.2.0 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
+//! drill.js - v5.2.1 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
 const getOid = () => Math.random().toString(32).slice(2);
 
 class Onion {
@@ -59,10 +59,15 @@ use(["mjs", "js"], async (ctx, next) => {
   if (!ctx.result) {
     const { url, params } = ctx;
     const d = new URL(url);
-    if (params.includes("-direct")) {
+    if (
+      /^blob:/.test(url) ||
+      /^data:/.test(url) ||
+      params.includes("-direct")
+    ) {
       ctx.result = await import(url);
+    } else {
+      ctx.result = await import(`${d.origin}${d.pathname}`);
     }
-    ctx.result = await import(`${d.origin}${d.pathname}`);
   }
 
   await next();

@@ -1,6 +1,6 @@
 {
   "name": "drill.js",
-  "version": "5.2.0",
+  "version": "5.2.1",
   "description": "A declarative modular framework that runs on the browser",
   "main": "dist/drill.js",
   "exports": {
@@ -8,6 +8,7 @@
     "import": "./src/dist.mjs"
   },
   "scripts": {
+    "bump": "node scripts/bump-version.js && npm run build && npm i",
     "build": "rollup -c",
     "static-server": "node scripts/static-server",
     "test": "npm run playwright && npx vitest",
