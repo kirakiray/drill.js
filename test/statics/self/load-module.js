@@ -28,4 +28,32 @@ describe("load module", () => {
 
     expect(square(3, 3)).toBe(9);
   });
+
+  test("load css succeed", async () => {
+    const cssContent = await load("../other/test.css");
+
+    expect(cssContent.includes("#test-ele")).toBe(true);
+  });
+
+  test("load css by element", async () => {
+    await new Promise((res) => setTimeout(res, 50));
+
+    expect(getComputedStyle(document.querySelector("#test-ele")).color).toBe(
+      "rgb(0, 0, 255)"
+    );
+
+    document.querySelector(`l-m[src="./other/test.css"]`).remove();
+
+    await new Promise((res) => setTimeout(res, 1));
+
+    expect(getComputedStyle(document.querySelector("#test-ele")).color).toBe(
+      "rgb(0, 0, 0)"
+    );
+  });
+
+  test("load in ctx mode", async () => {
+    const ctx = await load("../esm/test-module1.mjs -ctx");
+
+    expect(ctx.result.val).toEqual("test module 1");
+  });
 });
