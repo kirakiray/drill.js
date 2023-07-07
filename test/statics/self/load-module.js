@@ -28,4 +28,11 @@ describe("load module", () => {
 
     expect(square(3, 3)).toBe(9);
   });
+
+  test("load css succeed", async () => {
+    const cssContent = await load("../other/test.css");
+
+    expect(cssContent.includes("#test-ele")).toBe(true);
+  });
+
 });
