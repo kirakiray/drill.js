@@ -67,6 +67,7 @@ export default (root, hasSourceMap = 1) => {
         "disconnected",
         (f = (e) => {
           link.remove();
+          URL.revokeObjectURL(cssUrl);
           element.removeEventListener("disconnected", f);
         })
       );
