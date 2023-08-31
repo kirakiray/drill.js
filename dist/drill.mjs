@@ -1,4 +1,4 @@
-//! drill.js - v5.2.2 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
+//! drill.js - v5.2.3 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
 const getOid = () => Math.random().toString(32).slice(2);
 
 class Onion {
@@ -76,7 +76,13 @@ use(["mjs", "js"], async (ctx, next) => {
 use(["txt", "html", "htm"], async (ctx, next) => {
   if (!ctx.result) {
     const { url } = ctx;
-    ctx.result = await fetch(url).then((e) => e.text());
+    ctx.result = await fetch(url).then((e) => {
+      if (/^2.{2}$/.test(e.status)) {
+        return e.text();
+      }
+
+      throw new Error(`Load ${url} failed: status code ${e.status}`);
+    });
   }
 
   await next();
