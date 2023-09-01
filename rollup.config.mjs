@@ -20,38 +20,38 @@ const lessBanner = `// less-drill ${
 }`;
 
 export default [
-  {
-    input: "libs/typescript/src/main.js",
-    output: [
-      {
-        file: "libs/typescript/dist/ts-drill.js",
-        format: "umd",
-      },
-    ],
-    plugins: [commonjs(), resolve(), jsonjs()],
-  },
-  {
-    input: "libs/typescript/src/main.js",
-    output: [
-      {
-        file: "libs/typescript/dist/ts-drill.min.js",
-        format: "umd",
-        sourcemap: true,
-      },
-    ],
-    plugins: [commonjs(), resolve(), jsonjs(), terser()],
-  },
-  {
-    input: "libs/typescript/src/main-dev.js",
-    output: [
-      {
-        file: "libs/typescript/dist/ts-drill-dev.js",
-        format: "umd",
-        sourcemap: true,
-      },
-    ],
-    plugins: [commonjs(), resolve(), jsonjs()],
-  },
+  // {
+  //   input: "libs/typescript/src/main.js",
+  //   output: [
+  //     {
+  //       file: "libs/typescript/dist/ts-drill.js",
+  //       format: "umd",
+  //     },
+  //   ],
+  //   plugins: [commonjs(), resolve(), jsonjs()],
+  // },
+  // {
+  //   input: "libs/typescript/src/main.js",
+  //   output: [
+  //     {
+  //       file: "libs/typescript/dist/ts-drill.min.js",
+  //       format: "umd",
+  //       sourcemap: true,
+  //     },
+  //   ],
+  //   plugins: [commonjs(), resolve(), jsonjs(), terser()],
+  // },
+  // {
+  //   input: "libs/typescript/src/main-dev.js",
+  //   output: [
+  //     {
+  //       file: "libs/typescript/dist/ts-drill-dev.js",
+  //       format: "umd",
+  //       sourcemap: true,
+  //     },
+  //   ],
+  //   plugins: [commonjs(), resolve(), jsonjs()],
+  // },
   {
     input: "libs/less/src/main.js",
     output: [
