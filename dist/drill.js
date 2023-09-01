@@ -1,4 +1,4 @@
-//! drill.js - v5.2.3 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
+//! drill.js - v5.2.4 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
@@ -65,14 +65,23 @@
     if (!ctx.result) {
       const { url, params } = ctx;
       const d = new URL(url);
-      if (
-        /^blob:/.test(url) ||
-        /^data:/.test(url) ||
-        params.includes("-direct")
-      ) {
-        ctx.result = await import(url);
-      } else {
-        ctx.result = await import(`${d.origin}${d.pathname}`);
+
+      const notHttp = /^blob:/.test(url) || /^data:/.test(url);
+      try {
+        if (notHttp || params.includes("-direct")) {
+          ctx.result = await import(url);
+        } else {
+          ctx.result = await import(`${d.origin}${d.pathname}`);
+        }
+      } catch (error) {
+        const err = new Error(
+          `Failed to load module ${notHttp ? "" : ":" + url} \n  ${error.stack}`
+        );
+        err.error = error;
+        if (notHttp) {
+          console.log("Failed to load module:", ctx);
+        }
+        throw err;
       }
     }
 
@@ -82,13 +91,21 @@
   use(["txt", "html", "htm"], async (ctx, next) => {
     if (!ctx.result) {
       const { url } = ctx;
-      ctx.result = await fetch(url).then((e) => {
-        if (/^2.{2}$/.test(e.status)) {
-          return e.text();
-        }
 
+      let resp;
+      try {
+        resp = await fetch(url);
+      } catch (error) {
+        const err = new Error(`Load ${url} failed \n  ${error.stack}`);
+        err.error = error;
+        throw err;
+      }
+
+      if (!/^2.{2}$/.test(resp.status)) {
         throw new Error(`Load ${url} failed: status code ${e.status}`);
-      });
+      }
+
+      ctx.result = await resp.text();
     }
 
     await next();
