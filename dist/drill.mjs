@@ -1,4 +1,4 @@
-//! drill.js - v5.2.3 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
+//! drill.js - v5.2.4 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
 const getOid = () => Math.random().toString(32).slice(2);
 
 class Onion {
@@ -72,6 +72,9 @@ use(["mjs", "js"], async (ctx, next) => {
         `Failed to load module ${notHttp ? "" : ":" + url} \n  ${error.stack}`
       );
       err.error = error;
+      if (notHttp) {
+        console.log("Failed to load module:", ctx);
+      }
       throw err;
     }
   }

@@ -40,6 +40,9 @@ use(["mjs", "js"], async (ctx, next) => {
         `Failed to load module ${notHttp ? "" : ":" + url} \n  ${error.stack}`
       );
       err.error = error;
+      if (notHttp) {
+        console.log("Failed to load module:", ctx);
+      }
       throw err;
     }
   }

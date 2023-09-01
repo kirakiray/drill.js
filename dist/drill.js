@@ -1,4 +1,4 @@
-//! drill.js - v5.2.3 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
+//! drill.js - v5.2.4 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
@@ -78,6 +78,9 @@
           `Failed to load module ${notHttp ? "" : ":" + url} \n  ${error.stack}`
         );
         err.error = error;
+        if (notHttp) {
+          console.log("Failed to load module:", ctx);
+        }
         throw err;
       }
     }
