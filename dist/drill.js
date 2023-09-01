@@ -1,4 +1,4 @@
-//! drill.js - v5.2.4 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
+//! drill.js - v5.2.5 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
@@ -102,7 +102,7 @@
       }
 
       if (!/^2.{2}$/.test(resp.status)) {
-        throw new Error(`Load ${url} failed: status code ${e.status}`);
+        throw new Error(`Load ${url} failed: status code ${error.status}`);
       }
 
       ctx.result = await resp.text();
