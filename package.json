@@ -1,6 +1,6 @@
 {
   "name": "drill.js",
-  "version": "5.2.5",
+  "version": "5.2.6",
   "description": "A declarative modular framework that runs on the browser",
   "main": "dist/drill.js",
   "exports": {
