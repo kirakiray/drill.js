@@ -1,4 +1,4 @@
-//! drill.js - v5.2.5 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
+//! drill.js - v5.2.6 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
@@ -74,13 +74,15 @@
           ctx.result = await import(`${d.origin}${d.pathname}`);
         }
       } catch (error) {
-        const err = new Error(
-          `Failed to load module ${notHttp ? "" : ":" + url} \n  ${error.stack}`
+        const err = wrapError(
+          `Failed to load module ${ctx.realUrl || url}`,
+          error
         );
-        err.error = error;
+
         if (notHttp) {
           console.log("Failed to load module:", ctx);
         }
+
         throw err;
       }
     }
@@ -96,13 +98,11 @@
       try {
         resp = await fetch(url);
       } catch (error) {
-        const err = new Error(`Load ${url} failed \n  ${error.stack}`);
-        err.error = error;
-        throw err;
+        throw wrapError(`Load ${url} failed`, error);
       }
 
       if (!/^2.{2}$/.test(resp.status)) {
-        throw new Error(`Load ${url} failed: status code ${error.status}`);
+        throw new Error(`Load ${url} failed: status code ${resp.status}`);
       }
 
       ctx.result = await resp.text();
@@ -169,6 +169,12 @@
     await next();
   });
 
+  const wrapError = (desc, error) => {
+    const err = new Error(`${desc} \n  ${error.toString()}`);
+    err.error = error;
+    return err;
+  };
+
   const LOADED = Symbol("loaded");
 
   const createLoad = (meta) => {
@@ -199,11 +205,14 @@
     const { pathname } = urldata;
 
     let type;
+    let realUrl = null;
 
     opts.params &&
       opts.params.forEach((e) => {
         if (/^\..+/.test(e)) {
           type = e.replace(/^\.(.+)/, "$1");
+        } else if (/^\-\-real/.test(e)) {
+          realUrl = e.replace(/^\-\-real\:/, "");
         }
       });
 
@@ -214,6 +223,7 @@
     const ctx = {
       url,
       result: null,
+      realUrl,
       ...opts,
     };
 
