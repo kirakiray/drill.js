@@ -69,3 +69,11 @@ test("param type", async ({ page }) => {
 
   await expect(await page.innerText("body")).toBe("string");
 });
+
+test("load alias path", async ({ page }) => {
+  await page.goto("http://localhost:3340/test/statics/alias.html");
+
+  await new Promise((res) => setTimeout(res, 500));
+
+  await expect(await page.innerText("body")).toBe("1");
+});
