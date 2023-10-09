@@ -1,4 +1,4 @@
-//! drill.js - v5.3.0 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
+//! drill.js - v5.3.1 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
@@ -201,7 +201,7 @@
 
   const LOADED = Symbol("loaded");
 
-  const createLoad = (meta) => {
+  const createLoad = (meta, opts) => {
     if (!meta) {
       meta = {
         url: document.location.href,
@@ -230,7 +230,7 @@
         reurl = resolvedUrl.href;
       }
 
-      return agent(reurl, { params });
+      return agent(reurl, { params, ...opts });
     };
     return load;
   };
@@ -284,11 +284,11 @@
     return ctx.result;
   };
 
-  function lm(meta) {
-    return createLoad(meta);
+  function lm$1(meta, opts) {
+    return createLoad(meta, opts);
   }
 
-  Object.assign(lm, {
+  Object.assign(lm$1, {
     use,
   });
 
@@ -320,19 +320,17 @@
       }
       this.__initSrc = src;
 
-      src = new URL(src, location.href).href;
+      const load = lm(undefined, {
+        element: this,
+      });
+
+      load(src);
+
       Object.defineProperties(this, {
         src: {
           configurable: true,
           value: src,
         },
-      });
-
-      const [url, ...params] = src.split(" ");
-
-      agent(url, {
-        element: this,
-        params,
       });
     }
 
@@ -387,11 +385,11 @@
     window.addEventListener("load", ready);
   }
 
-  lm.config = config;
-  Object.freeze(lm);
+  lm$1.config = config;
+  Object.freeze(lm$1);
 
-  window.lm = lm;
+  window.lm = lm$1;
 
-  return lm;
+  return lm$1;
 
 }));
