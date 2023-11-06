@@ -1,4 +1,4 @@
-//! drill.js - v5.3.2 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
+//! drill.js - v5.3.3 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
@@ -37,6 +37,20 @@
       await next();
     }
   }
+
+  const caches = new Map();
+  const wrapFetch = async (url) => {
+    let fetchObj = caches.get(url);
+
+    if (!fetchObj) {
+      fetchObj = fetch(url);
+      caches.set(url, fetchObj);
+    }
+
+    const resp = await fetchObj;
+
+    return resp.clone();
+  };
 
   const processor = {};
 
@@ -96,7 +110,7 @@
 
       let resp;
       try {
-        resp = await fetch(url);
+        resp = await wrapFetch(url);
       } catch (error) {
         throw wrapError(`Load ${url} failed`, error);
       }
@@ -115,7 +129,7 @@
     if (!ctx.result) {
       const { url } = ctx;
 
-      ctx.result = await fetch(url).then((e) => e.json());
+      ctx.result = await wrapFetch(url).then((e) => e.json());
     }
 
     await next();
@@ -125,7 +139,7 @@
     if (!ctx.result) {
       const { url } = ctx;
 
-      const data = await fetch(url).then((e) => e.arrayBuffer());
+      const data = await wrapFetch(url).then((e) => e.arrayBuffer());
 
       const module = await WebAssembly.compile(data);
       const instance = new WebAssembly.Instance(module);
@@ -162,7 +176,7 @@
           })
         );
       } else {
-        ctx.result = await fetch(url).then((e) => e.text());
+        ctx.result = await wrapFetch(url).then((e) => e.text());
       }
     }
 
