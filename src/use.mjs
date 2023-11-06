@@ -1,6 +1,6 @@
 import Onion from "./onion.mjs";
 
-const caches = new Map();
+export const caches = new Map();
 const wrapFetch = async (url) => {
   let fetchObj = caches.get(url);
 
