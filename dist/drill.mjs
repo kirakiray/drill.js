@@ -213,25 +213,23 @@ const path = (moduleName, baseURI) => {
 
   const [url, ...params] = moduleName.split(" ");
 
-  let lastUrl = "";
+  let lastUrl = url;
 
   if (/^@/.test(url)) {
     const [first, ...args] = url.split("/");
 
     if (aliasMap[first]) {
       lastUrl = [aliasMap[first].replace(/\/$/, ""), ...args].join("/");
-
-      return lastUrl;
     } else {
       throw `No alias defined ${first}`;
     }
-  } else {
-    const base = baseURI ? new URL(baseURI, location.href) : location.href;
-
-    const moduleURL = new URL(url, base);
-
-    lastUrl = moduleURL.href;
   }
+
+  const base = baseURI ? new URL(baseURI, location.href) : location.href;
+
+  const moduleURL = new URL(lastUrl, base);
+
+  lastUrl = moduleURL.href;
 
   if (params.length) {
     return `${lastUrl} ${params.join(" ")}`;
@@ -249,27 +247,9 @@ const createLoad = (meta, opts) => {
     };
   }
   const load = (ourl) => {
-    let reurl = "";
     let [url, ...params] = ourl.split(" ");
 
-    // Determine and splice the address of the alias
-    const urlMathcs = url.split("/");
-    if (/^@.+/.test(urlMathcs[0])) {
-      if (aliasMap[urlMathcs[0]]) {
-        urlMathcs[0] = aliasMap[urlMathcs[0]];
-        url = urlMathcs.join("/");
-      } else {
-        throw `Can't find an alias address: '${urlMathcs[0]}'`;
-      }
-    }
-
-    if (meta.resolve) {
-      reurl = meta.resolve(url);
-    } else {
-      const currentUrl = new URL(meta.url);
-      const resolvedUrl = new URL(url, currentUrl);
-      reurl = resolvedUrl.href;
-    }
+    const reurl = path(url, meta.url);
 
     return agent(reurl, { params, ...opts });
   };

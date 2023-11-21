@@ -28,25 +28,23 @@ export const path = (moduleName, baseURI) => {
 
   const [url, ...params] = moduleName.split(" ");
 
-  let lastUrl = "";
+  let lastUrl = url;
 
   if (/^@/.test(url)) {
     const [first, ...args] = url.split("/");
 
     if (aliasMap[first]) {
       lastUrl = [aliasMap[first].replace(/\/$/, ""), ...args].join("/");
-
-      return lastUrl;
     } else {
       throw `No alias defined ${first}`;
     }
-  } else {
-    const base = baseURI ? new URL(baseURI, location.href) : location.href;
-
-    const moduleURL = new URL(url, base);
-
-    lastUrl = moduleURL.href;
   }
+
+  const base = baseURI ? new URL(baseURI, location.href) : location.href;
+
+  const moduleURL = new URL(lastUrl, base);
+
+  lastUrl = moduleURL.href;
 
   if (params.length) {
     return `${lastUrl} ${params.join(" ")}`;
