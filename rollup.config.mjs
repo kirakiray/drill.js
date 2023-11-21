@@ -52,42 +52,42 @@ export default [
   //   ],
   //   plugins: [commonjs(), resolve(), jsonjs()],
   // },
-  {
-    input: "libs/less/src/main.js",
-    output: [
-      {
-        file: "libs/less/dist/less-drill.js",
-        format: "es",
-        banner: lessBanner,
-      },
-    ],
-    plugins: [commonjs(), resolve(), jsonjs()],
-  },
-  {
-    input: "libs/less/src/main.js",
-    output: [
-      {
-        file: "libs/less/dist/less-drill.min.js",
-        format: "es",
-        banner: lessBanner,
-        sourcemap: true,
-      },
-    ],
-    plugins: [commonjs(), resolve(), jsonjs(), terser()],
-  },
-  {
-    input: "libs/less/src/main-dev.js",
-    output: [
-      {
-        file: "libs/less/dist/less-drill-dev.js",
-        format: "es",
-        name: "less",
-        banner: lessBanner,
-        sourcemap: true,
-      },
-    ],
-    plugins: [commonjs(), resolve(), jsonjs(), terser()],
-  },
+  // {
+  //   input: "libs/less/src/main.js",
+  //   output: [
+  //     {
+  //       file: "libs/less/dist/less-drill.js",
+  //       format: "es",
+  //       banner: lessBanner,
+  //     },
+  //   ],
+  //   plugins: [commonjs(), resolve(), jsonjs()],
+  // },
+  // {
+  //   input: "libs/less/src/main.js",
+  //   output: [
+  //     {
+  //       file: "libs/less/dist/less-drill.min.js",
+  //       format: "es",
+  //       banner: lessBanner,
+  //       sourcemap: true,
+  //     },
+  //   ],
+  //   plugins: [commonjs(), resolve(), jsonjs(), terser()],
+  // },
+  // {
+  //   input: "libs/less/src/main-dev.js",
+  //   output: [
+  //     {
+  //       file: "libs/less/dist/less-drill-dev.js",
+  //       format: "es",
+  //       name: "less",
+  //       banner: lessBanner,
+  //       sourcemap: true,
+  //     },
+  //   ],
+  //   plugins: [commonjs(), resolve(), jsonjs(), terser()],
+  // },
   {
     input: "src/base.mjs",
     output: [

@@ -40,11 +40,13 @@ export const path = (moduleName, baseURI) => {
     }
   }
 
-  const base = baseURI ? new URL(baseURI, location.href) : location.href;
+  if (typeof location !== "undefined") {
+    const base = baseURI ? new URL(baseURI, location.href) : location.href;
 
-  const moduleURL = new URL(lastUrl, base);
+    const moduleURL = new URL(lastUrl, base);
 
-  lastUrl = moduleURL.href;
+    lastUrl = moduleURL.href;
+  }
 
   if (params.length) {
     return `${lastUrl} ${params.join(" ")}`;
