@@ -1,4 +1,4 @@
-//! drill.js - v5.3.3 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
+//! drill.js - v5.3.4 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
 const getOid = () => Math.random().toString(32).slice(2);
 
 class Onion {
@@ -203,9 +203,42 @@ async function config(opts) {
       }
     });
   }
-
   return true;
 }
+
+const path = (moduleName, baseURI) => {
+  if (moduleName.startsWith("http://") || moduleName.startsWith("https://")) {
+    return moduleName;
+  }
+
+  const [url, ...params] = moduleName.split(" ");
+
+  let lastUrl = url;
+
+  if (/^@/.test(url)) {
+    const [first, ...args] = url.split("/");
+
+    if (aliasMap[first]) {
+      lastUrl = [aliasMap[first].replace(/\/$/, ""), ...args].join("/");
+    } else {
+      throw `No alias defined ${first}`;
+    }
+  }
+
+  if (typeof location !== "undefined") {
+    const base = baseURI ? new URL(baseURI, location.href) : location.href;
+
+    const moduleURL = new URL(lastUrl, base);
+
+    lastUrl = moduleURL.href;
+  }
+
+  if (params.length) {
+    return `${lastUrl} ${params.join(" ")}`;
+  }
+
+  return lastUrl;
+};
 
 const LOADED = Symbol("loaded");
 
@@ -216,27 +249,9 @@ const createLoad = (meta, opts) => {
     };
   }
   const load = (ourl) => {
-    let reurl = "";
     let [url, ...params] = ourl.split(" ");
 
-    // Determine and splice the address of the alias
-    const urlMathcs = url.split("/");
-    if (/^@.+/.test(urlMathcs[0])) {
-      if (aliasMap[urlMathcs[0]]) {
-        urlMathcs[0] = aliasMap[urlMathcs[0]];
-        url = urlMathcs.join("/");
-      } else {
-        throw `Can't find an alias address: '${urlMathcs[0]}'`;
-      }
-    }
-
-    if (meta.resolve) {
-      reurl = meta.resolve(url);
-    } else {
-      const currentUrl = new URL(meta.url);
-      const resolvedUrl = new URL(url, currentUrl);
-      reurl = resolvedUrl.href;
-    }
+    const reurl = path(url, meta.url);
 
     return agent(reurl, { params, ...opts });
   };
@@ -394,6 +409,7 @@ if (document.readyState === "complete") {
 }
 
 lm$1.config = config;
+lm$1.path = path;
 Object.freeze(lm$1);
 
 window.lm = lm$1;
