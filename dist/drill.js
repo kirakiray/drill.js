@@ -1,4 +1,4 @@
-//! drill.js - v5.3.3 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
+//! drill.js - v5.3.4 https://github.com/kirakiray/drill.js  (c) 2018-2023 YAO
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
