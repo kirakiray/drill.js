@@ -1,4 +1,4 @@
-//! drill.js - v5.3.5 https://github.com/kirakiray/drill.js  (c) 2018-2024 YAO
+//! drill.js - v5.3.6 https://github.com/kirakiray/drill.js  (c) 2018-2024 YAO
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
@@ -188,8 +188,9 @@
   });
 
   const wrapError = (desc, error) => {
-    const err = new Error(`${desc} \n  ${error.toString()}`);
-    err.error = error;
+    const err = new Error(`${desc} \n  ${error.toString()}`, {
+      cause: error,
+    });
     return err;
   };
 
