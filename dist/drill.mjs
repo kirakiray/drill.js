@@ -1,4 +1,4 @@
-//! drill.js - v5.3.5 https://github.com/kirakiray/drill.js  (c) 2018-2024 YAO
+//! drill.js - v5.3.6 https://github.com/kirakiray/drill.js  (c) 2018-2024 YAO
 const getOid = () => Math.random().toString(32).slice(2);
 
 class Onion {
@@ -182,8 +182,9 @@ use("css", async (ctx, next) => {
 });
 
 const wrapError = (desc, error) => {
-  const err = new Error(`${desc} \n  ${error.toString()}`);
-  err.error = error;
+  const err = new Error(`${desc} \n  ${error.toString()}`, {
+    cause: error,
+  });
   return err;
 };
 
