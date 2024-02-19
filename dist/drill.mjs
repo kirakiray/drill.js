@@ -1,4 +1,4 @@
-//! drill.js - v5.3.6 https://github.com/kirakiray/drill.js  (c) 2018-2024 YAO
+//! drill.js - v5.3.7 https://github.com/kirakiray/drill.js  (c) 2018-2024 YAO
 const getOid = () => Math.random().toString(32).slice(2);
 
 class Onion {
@@ -200,10 +200,12 @@ async function config(opts) {
           if (!/^\./.test(path)) {
             aliasMap[name] = path;
           } else {
-            throw `The address does not match the specification, please use '/' or or the beginning of the protocol: '${path}'`;
+            throw new Error(
+              `The address does not match the specification, please use '/' or or the beginning of the protocol: '${path}'`
+            );
           }
         } else {
-          throw `Alias already exists: '${name}'`;
+          throw new Error(`Alias already exists: '${name}'`);
         }
       }
     });
@@ -226,7 +228,7 @@ const path = (moduleName, baseURI) => {
     if (aliasMap[first]) {
       lastUrl = [aliasMap[first].replace(/\/$/, ""), ...args].join("/");
     } else {
-      throw `No alias defined ${first}`;
+      throw new Error(`No alias defined ${first}`);
     }
   }
 
