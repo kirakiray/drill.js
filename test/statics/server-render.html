@@ -5,8 +5,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>server render test</title>
-    <script type="module" src="../../src/base.mjs"></script>
-    <!-- <script src="../../dist/drill.js"></script> -->
+    <!-- <script type="module" src="../../src/base.mjs"></script> -->
+    <script src="../../dist/drill.js"></script>
   </head>
   <body>
     <div id="test_is"></div>
@@ -16,7 +16,9 @@
 
     (async () => {
       const data = await load("/_test_js");
-      document.querySelector("#test_is").innerHTML = data.val;
+      document.write(data.val);
+
+      // document.querySelector("#test_is").innerHTML = data.val;
     })();
   </script>
 </html>
