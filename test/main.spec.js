@@ -83,3 +83,11 @@ test("load alias path", async ({ page, browserName }) => {
 
   await expect(await page.innerText("body")).toBe("1");
 });
+
+test("load server render data", async ({ page }) => {
+  await page.goto("http://localhost:3340/test/statics/server-render.html");
+
+  await new Promise((res) => setTimeout(res, 200));
+
+  await expect(await page.innerText("body")).toBe("I am _test_js");
+});
