@@ -1,4 +1,4 @@
-//! drill.js - v5.3.8 https://github.com/kirakiray/drill.js  (c) 2018-2024 YAO
+//! drill.js - v5.3.9 https://github.com/kirakiray/drill.js  (c) 2018-2024 YAO
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
@@ -268,12 +268,15 @@
           if (!/^\./.test(path)) {
             aliasMap[name] = path;
           } else {
-            throw new Error(
-              `The address does not match the specification, please use '/' or or the beginning of the protocol: '${path}'`
-            );
+            throw getErr("alias_relate_name", {
+              name,
+              path,
+            });
           }
         } else {
-          throw new Error(`Alias already exists: '${name}'`);
+          throw getErr("alias_already", {
+            name,
+          });
         }
       });
     }
@@ -406,10 +409,6 @@
   function lm$1(meta, opts) {
     return createLoad(meta, opts);
   }
-
-  // Object.assign(lm, {
-  //   use,
-  // });
 
   Object.defineProperties(lm$1, {
     use: {

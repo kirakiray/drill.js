@@ -1,4 +1,4 @@
-//! drill.js - v5.3.8 https://github.com/kirakiray/drill.js  (c) 2018-2024 YAO
+//! drill.js - v5.3.9 https://github.com/kirakiray/drill.js  (c) 2018-2024 YAO
 const error_origin = "http://127.0.0.1:5793/errors";
 
 // 存放错误信息的数据对象
@@ -262,12 +262,15 @@ async function config(opts) {
         if (!/^\./.test(path)) {
           aliasMap[name] = path;
         } else {
-          throw new Error(
-            `The address does not match the specification, please use '/' or or the beginning of the protocol: '${path}'`
-          );
+          throw getErr("alias_relate_name", {
+            name,
+            path,
+          });
         }
       } else {
-        throw new Error(`Alias already exists: '${name}'`);
+        throw getErr("alias_already", {
+          name,
+        });
       }
     });
   }
@@ -400,10 +403,6 @@ const agent = async (url, opts) => {
 function lm$1(meta, opts) {
   return createLoad(meta, opts);
 }
-
-// Object.assign(lm, {
-//   use,
-// });
 
 Object.defineProperties(lm$1, {
   use: {
