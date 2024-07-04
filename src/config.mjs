@@ -17,12 +17,15 @@ export default async function config(opts) {
         if (!/^\./.test(path)) {
           aliasMap[name] = path;
         } else {
-          throw new Error(
-            `The address does not match the specification, please use '/' or or the beginning of the protocol: '${path}'`
-          );
+          throw getErr("alias_relate_name", {
+            name,
+            path,
+          });
         }
       } else {
-        throw new Error(`Alias already exists: '${name}'`);
+        throw getErr("alias_already", {
+          name,
+        });
       }
     });
   }
