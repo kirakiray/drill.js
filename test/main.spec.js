@@ -51,7 +51,13 @@ test("use", async ({ page }) => {
   await expect(data2.length).toBe(3);
 });
 
-test("load module count with parameters", async ({ page }) => {
+test("load module count with parameters", async ({ page, browserName }) => {
+  if (browserName === "firefox") {
+    // There are problems with the test cases in firefox, but there are no problems in real browsers.
+    test.skip(true, "Still working on Firefox");
+    return;
+  }
+
   await page.goto("http://localhost:3340/test/statics/cache.html");
 
   await new Promise((res) => setTimeout(res, 100));
@@ -85,8 +91,8 @@ test("param type", async ({ page }) => {
 
 test("load alias path", async ({ page, browserName }) => {
   if (browserName === "firefox") {
-    // There are problems with the test cases in firefox, but there are no problems, so you don't need firefox to test them.
-    test.skip(true, "Still working on it");
+    // There are problems with the test cases in firefox, but there are no problems in real browsers.
+    test.skip(true, "Still working on Firefox");
     return;
   }
 

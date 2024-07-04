@@ -7,9 +7,13 @@ const errors = {};
 if (globalThis.navigator && navigator.language) {
   fetch(`${error_origin}/${navigator.language.toLowerCase()}.json`)
     .catch(() => {
-      return fetch(`default.json`);
+      return fetch(`${error_origin}/default.json`);
     })
     .then((e) => e.json())
+    .catch((err) => {
+      console.error(err);
+      return {};
+    })
     .then((data) => {
       Object.assign(errors, data);
     });
