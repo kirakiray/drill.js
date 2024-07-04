@@ -1,5 +1,6 @@
 //! drill.js - v5.3.9 https://github.com/kirakiray/drill.js  (c) 2018-2024 YAO
-const error_origin = "http://127.0.0.1:5793/errors";
+// const error_origin = "http://127.0.0.1:5793/errors";
+const error_origin = "https://ofajs.github.io/ofa-errors/errors";
 
 // 存放错误信息的数据对象
 const errors = {};
