@@ -1,6 +1,12 @@
 const load = lm(import.meta);
 
 describe("load module", () => {
+  test("load in ctx mode", async () => {
+    const ctx = await load("../esm/test-module1.mjs -ctx");
+
+    expect(ctx.result.val).toEqual("test module 1");
+  });
+
   test("load es module succeed", async () => {
     const data = await load("../esm/test-module1.mjs");
 
@@ -49,11 +55,5 @@ describe("load module", () => {
     expect(getComputedStyle(document.querySelector("#test-ele")).color).toBe(
       "rgb(0, 0, 0)"
     );
-  });
-
-  test("load in ctx mode", async () => {
-    const ctx = await load("../esm/test-module1.mjs -ctx");
-
-    expect(ctx.result.val).toEqual("test module 1");
   });
 });
