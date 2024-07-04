@@ -3,15 +3,16 @@ const error_origin = "http://127.0.0.1:5793/errors";
 // 存放错误信息的数据对象
 const errors = {};
 
-fetch(`${error_origin}/${navigator.language.toLowerCase()}.json`)
-  .catch(() => {
-    return fetch(`default.json`);
-  })
-  .then((e) => e.json())
-  .then((data) => {
-    Object.assign(errors, data);
-  });
-
+if (globalThis.navigator && navigator.language) {
+  fetch(`${error_origin}/${navigator.language.toLowerCase()}.json`)
+    .catch(() => {
+      return fetch(`default.json`);
+    })
+    .then((e) => e.json())
+    .then((data) => {
+      Object.assign(errors, data);
+    });
+}
 /**
  * 根据键、选项和错误对象生成错误对象。
  *
