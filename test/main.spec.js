@@ -3,6 +3,12 @@ const { test, expect } = require("@playwright/test");
 test("load module are all correct", async ({ page }) => {
   await page.goto("http://localhost:3340/test/statics/load-module.html");
 
+  setTimeout(() => {
+    page;
+  }, 2000);
+
+  await page.getByRole("link", { name: "• load in ctx mode" }).click();
+  await page.goBack();
   await page.getByRole("link", { name: "• load css by element" }).click();
   await page.goBack();
   await page.getByRole("link", { name: "• load css succeed" }).click();
@@ -15,13 +21,6 @@ test("load module are all correct", async ({ page }) => {
   await page.goBack();
   await page.getByRole("link", { name: "• load es module succeed" }).click();
   await page.goBack();
-  await page.getByRole("link", { name: "• load in ctx mode" }).click();
-  await page.goBack();
-
-  // await new Promise((res) => setTimeout(res, 2000));
-  // await expect((await page.$$(".jasmine-specs .jasmine-passed")).length).toBe(
-  //   7
-  // );
 });
 
 test("use", async ({ page }) => {
