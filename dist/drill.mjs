@@ -1,4 +1,62 @@
 //! drill.js - v5.3.8 https://github.com/kirakiray/drill.js  (c) 2018-2024 YAO
+const error_origin = "http://127.0.0.1:5793/errors";
+
+// 存放错误信息的数据对象
+const errors = {};
+
+fetch(`${error_origin}/${navigator.language.toLowerCase()}.json`)
+  .catch(() => {
+    return fetch(`default.json`);
+  })
+  .then((e) => e.json())
+  .then((data) => {
+    Object.assign(errors, data);
+  });
+
+/**
+ * 根据键、选项和错误对象生成错误对象。
+ *
+ * @param {string} key - 错误描述的键。
+ * @param {Object} [options] - 映射相关值的选项对象。
+ * @param {Error} [error] - 原始错误对象。
+ * @returns {Error} 生成的错误对象。
+ */
+const getErr = (key, options, error) => {
+  const desc = getErrDesc(key, options);
+
+  let errObj;
+  if (error) {
+    errObj = new Error(desc, { cause: error });
+  } else {
+    errObj = new Error(desc);
+  }
+  return errObj;
+};
+
+/**
+ * 根据键、选项生成错误描述
+ *
+ * @param {string} key - 错误描述的键。
+ * @param {Object} [options] - 映射相关值的选项对象。
+ * @returns {string} 生成的错误描述。
+ */
+const getErrDesc = (key, options) => {
+  if (!errors[key]) {
+    return `Error code: "${key}", please go to https://github.com/ofajs/ofa-errors to view the corresponding error information`;
+  }
+
+  let desc = errors[key];
+
+  // 映射相关值
+  if (options) {
+    for (let k in options) {
+      desc = desc.replace(new RegExp(`{${k}}`, "g"), options[k]);
+    }
+  }
+
+  return desc;
+};
+
 const getOid = () => Math.random().toString(32).slice(2);
 
 class Onion {
@@ -86,13 +144,16 @@ use(["mjs", "js"], async (ctx, next) => {
         ctx.result = await import(`${d.origin}${d.pathname}`);
       }
     } catch (error) {
-      const err = wrapError(
-        `Failed to load module ${ctx.realUrl || url}`,
+      const err = getErr(
+        "load_module",
+        {
+          url: ctx.realUrl || url,
+        },
         error
       );
 
       if (notHttp) {
-        console.log("Failed to load module:", ctx);
+        console.log("load failed:", ctx.realUrl || url, " ctx:", ctx);
       }
 
       throw err;
@@ -110,11 +171,14 @@ use(["txt", "html", "htm"], async (ctx, next) => {
     try {
       resp = await wrapFetch(url, params);
     } catch (error) {
-      throw wrapError(`Load ${url} failed`, error);
+      throw getErr("load_fail", { url }, error);
     }
 
     if (!/^2.{2}$/.test(resp.status)) {
-      throw new Error(`Load ${url} failed: status code ${resp.status}`);
+      throw getErr("load_fail_status", {
+        url,
+        status: resp.status,
+      });
     }
 
     ctx.result = await resp.text();
@@ -181,13 +245,6 @@ use("css", async (ctx, next) => {
   await next();
 });
 
-const wrapError = (desc, error) => {
-  const err = new Error(`${desc} \n  ${error.toString()}`, {
-    cause: error,
-  });
-  return err;
-};
-
 const aliasMap = {};
 
 async function config(opts) {
@@ -195,18 +252,22 @@ async function config(opts) {
 
   if (alias) {
     Object.entries(alias).forEach(([name, path]) => {
-      if (/^@.+/.test(name)) {
-        if (!aliasMap[name]) {
-          if (!/^\./.test(path)) {
-            aliasMap[name] = path;
-          } else {
-            throw new Error(
-              `The address does not match the specification, please use '/' or or the beginning of the protocol: '${path}'`
-            );
-          }
+      if (!/^@.+/.test(name)) {
+        throw getErr("config_alias_name_error", {
+          name,
+        });
+      }
+
+      if (!aliasMap[name]) {
+        if (!/^\./.test(path)) {
+          aliasMap[name] = path;
         } else {
-          throw new Error(`Alias already exists: '${name}'`);
+          throw new Error(
+            `The address does not match the specification, please use '/' or or the beginning of the protocol: '${path}'`
+          );
         }
+      } else {
+        throw new Error(`Alias already exists: '${name}'`);
       }
     });
   }
@@ -228,7 +289,10 @@ const path = (moduleName, baseURI) => {
     if (aliasMap[first]) {
       lastUrl = [aliasMap[first].replace(/\/$/, ""), ...args].join("/");
     } else {
-      throw new Error(`No alias defined ${first}`);
+      throw getErr("no_alias", {
+        name: first,
+        url: moduleName,
+      });
     }
   }
 
@@ -337,8 +401,19 @@ function lm$1(meta, opts) {
   return createLoad(meta, opts);
 }
 
-Object.assign(lm$1, {
-  use,
+// Object.assign(lm, {
+//   use,
+// });
+
+Object.defineProperties(lm$1, {
+  use: {
+    value: use,
+  },
+  alias: {
+    get() {
+      return { ...aliasMap };
+    },
+  },
 });
 
 class LoadModule extends HTMLElement {
