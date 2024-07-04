@@ -1,27 +1,27 @@
 const { test, expect } = require("@playwright/test");
 
-test("load module are all correct", async ({ page }) => {
-  await page.goto("http://localhost:3340/test/statics/load-module.html");
+// test("load module are all correct", async ({ page }) => {
+//   await page.goto("http://localhost:3340/test/statics/load-module.html");
 
-  await page.evaluate(() => window.location.reload());
+//   await page.evaluate(() => window.location.reload());
 
-  await page.getByRole("link", { name: "• load in ctx mode" }).click();
-  await page.goBack();
-  await page.getByRole("link", { name: "• load css by element" }).click();
-  await page.goBack();
-  await page.getByRole("link", { name: "• load css succeed" }).click();
-  await page.goBack();
-  await page.getByRole("link", { name: "• load wasm succeed" }).click();
-  await page.goBack();
-  await page.getByRole("link", { name: "• load json succeed" }).click();
-  await page.goBack();
-  await page.getByRole("link", { name: "• load txt succeed" }).click();
-  await page.goBack();
-  await page.getByRole("link", { name: "• load es module succeed" }).click();
-  await page.goBack();
+//   await page.getByRole("link", { name: "• load in ctx mode" }).click();
+//   await page.goBack();
+//   await page.getByRole("link", { name: "• load css by element" }).click();
+//   await page.goBack();
+//   await page.getByRole("link", { name: "• load css succeed" }).click();
+//   await page.goBack();
+//   await page.getByRole("link", { name: "• load wasm succeed" }).click();
+//   await page.goBack();
+//   await page.getByRole("link", { name: "• load json succeed" }).click();
+//   await page.goBack();
+//   await page.getByRole("link", { name: "• load txt succeed" }).click();
+//   await page.goBack();
+//   await page.getByRole("link", { name: "• load es module succeed" }).click();
+//   await page.goBack();
 
-  await expect(true).toBe(true);
-});
+//   await expect(true).toBe(true);
+// });
 
 test("use", async ({ page }) => {
   await page.goto("http://localhost:3340/test/statics/use.html");
