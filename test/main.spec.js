@@ -3,6 +3,8 @@ const { test, expect } = require("@playwright/test");
 test("load module are all correct", async ({ page }) => {
   await page.goto("http://localhost:3340/test/statics/load-module.html");
 
+  await page.evaluate(() => window.location.reload());
+
   await page.getByRole("link", { name: "• load in ctx mode" }).click();
   await page.goBack();
   await page.getByRole("link", { name: "• load css by element" }).click();

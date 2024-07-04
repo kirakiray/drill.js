@@ -4,23 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>simple test</title>
-    <!-- <script type="module" src="../../src/base.mjs"></script> -->
-    <script src="../../dist/drill.js"></script>
+    <script type="module" src="../../src/base.mjs"></script>
+    <!-- <script src="../../dist/drill.js"></script> -->
   </head>
   <body>
     <script type="module">
       setTimeout(async () => {
         const load = lm(import.meta);
 
-        lm.config({
-          alias: {
-            "@aa": "http://localhost:3340/test/statics",
-          },
-        });
+        const ctx = await load("./esm/test-module1.mjs -ctx");
 
-        const data = await load("@aa/esm/test-count2.mjs");
-
-        console.log(data);
+        console.log(ctx.result.val);
       }, 100);
     </script>
   </body>
