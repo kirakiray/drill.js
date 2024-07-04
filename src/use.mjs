@@ -1,4 +1,4 @@
-import { getErr } from "./errors.mjs";
+import { getErr } from "../ofa-error/main.js";
 import Onion from "./onion.mjs";
 
 export const caches = new Map();

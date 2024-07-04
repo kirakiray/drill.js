@@ -1,4 +1,4 @@
-import { getErr } from "./errors.mjs";
+import { getErr } from "../ofa-error/main.js";
 
 export const aliasMap = {};
 
