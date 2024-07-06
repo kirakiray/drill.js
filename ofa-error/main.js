@@ -14,6 +14,11 @@ if (globalThis.navigator && navigator.language) {
   (async () => {
     let targetLangErrors;
 
+    const errCacheTime = localStorage.getItem("ofa-errors-time");
+    if (errCacheTime && Date.now() > Number(errCacheTime) + 5 * 60 * 1000) {
+      localStorage.removeItem("ofa-errors");
+    }
+
     if (localStorage.getItem("ofa-errors")) {
       targetLangErrors = JSON.parse(localStorage.getItem("ofa-errors"));
     } else {
@@ -23,6 +28,7 @@ if (globalThis.navigator && navigator.language) {
 
       if (targetLangErrors) {
         localStorage.setItem("ofa-errors", JSON.stringify(targetLangErrors));
+        localStorage.setItem("ofa-errors-time", Date.now());
       } else {
         targetLangErrors = await fetch(`${error_origin}/en.json`)
           .then((e) => e.json())
