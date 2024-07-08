@@ -12,23 +12,21 @@ if (globalThis.navigator && navigator.language) {
   }
 
   (async () => {
-    let targetLangErrors;
-
-    const errCacheTime = localStorage.getItem("ofa-errors-time");
-    if (errCacheTime && Date.now() > Number(errCacheTime) + 5 * 60 * 1000) {
-      localStorage.removeItem("ofa-errors");
+    if (localStorage["ofa-errors"]) {
+      const targetLangErrors = JSON.parse(localStorage["ofa-errors"]);
+      Object.assign(errors, targetLangErrors);
     }
 
-    if (localStorage.getItem("ofa-errors")) {
-      targetLangErrors = JSON.parse(localStorage.getItem("ofa-errors"));
-    } else {
-      targetLangErrors = await fetch(`${error_origin}/${langFirst}.json`)
+    const errCacheTime = localStorage["ofa-errors-time"];
+
+    if (!errCacheTime || Date.now() > Number(errCacheTime) + 5 * 60 * 1000) {
+      const targetLangErrors = await fetch(`${error_origin}/${langFirst}.json`)
         .then((e) => e.json())
         .catch(() => null);
 
       if (targetLangErrors) {
-        localStorage.setItem("ofa-errors", JSON.stringify(targetLangErrors));
-        localStorage.setItem("ofa-errors-time", Date.now());
+        localStorage["ofa-errors"] = JSON.stringify(targetLangErrors);
+        localStorage["ofa-errors-time"] = Date.now();
       } else {
         targetLangErrors = await fetch(`${error_origin}/en.json`)
           .then((e) => e.json())
@@ -37,9 +35,9 @@ if (globalThis.navigator && navigator.language) {
             return null;
           });
       }
-    }
 
-    Object.assign(errors, targetLangErrors);
+      Object.assign(errors, targetLangErrors);
+    }
   })();
 }
 
