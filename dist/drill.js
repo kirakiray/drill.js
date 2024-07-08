@@ -1,9 +1,109 @@
-//! drill.js - v5.3.8 https://github.com/kirakiray/drill.js  (c) 2018-2024 YAO
+//! drill.js - v5.3.9 https://github.com/kirakiray/drill.js  (c) 2018-2024 YAO
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.lm = factory());
 })(this, (function () { 'use strict';
+
+  // const error_origin = "http://127.0.0.1:5793/errors";
+  const error_origin = "https://ofajs.github.io/ofa-errors/errors";
+
+  // 存放错误信息的数据对象
+  const errors = {};
+
+  if (globalThis.navigator && navigator.language) {
+    let langFirst = navigator.language.toLowerCase().split("-")[0];
+
+    if (langFirst === "zh" && navigator.language.toLowerCase() !== "zh-cn") {
+      langFirst = "zhft";
+    }
+
+    (async () => {
+      if (localStorage["ofa-errors"]) {
+        const targetLangErrors = JSON.parse(localStorage["ofa-errors"]);
+        Object.assign(errors, targetLangErrors);
+      }
+
+      const errCacheTime = localStorage["ofa-errors-time"];
+
+      if (!errCacheTime || Date.now() > Number(errCacheTime) + 5 * 60 * 1000) {
+        const targetLangErrors = await fetch(`${error_origin}/${langFirst}.json`)
+          .then((e) => e.json())
+          .catch(() => null);
+
+        if (targetLangErrors) {
+          localStorage["ofa-errors"] = JSON.stringify(targetLangErrors);
+          localStorage["ofa-errors-time"] = Date.now();
+        } else {
+          targetLangErrors = await fetch(`${error_origin}/en.json`)
+            .then((e) => e.json())
+            .catch((error) => {
+              console.error(error);
+              return null;
+            });
+        }
+
+        Object.assign(errors, targetLangErrors);
+      }
+    })();
+  }
+
+  let isSafari = false;
+  if (globalThis.navigator) {
+    isSafari =
+      navigator.userAgent.includes("Safari") &&
+      !navigator.userAgent.includes("Chrome");
+  }
+
+  /**
+   * 根据键、选项和错误对象生成错误对象。
+   *
+   * @param {string} key - 错误描述的键。
+   * @param {Object} [options] - 映射相关值的选项对象。
+   * @param {Error} [error] - 原始错误对象。
+   * @returns {Error} 生成的错误对象。
+   */
+  const getErr = (key, options, error) => {
+    let desc = getErrDesc(key, options);
+
+    let errObj;
+    if (error) {
+      if (isSafari) {
+        desc += `\nCaused by: ${error.toString()}\n  ${error.stack.replace(
+        /\n/g,
+        "\n    "
+      )}`;
+      }
+      errObj = new Error(desc, { cause: error });
+    } else {
+      errObj = new Error(desc);
+    }
+    return errObj;
+  };
+
+  /**
+   * 根据键、选项生成错误描述
+   *
+   * @param {string} key - 错误描述的键。
+   * @param {Object} [options] - 映射相关值的选项对象。
+   * @returns {string} 生成的错误描述。
+   */
+  const getErrDesc = (key, options) => {
+    if (!errors[key]) {
+      return `Error code: "${key}", please go to https://github.com/ofajs/ofa-errors to view the corresponding error information`;
+    }
+
+    let desc = errors[key];
+
+    // 映射相关值
+    if (options) {
+      for (let k in options) {
+        desc = desc.replace(new RegExp(`{${k}}`, "g"), options[k]);
+      }
+    }
+
+    return desc;
+  };
 
   const getOid = () => Math.random().toString(32).slice(2);
 
@@ -92,13 +192,16 @@
           ctx.result = await import(`${d.origin}${d.pathname}`);
         }
       } catch (error) {
-        const err = wrapError(
-          `Failed to load module ${ctx.realUrl || url}`,
+        const err = getErr(
+          "load_module",
+          {
+            url: ctx.realUrl || url,
+          },
           error
         );
 
         if (notHttp) {
-          console.log("Failed to load module:", ctx);
+          console.log("load failed:", ctx.realUrl || url, " ctx:", ctx);
         }
 
         throw err;
@@ -116,11 +219,14 @@
       try {
         resp = await wrapFetch(url, params);
       } catch (error) {
-        throw wrapError(`Load ${url} failed`, error);
+        throw getErr("load_fail", { url }, error);
       }
 
       if (!/^2.{2}$/.test(resp.status)) {
-        throw new Error(`Load ${url} failed: status code ${resp.status}`);
+        throw getErr("load_fail_status", {
+          url,
+          status: resp.status,
+        });
       }
 
       ctx.result = await resp.text();
@@ -187,13 +293,6 @@
     await next();
   });
 
-  const wrapError = (desc, error) => {
-    const err = new Error(`${desc} \n  ${error.toString()}`, {
-      cause: error,
-    });
-    return err;
-  };
-
   const aliasMap = {};
 
   async function config(opts) {
@@ -201,18 +300,25 @@
 
     if (alias) {
       Object.entries(alias).forEach(([name, path]) => {
-        if (/^@.+/.test(name)) {
-          if (!aliasMap[name]) {
-            if (!/^\./.test(path)) {
-              aliasMap[name] = path;
-            } else {
-              throw new Error(
-                `The address does not match the specification, please use '/' or or the beginning of the protocol: '${path}'`
-              );
-            }
+        if (!/^@.+/.test(name)) {
+          throw getErr("config_alias_name_error", {
+            name,
+          });
+        }
+
+        if (!aliasMap[name]) {
+          if (!/^\./.test(path)) {
+            aliasMap[name] = path;
           } else {
-            throw new Error(`Alias already exists: '${name}'`);
+            throw getErr("alias_relate_name", {
+              name,
+              path,
+            });
           }
+        } else {
+          throw getErr("alias_already", {
+            name,
+          });
         }
       });
     }
@@ -234,7 +340,10 @@
       if (aliasMap[first]) {
         lastUrl = [aliasMap[first].replace(/\/$/, ""), ...args].join("/");
       } else {
-        throw new Error(`No alias defined ${first}`);
+        throw getErr("no_alias", {
+          name: first,
+          url: moduleName,
+        });
       }
     }
 
@@ -343,8 +452,15 @@
     return createLoad(meta, opts);
   }
 
-  Object.assign(lm$1, {
-    use,
+  Object.defineProperties(lm$1, {
+    use: {
+      value: use,
+    },
+    alias: {
+      get() {
+        return { ...aliasMap };
+      },
+    },
   });
 
   class LoadModule extends HTMLElement {

@@ -1,6 +1,6 @@
 {
   "name": "drill.js",
-  "version": "5.3.8",
+  "version": "5.3.9",
   "description": "A declarative modular framework that runs on the browser",
   "main": "dist/drill.js",
   "exports": {
@@ -10,9 +10,9 @@
   "scripts": {
     "bump": "node scripts/bump-version.js && npm run build && npm i",
     "build": "rollup -c",
-    "static-server": "node scripts/static-server",
+    "static": "node scripts/static-server",
     "test": "npm run playwright && npx vitest",
-    "playwright": "node scripts/playwright-test",
+    "playwright": "npx playwright test",
     "jest": "",
     "codegen": "npx playwright codegen localhost:3340/"
   },
@@ -21,7 +21,7 @@
     "url": "git+https://github.com/kirakiray/drill.js.git"
   },
   "devDependencies": {
-    "@playwright/test": "^1.38.1",
+    "@playwright/test": "^1.45.1",
     "@rollup/plugin-commonjs": "^25.0.0",
     "@rollup/plugin-json": "^6.0.0",
     "@rollup/plugin-node-resolve": "^15.1.0",
