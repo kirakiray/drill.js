@@ -1,4 +1,4 @@
-//! drill.js - v5.3.9 https://github.com/kirakiray/drill.js  (c) 2018-2024 YAO
+//! drill.js - v5.3.10 https://github.com/kirakiray/drill.js  (c) 2018-2024 YAO
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
@@ -78,6 +78,7 @@
     } else {
       errObj = new Error(desc);
     }
+    errObj.code = key;
     return errObj;
   };
 
@@ -201,7 +202,7 @@
         );
 
         if (notHttp) {
-          console.log("load failed:", ctx.realUrl || url, " ctx:", ctx);
+          console.warn(err, ctx);
         }
 
         throw err;
@@ -523,10 +524,11 @@
         if (newValue && oldValue === null) {
           this._init();
         } else if (this.__initSrc && oldValue && newValue !== this.__initSrc) {
-          console.warn(
-            `${this.tagName.toLowerCase()} change src is invalid, only the first change will be loaded`
-          );
           this.setAttribute("src", this.__initSrc);
+
+          throw getErr("change_lm_src", {
+            tag: this.tagName.toLowerCase(),
+          });
         }
       } else if (name === "pause" && newValue === null) {
         this._init();

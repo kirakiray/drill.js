@@ -1,4 +1,4 @@
-//! drill.js - v5.3.9 https://github.com/kirakiray/drill.js  (c) 2018-2024 YAO
+//! drill.js - v5.3.10 https://github.com/kirakiray/drill.js  (c) 2018-2024 YAO
 // const error_origin = "http://127.0.0.1:5793/errors";
 const error_origin = "https://ofajs.github.io/ofa-errors/errors";
 
@@ -72,6 +72,7 @@ const getErr = (key, options, error) => {
   } else {
     errObj = new Error(desc);
   }
+  errObj.code = key;
   return errObj;
 };
 
@@ -195,7 +196,7 @@ use(["mjs", "js"], async (ctx, next) => {
       );
 
       if (notHttp) {
-        console.log("load failed:", ctx.realUrl || url, " ctx:", ctx);
+        console.warn(err, ctx);
       }
 
       throw err;
@@ -517,10 +518,11 @@ class LoadModule extends HTMLElement {
       if (newValue && oldValue === null) {
         this._init();
       } else if (this.__initSrc && oldValue && newValue !== this.__initSrc) {
-        console.warn(
-          `${this.tagName.toLowerCase()} change src is invalid, only the first change will be loaded`
-        );
         this.setAttribute("src", this.__initSrc);
+
+        throw getErr("change_lm_src", {
+          tag: this.tagName.toLowerCase(),
+        });
       }
     } else if (name === "pause" && newValue === null) {
       this._init();
