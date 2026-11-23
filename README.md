@@ -1,5 +1,15 @@
 # drill.js
 
+> **This repository is frozen. drill.js is now developed in the [ofa.js monorepo](https://github.com/ofajs/ofa.js) and will only be updated there.**
+>
+> 本仓库已冻结。drill.js 现在随 [ofa.js monorepo](https://github.com/ofajs/ofa.js) 同仓维护，**以后只更新到 monorepo**——代码、文档、示例和发版都不再进入本仓库。
+>
+> - Active source: [`packages/drill`](https://github.com/ofajs/ofa.js/tree/main/packages/drill)
+> - Up-to-date API: [`packages/drill/README.md`](https://github.com/ofajs/ofa.js/blob/main/packages/drill/README.md)
+> - Issues / pull requests: [ofajs/ofa.js](https://github.com/ofajs/ofa.js/issues)
+> - The text below documents the standalone **5.x** line. The monorepo ships **6.x**, which is not API-compatible with 5.x (the `@alias` quick-path system was removed, see the current README).
+> - The `drill-less` / `drill-ts` extensions listed below are legacy and are not maintained in the monorepo.
+
 ## Use of documentation
 
 * [简体中文](./docs/cn/README.md)
